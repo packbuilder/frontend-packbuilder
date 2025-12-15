@@ -1,0 +1,146 @@
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useRef, useState, type FormEvent } from "react";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { appQueries } from "@/hooks/appQueries";
+import { createSuggestion } from "@/lib/api";
+import { enumNameFromValue } from "@/lib/utils";
+import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
+import { ModLoader } from "@/types/enums";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from "../ui/select"
+import { Save, UserRoundPlus, X } from "lucide-react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import type { User } from "@/types/user";
+import type { Modpack } from "@/types/modpack";
+import { toast } from "sonner";
+
+export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Modpack, curUser: User | null}) {
+    const [isOpen, setOpen] = useState(false);
+    const queryClient = useQueryClient();
+    const router = useRouter();
+    const navigate = useNavigate();
+    const formRef = useRef(null);
+
+    const { data: minecraftVersions } = useSuspenseQuery(appQueries.minecraftVersions());
+
+    if (!modpack || !curUser) {
+        return;
+    }
+
+    const [minecraftVersion, setMinecraftVersion] = useState(modpack.versions[0].gameVersion);
+    const [modLoader, setModLoader] = useState(modpack.versions[0].modLoader.toString());
+
+    const mutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const memo = formData.get("memo") as string;
+            const result = createSuggestionDtoSchema.safeParse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
+
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
+
+            const response = await createSuggestion(modpack.id.toString(), result.data);
+
+            if(!response || response.status < 200 || response.status > 200 || !response.suggestionId) {
+                throw new Error("There was a problem with creating your suggestion");
+            }
+
+            return response.suggestionId
+        },
+        onSuccess: async (suggestionId: number) => {
+            toast.success(`Successfully created a suggestion for ${modpack.name}!`);
+
+            setOpen(false);
+            
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
+                refetchType: "all"
+            });
+            
+            await router.invalidate({sync: true});
+            
+            navigate({to: `/modpack/${modpack.user.name}/${modpack.id}/suggestion/${suggestionId}`})
+        },
+        onError: (error) => {
+            toast.error(error.message);
+            console.error(error.message);
+        }
+    });
+
+    const submitForm = () => {
+        const form = formRef.current as unknown as HTMLFormElement;
+        form.requestSubmit();
+    }
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        mutation.mutate(formData);
+    }
+
+    return <Dialog open={isOpen} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+            <Button variant={"default"}>
+                Create suggestion <UserRoundPlus />
+            </Button>   
+        </DialogTrigger>
+        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center w-9/10">
+            <DialogHeader className="w-full px-2 text-left">
+                <DialogTitle>Create Suggestion for this modpack!</DialogTitle>
+                <DialogDescription>Suggestions act as the main hub for all your proposed changes to a modpack! You can only have one suggestion per modpack at a time. </DialogDescription>
+            </DialogHeader>
+            <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
+                <div className="flex flex-col justify-center items-start gap-2">
+                    <h3>Memo</h3>
+                    <Input id="memo" type="text" name="memo" className="text-sm" placeholder="Your message..."/>
+                </div>
+                <h3>Game Version & Mod Loader</h3>
+                <div className={`flex items-center justify-center gap-2`}>
+                    <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select game version..."/>
+                        </SelectTrigger> 
+                        <SelectContent side="bottom">
+                            <SelectGroup>     
+                                <SelectLabel>Select version</SelectLabel>
+                                {
+                                    minecraftVersions?.map((version, index) => {
+                                        return <SelectItem className="cursor-pointer" key={index} value={version}>
+                                            {version}
+                                        </SelectItem>
+                                    })
+                                }
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <Select value={modLoader.toString()} onValueChange={setModLoader}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select game version..."/>
+                        </SelectTrigger> 
+                        <SelectContent side="bottom">
+                            <SelectGroup>     
+                                <SelectLabel>Select mod loader</SelectLabel>
+                                {
+                                    Object.values(ModLoader).map((modLoader, index) => {
+                                        return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
+                                            {enumNameFromValue(ModLoader, modLoader)}
+                                        </SelectItem>
+                                    })
+                                }
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </form>
+            <DialogFooter className="w-full px-2">
+                <div className="w-full flex flex-row justify-start items-center gap-2">
+                    <Button variant={"default"} onClick={submitForm} type="submit">Create Suggestion <Save/></Button>
+                    <DialogClose asChild>
+                        <Button variant={"destructive"}>Cancel <X/></Button>
+                    </DialogClose>
+                </div>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+}

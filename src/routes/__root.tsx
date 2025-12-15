@@ -1,34 +1,97 @@
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
-
-import Header from '../components/Header'
-
-import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-
-import type { QueryClient } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ThemeProvider } from '@/components/display/theme-provider';
+import { getUserSession } from '@/lib/api'
+import { type User } from '@/types/user'
+import { SignalRProvider } from '@/components/signalr/signalr-provider'
+import { Toaster } from 'sonner'
+import Navbar from '@/components/display/navbar';
 
 interface MyRouterContext {
-  queryClient: QueryClient
+  queryClient: QueryClient,
+  user: User | null
+}
+
+const queryClient = new QueryClient();
+
+function RootLayout() {
+  const { user } = Route.useRouteContext();
+
+  return (
+    <>
+    <SignalRProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="dark" storageKey="website-theme">
+          <main className="min-h-dvh size-full bg-background flex flex-col items-center justify-start">
+            <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
+            <Navbar user={user} />
+            <Outlet />
+          </main>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </SignalRProvider>
+    </>
+  );
+}
+
+function ErrorComponent({ error }: { error: Error }) {
+  const { user } = Route.useRouteContext();
+
+  return (
+    <SignalRProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="website-theme">
+        <main className="min-h-dvh size-full bg-background">
+          <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
+          <Navbar user={user} />
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl text-center text-bold">
+              There was an error rendering this page :(
+            </h1>
+            <h2 className="text-2xl text-center text-bold">{error.message}</h2>
+          </div>
+        </main>
+      </ThemeProvider>
+    </SignalRProvider>
+  );
+}
+
+function NotFoundComponent() {
+  const { user } = Route.useRouteContext();
+  return (
+    <SignalRProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="website-theme">
+        <main className="min-h-dvh size-full bg-background">
+          <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
+          <Navbar user={user} />
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl text-center text-bold">
+              This page does not exist :(
+            </h1>
+            <h2 className="text-2xl text-center text-bold">Maybe try searching a little harder?</h2>
+          </div>
+        </main>
+      </ThemeProvider>
+    </SignalRProvider>
+  )
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
-  component: () => (
-    <>
-      <Header />
-      <Outlet />
-      <TanStackDevtools
-        config={{
-          position: 'bottom-right',
-        }}
-        plugins={[
-          {
-            name: 'Tanstack Router',
-            render: <TanStackRouterDevtoolsPanel />,
-          },
-          TanStackQueryDevtools,
-        ]}
-      />
-    </>
-  ),
+  beforeLoad: async () => {
+    try {
+      
+      const user = await getUserSession();
+      
+      if(!user) {
+        return;
+      }
+      
+      return { user };
+
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  component: RootLayout,
+  errorComponent: ErrorComponent,
+  notFoundComponent: NotFoundComponent
 })
