@@ -68,12 +68,12 @@ const store = create<Store>()(
             name: "PersistedStore",
             partialize: (state) => ({context: state.breadCrumbs}),
             merge: (persistedState, currentState) => {
-                const {context} = persistedState as {context: BreadCrumb[]}
-                currentState.breadCrumbs = context;
+                if(persistedState) {
+                    const {context} = persistedState as {context: BreadCrumb[]}
+                    currentState.breadCrumbs = context;
+                }
+                
                 return currentState;
-            },
-            onRehydrateStorage: (state) => {
-                console.log(state);
             },
         }
     )

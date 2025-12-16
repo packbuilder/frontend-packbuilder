@@ -40,6 +40,7 @@ export default function Header({user} : {user: User | null}) {
             updateBreadCrumbs(location.pathname);
             setIsHydrated(true);
         }
+
         return () => unsubscribe();
     }, []);
     

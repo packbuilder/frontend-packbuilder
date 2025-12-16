@@ -49,15 +49,16 @@ function ErrorComponent({ error }: { error: Error }) {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async () => {
     const token = getUserToken();
 
     if(!token) {
       return;
     }
 
-    const user = parseUserToken(token);
-    context.user = user as User;
+    const user = parseUserToken(token) as User;
+
+    return { user };
   },
   component: RootLayout,
   errorComponent: ErrorComponent
