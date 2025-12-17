@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { login } from '@/lib/api';
+import store from '@/store/store';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import Cookies from 'js-cookie';
 import { LogIn } from 'lucide-react';
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/login/')({
 
 function Login() {
   const [formError, setFormError] = useState("");
+  const {removeBreadCrumb} = store();
   const navigate = useNavigate();
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -37,7 +39,8 @@ function Login() {
       secure: true,
       expires: 7
     });
-  
+    
+    removeBreadCrumb("Login")
     navigate({to:"/"});
   }
 

@@ -20,8 +20,8 @@ function RootLayout() {
     <>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-          <Header user={user} />
-          <main className="h-[100vh] w-full bg-gray-900">
+          <main className="container mx-auto min-h-dvh w-full size-full bg-gradient-to-r from-sky-500 to-emerald-500">
+            <Header user={user} />
             <Outlet />
           </main>
         </ThemeProvider>
@@ -35,7 +35,7 @@ function ErrorComponent({ error }: { error: Error }) {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-      <main className="h-[100vh] w-full bg-gray-900">
+      <main className="container mx-auto min-h-dvh w-full size-full bg-gradient-to-r from-sky-500 to-emerald-500">
         <Header user={user} />
         <div className="flex flex-col items-center justify-center">
           <h1 className="text-4xl text-center text-bold">
@@ -56,9 +56,17 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       return;
     }
 
-    const user = parseUserToken(token) as User;
-
-    return { user };
+    try {
+      const user = parseUserToken(token) as User;
+      
+      if(!user) {
+        return;
+      }
+      
+      return { user };
+    } catch (error) {
+      console.log(error);
+    }
   },
   component: RootLayout,
   errorComponent: ErrorComponent

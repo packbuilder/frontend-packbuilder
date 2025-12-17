@@ -1,6 +1,6 @@
-import type { Modpack } from "app/types/modpack";
 import modpackImage from "@/modpack.gif"
 import BreadCrumbLink from "./breadcrumb-link";
+import type { Modpack } from "@/types/modpack";
 
 function ModpackCard({modpack} : {modpack: Modpack}) {
     return <BreadCrumbLink 

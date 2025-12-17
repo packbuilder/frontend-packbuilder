@@ -10,6 +10,7 @@ import type { CreateModificationDto } from "@/types/dtos/createModificationDto";
 import type { Modification } from "@/types/modification";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import Cookies from "js-cookie";
+import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
 
 const api = useApi();
 
@@ -35,16 +36,13 @@ export async function login(email: string, password: string) {
     }
 }
 
-export async function searchCurseforgeMods(searchQuery: string, page: number, sortMethod: SortMethod, request: Request) {
-    const searchParams = new URL(request.url).searchParams;
-    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+export async function searchCurseforgeMods(searchQuery: string, page: number, sortMethod: SortMethod) {
     const token = getUserToken();
 
     try {
-        const response = await api.get(`/curseforge/search/432?sortField=${sortMethod}&searchQuery=${searchQuery}&index=${page}&pageSize=${pageSize}`, {
+        const response = await api.get(`/curseforge/search/432?sortField=${sortMethod}&searchQuery=${searchQuery}&index=${page}&pageSize=${"10"}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
 
@@ -75,14 +73,13 @@ export async function getUserModpacks(curUser: User) {
     }
 }
 
-export async function getModpack(username: string, modpackSlug: string, request: Request) {
+export async function getModpack(username: string, modpackSlug: string) {
     const token = getUserToken();
     
     try {
         const response = await api.get(`${username}/modpacks/${modpackSlug}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             }
         });
         const data = response.data as Modpack;
@@ -94,14 +91,13 @@ export async function getModpack(username: string, modpackSlug: string, request:
     }
 }
 
-export async function getModReferenceIds(modIds: number[], request: Request) {
+export async function getModReferenceIds(modIds: number[]) {
     const token = getUserToken();
     
     try {
         const response = await api.post(`/mods/referenceIds`, modIds, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
         const data = response.data as string[];
@@ -113,14 +109,13 @@ export async function getModReferenceIds(modIds: number[], request: Request) {
     }
 }
 
-export async function getCurseForgeModData(referenceIds: string[], request: Request) {
+export async function getCurseForgeModData(referenceIds: string[]) {
     const token = getUserToken();
     
     try {
         const response = await api.post(`/curseforge`, referenceIds, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
         const {mods} = response.data as {mods: CurseForgeMod[], pagination: CurseForgePagination}
@@ -132,14 +127,13 @@ export async function getCurseForgeModData(referenceIds: string[], request: Requ
     }
 }
 
-export async function getModpackSuggestions(username: string, slug: string, request: Request) {
+export async function getModpackSuggestions(username: string, slug: string) {
     const token = getUserToken();
     
     try {
         const response = await api.get(`/${username}/modpacks/${slug}/suggestions`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
 
@@ -152,14 +146,13 @@ export async function getModpackSuggestions(username: string, slug: string, requ
     }
 }
 
-export async function getSuggestion(username: string, slug: string, id: string, request: Request) {
+export async function getSuggestion(username: string, slug: string, id: string) {
     const token = getUserToken();
     
     try {
         const response = await api.get(`/${username}/modpacks/${slug}/suggestions/${id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
 
@@ -172,14 +165,13 @@ export async function getSuggestion(username: string, slug: string, id: string, 
     }
 }
 
-export async function createSuggestion(username: string, slug: string, memo: string, request: Request) {
+export async function createSuggestion(username: string, slug: string, memo: string) {
     const token = getUserToken();
     
     try {
         const response = await api.post(`/${username}/modpacks/${slug}/suggestions`, {memo}, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
 
@@ -192,14 +184,13 @@ export async function createSuggestion(username: string, slug: string, memo: str
     }
 }
 
-export async function createModification(username: string, slug: string, suggestionId: string, body: CreateModificationDto, request: Request) {
+export async function createModification(username: string, slug: string, suggestionId: string, body: CreateModificationDto) {
     const token = getUserToken();
     
     try {
         const response = await api.post(`/${username}/modpacks/${slug}/suggestions/${suggestionId}/modifications`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
 
@@ -212,14 +203,13 @@ export async function createModification(username: string, slug: string, suggest
     }
 }
 
-export async function updateSuggestion(username: string, slug: string, memo: string, suggestionId: string, request: Request) {
+export async function updateSuggestion(username: string, slug: string, memo: string, suggestionId: string) {
     const token = getUserToken();
     
     try {
         const response = await api.put(`/${username}/modpacks/${slug}/suggestions/${suggestionId}`, {memo}, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
 
@@ -232,14 +222,13 @@ export async function updateSuggestion(username: string, slug: string, memo: str
     }
 }
 
-export async function updateProfile(username: string, body: UpdateUserDto, request: Request) {
+export async function updateProfile(username: string, body: UpdateUserDto) {
     const token = getUserToken();
     
     try {
         const response = await api.put(`/users/${username}`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             },
         });
 
@@ -252,15 +241,32 @@ export async function updateProfile(username: string, body: UpdateUserDto, reque
     }
 }
 
+export async function updateModpack(username: string, slug: string, body: UpdateModpackDto) {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.put(`/${username}/modpacks/${slug}`, body, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
 
-export async function deleteModification(username: string, slug: string, modificationId: string, suggestionId: string, request: Request) {
+        const data = response.data as Modpack;
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function deleteModification(username: string, slug: string, modificationId: string, suggestionId: string) {
     const token = getUserToken();
     
     try {
         const response = await api.delete(`/${username}/modpacks/${slug}/suggestions/${suggestionId}/modifications/${modificationId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                cookie: request.headers.get("cookie") || "",
             }
         });
 
