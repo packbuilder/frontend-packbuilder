@@ -20,7 +20,7 @@ export default function BreadCrumbLink({
     const {addBreadCrumb} = store();
 
     return (
-        <Link to={link} className={className} style={style} onClick={() => addBreadCrumb({link, text})}>
+        <Link to={link} from="/" className={className} style={style} onClick={() => addBreadCrumb({link, text})}>
             {children}
         </Link>
     );
