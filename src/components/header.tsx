@@ -18,6 +18,7 @@ function BreadCrumb() {
             onClick={() => {updateBreadCrumbs(breadCrumb.link);}}
             key={index} 
             to={breadCrumb.link}
+            from="/"
             className={`flex flex-row justify-around gap-4 items-center ${breadCrumbs.length - 1 === index ? "font-bold" : ""}`}>
                 <button className="cursor-pointer"><p className="text-center whitespace-nowrap">{breadCrumb.text}</p></button>
                 {breadCrumbs.length - 1 === index ? null : <p className="">{"/"}</p>}

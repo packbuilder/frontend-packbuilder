@@ -12,7 +12,7 @@ import BreadCrumbLink from "@/components/breadcrumb-link";
 import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { queryOptions, useMutation } from "@tanstack/react-query";
 
-export const Route = createFileRoute('/modpack/suggestions/$username/$slug')({
+export const Route = createFileRoute('/modpack/$username/$slug/suggestions')({
     loader: async ({context, params}) => {
         const {user, queryClient} = context;
         const {username, slug} = params;
@@ -45,13 +45,13 @@ export const Route = createFileRoute('/modpack/suggestions/$username/$slug')({
 })
 
 function SuggestionView({suggestion} : {suggestion: Suggestion}) {
-    const {pathname} = useLocation();
+    const {username, slug} = Route.useParams()
     const addedMods = suggestion.modifications.filter(m => m.modAction === "Added");
     const removedMods = suggestion.modifications.filter(m => m.modAction === "Removed");
     
     return <BreadCrumbLink 
-        className="duration-100 cursor-pointer relative before:content-[''] before:absolute before:top-0 before:left-[-150%] before:w-[60%] before:h-full before:bg-white before:opacity-40 before:skew-x-[45deg] before:transition-all before:duration-500 before:ease-linear hover:before:left-[180%] hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white flex flex-col gap-2 items-center w-full rounded overflow-hidden"
-        link={`${pathname}/${suggestion.id}`} 
+        className="duration-100 cursor-pointer relative before:content-[''] before:absolute before:top-0 before:left-[-150%] before:w-[60%] before:h-full before:bg-white before:opacity-40 before:skew-x-[45deg] before:transition-all before:duration-500 before:ease-linear hover:before:left-[180%] hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full rounded overflow-hidden"
+        link={`/suggestion/${username}/${slug}/${suggestion.id}/view`} 
         text={`View`}
         style={{
             background:"rgba(255, 255, 255, 0.2)",

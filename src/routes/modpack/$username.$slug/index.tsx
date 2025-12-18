@@ -14,7 +14,7 @@ import { createFileRoute, redirect, useLocation, useRouter } from '@tanstack/rea
 import { Link } from "@tanstack/react-router";
 import { queryOptions, useMutation } from "@tanstack/react-query";
 
-export const Route = createFileRoute('/modpack/$username/$slug')({
+export const Route = createFileRoute('/modpack/$username/$slug/')({
   loader: async ({context, params}) => {
     const {user, queryClient} = context;
     const {username, slug} = params;
@@ -129,7 +129,7 @@ export default function ModpackView() {
             <div className="flex flex-row items-center justify-center gap-2">
                 {curUser ? <EditModpackNameDropdown curName={modpack.name}/> : ""}
                 <CopyButton text={pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />
-                <BreadCrumbLink link={`modpack/suggestions/${username}/${slug}`} text="Suggestions">
+                <BreadCrumbLink link={`modpack/${username}/${slug}/suggestions`} text="Suggestions">
                     <ToolbarTooltip content="Suggestions">
                         <Button variant={"default"}>
                             <Users />

@@ -31,8 +31,7 @@ function RootLayout() {
 }
 
 function ErrorComponent({ error }: { error: Error }) {
-  const { user } = Route.useRouteContext();
-
+  const {user} = Route.useRouteContext();
   return (
     <ThemeProvider defaultTheme="dark" storageKey="website-theme">
       <main className="container mx-auto min-h-dvh w-full size-full bg-gradient-to-r from-sky-500 to-emerald-500">
@@ -49,20 +48,13 @@ function ErrorComponent({ error }: { error: Error }) {
 }
 
 function NotFoundComponent() {
-  const {user} = Route.useRouteContext();
-
   return (
-     <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-      <main className="container mx-auto min-h-dvh w-full size-full bg-gradient-to-r from-sky-500 to-emerald-500">
-        <Header user={user} />
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="text-4xl text-center text-bold">
-            This page does not exist :(
-          </h1>
-          <h2 className="text-2xl text-center text-bold">Maybe try searching a little harder?</h2>
-        </div>
-      </main>
-    </ThemeProvider>
+    <div className="flex flex-col items-center justify-center">
+      <h1 className="text-4xl text-center text-bold">
+        This page does not exist :(
+      </h1>
+      <h2 className="text-2xl text-center text-bold">Maybe try searching a little harder?</h2>
+    </div>
   )
 }
 
