@@ -14,7 +14,7 @@ import { ModPlatform } from "@/types/mod";
 import { createModificationDtoSchema } from "@/types/dtos/createModificationDto";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
-import { createFileRoute, Link, redirect, useNavigate, useParams, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { queryOptions, useMutation } from "@tanstack/react-query";
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
 import z from "zod";
@@ -25,17 +25,14 @@ const addModSearchSchema = z.object({
     searchQuery: fallback(z.string(), "").default('')
 });
 
-type ModSearchResults = {
-    mods: CurseForgeMod[];
-    pagination: CurseForgePagination;
-} | null;
-
 export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/edit')({
     validateSearch: zodValidator(addModSearchSchema),
-    loader: async ({context, params}) => {
-        const {user, queryClient} = context;
-        const {username, slug, suggestionId} = params;
-
+    loaderDeps: ({search: {searchQuery, page, sortMethod}}) => ({
+        searchQuery,
+        page,
+        sortMethod
+    }),
+    loader: async ({context: {user, queryClient}, params: {username, slug, suggestionId}, deps: {searchQuery, page, sortMethod}}) => {
         const suggestion = await queryClient.ensureQueryData(
             queryOptions({
                 queryKey: ["suggestion", suggestionId],
@@ -57,7 +54,7 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
         const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
         const modificationModData = await queryClient.ensureQueryData(
             queryOptions({
-                queryKey: ["modificationModData"],
+                queryKey: ["modificationModData", modificationReferenceIds],
                 queryFn: () => getCurseForgeModData(modificationReferenceIds)
             })
         )
@@ -65,87 +62,29 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
         const modpackModIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
         const modpackReferenceIds = await queryClient.ensureQueryData(
             queryOptions({
-                queryKey: ["modpackReferenceIds"],
+                queryKey: ["modpackReferenceIds", modpackModIds],
                 queryFn: () => getModReferenceIds(modpackModIds)
             })
         );
 
         const modpackModData = await queryClient.ensureQueryData(
             queryOptions({
-                queryKey: ["modpackModData"],
+                queryKey: ["modpackModData", modpackReferenceIds],
                 queryFn: () => getCurseForgeModData(modpackReferenceIds || [])
             })
         );
 
-        return {curUser: user, suggestion, modpack, modificationModData, modpackModData: modpackModData || [], queryClient }
-    },
-    component: EditSuggestion,
-});
-
-// TODO: Fix bug with query cache and router not invalidating properly to update when user searches through curseforge, also fix some bugs with the search params being weird
-function AddModsForm() {
-    const {page, sortMethod, searchQuery} = Route.useSearch();
-    const [sort, setSort] = useState("0");
-    const {queryClient} = Route.useLoaderData();
-    const modSearchResults = queryClient.getQueryData(["modSearchResults"]) as ModSearchResults;
-    const navigate = useNavigate({from: Route.fullPath});
-    const router = useRouter();
-
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const newSearchQuery = formData.get("searchQuery") as string;
-
-        await queryClient.invalidateQueries({
-            queryKey: ["modSearchResults"],
-            refetchType: "all"
-        });
-
-        await queryClient.ensureQueryData(
+        const modSearchResults = await queryClient.ensureQueryData(
             queryOptions({
-                queryKey: ["modSearchResults"],
+                queryKey: ["modSearchResults", searchQuery, page, sortMethod],
                 queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod)
             })
         );
 
-        await router.invalidate({sync: true});
-
-        navigate({search: () => ({page: "1", searchQuery: newSearchQuery})})
-
-    }
-
-    return (
-        <form method="post" id="addMods" onSubmit={handleSubmit}>
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-                <div className="flex items-center justify-center gap-2">
-                    <Select value={sort} onValueChange={setSort}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                            <SelectValue placeholder="Set sort method..."/>
-                        </SelectTrigger> 
-                        <SelectContent className="bg-white text-black">
-                            <SelectGroup>     
-                                <SelectLabel>Sort</SelectLabel>
-                                <SelectItem className="cursor-pointer" value="0">Featured</SelectItem>
-                                <SelectItem className="cursor-pointer" value="1">Popularity</SelectItem>
-                                <SelectItem className="cursor-pointer" value="2">Total Downloads</SelectItem>
-                                <SelectItem className="cursor-pointer" value="3">Rating</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                    <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search mods..." defaultValue={searchQuery} required/>
-                    <Button variant={"default"} type="submit"><Search/></Button>
-                </div>
-                {
-                    modSearchResults ? <div>
-                        <PaginationButtons paginationData={modSearchResults.pagination} curPage={page}/>
-                    </div> : ""
-                }
-                {/* put error message here */}
-                <div>{}</div>
-            </div>
-        </form>
-    );
-}
+        return {curUser: user, suggestion, modpack, modificationModData, modpackModData: modpackModData || [], queryClient, modSearchResults }
+    },
+    component: EditSuggestion,
+});
 
 function PaginationButtons({ paginationData, curPage } : { 
     paginationData: CurseForgePagination, 
@@ -153,19 +92,22 @@ function PaginationButtons({ paginationData, curPage } : {
 }) {
     const {resultCount, pageSize } = paginationData;
     const navigate = useNavigate({from: Route.fullPath});
+    const router = useRouter();
     
-    const nextPage = () => {
+    const nextPage = async () => {
         if(resultCount !== pageSize) {
             return;
         }
-        navigate({search: (prev) => ({page: prev.page + 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})})
+        await router.invalidate();
+        navigate({search: (prev) => ({page: prev.page + 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
     }
 
-    const previousPage = () => {
+    const previousPage = async () => {
         if(curPage - 1 < 0) {
             return;
         }
-        navigate({search: (prev) => ({page: prev.page - 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})})
+        await router.invalidate();
+        navigate({search: (prev) => ({page: prev.page - 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
     }
 
 
@@ -198,7 +140,7 @@ function EditMemoForm() {
                 queryKey: ["suggestion", suggestionId],
                 refetchType: "all",
             });
-            await router.invalidate({sync: true});
+            await router.invalidate();
         },
         onError: (error) => {
             console.error(error.message);
@@ -249,7 +191,7 @@ function CurseForgeModDisplay({curseforgeMod, modAction} : {curseforgeMod: Curse
                 queryKey: ["modificationModData"],
                 refetchType: "all"
             });
-            await router.invalidate({sync: true});
+            await router.invalidate();
         },
         onError: (error) => {
             console.error(error.message);
@@ -306,7 +248,7 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
                 queryKey: ["modificationModData"],
                 refetchType: "all"
             });
-            await router.invalidate({sync: true});
+            await router.invalidate();
         },
         onError: (error) => {
             console.error(error.message);
@@ -338,8 +280,25 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
 }
 
 function AddModsDialog() {
-    const {queryClient} = Route.useLoaderData();
-    const modSearchResults = queryClient.getQueryData(["modSearchResults"]) as ModSearchResults;
+    const {queryClient, modSearchResults} = Route.useLoaderData();
+    const {page, searchQuery} = Route.useSearch();
+    const [sort, setSort] = useState("0");
+    const navigate = useNavigate({from: Route.fullPath});
+    const router = useRouter();
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const newSearchQuery = formData.get("searchQuery") as string;
+
+        await queryClient.invalidateQueries({
+            queryKey: ["modSearchResults"]
+        });
+
+        await router.invalidate();
+
+        navigate({search: () => ({page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
+    }
 
     return (
         <Dialog>
@@ -360,7 +319,35 @@ function AddModsDialog() {
                 <DialogHeader className="mt-4 flex justify-center items-center">
                     <DialogTitle className="text-3xl font-bold">Add mods</DialogTitle>
                     <DialogDescription>Suggest mods to add by browsing curseforge mods!</DialogDescription>
-                    <AddModsForm />
+                    <form method="post" id="addMods" onSubmit={handleSubmit}>
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                            <div className="flex items-center justify-center gap-2">
+                                <Select value={sort} onValueChange={setSort}>
+                                    <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                                        <SelectValue placeholder="Set sort method..."/>
+                                    </SelectTrigger> 
+                                    <SelectContent className="bg-white text-black">
+                                        <SelectGroup>     
+                                            <SelectLabel>Sort</SelectLabel>
+                                            <SelectItem className="cursor-pointer" value="0">Featured</SelectItem>
+                                            <SelectItem className="cursor-pointer" value="1">Popularity</SelectItem>
+                                            <SelectItem className="cursor-pointer" value="2">Total Downloads</SelectItem>
+                                            <SelectItem className="cursor-pointer" value="3">Rating</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search mods..." defaultValue={searchQuery} required/>
+                                <Button variant={"default"} type="submit"><Search/></Button>
+                            </div>
+                            {/* put error message here */}
+                            <div>{}</div>
+                        </div>
+                    </form>
+                    {
+                        modSearchResults ? <div>
+                            <PaginationButtons paginationData={modSearchResults.pagination} curPage={page}/>
+                        </div> : ""
+                    }
                 </DialogHeader>
                 <div className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-[80%]">
                     {

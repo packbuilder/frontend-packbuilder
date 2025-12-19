@@ -80,15 +80,13 @@ function SuggestionView({suggestion} : {suggestion: Suggestion}) {
 function CreateSuggestionDialog() {
     const [isOpen, setOpen] = useState(false);
     const {queryClient} = Route.useLoaderData();
-    const params = Route.useParams();
-    const pathname = useLocation();
+    const {username, slug} = Route.useParams();
     const router = useRouter();
     const navigate = useNavigate();
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const memo = formData.get("memo") as string;
-            const { username, slug } = params;
 
             const suggestion = await createSuggestion(username, slug, memo);
 
@@ -105,8 +103,8 @@ function CreateSuggestionDialog() {
             });
 
             await router.invalidate({sync: true});
-
-            navigate({to:`${pathname}/${data.id}/edit`});
+            
+            navigate({to:`suggestion/${username}/${slug}/${data.id}/edit`, from: "/"});
         },
         onError: (error) => {
             console.error(error.message)
