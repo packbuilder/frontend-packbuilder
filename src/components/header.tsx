@@ -1,14 +1,12 @@
-import pfp from "../Seed-Avatar.jpg"
 import { useEffect, useState } from "react";
-import type { BreadCrumb } from "@/types/breadcrumb";
 import { Skeleton } from "./ui/skeleton";
 import type { User } from "@/types/user";
 import { Button } from "./ui/button";
-import BreadCrumbLink from "./breadcrumb-link";
 import { Link, useLocation } from "@tanstack/react-router";
 import store from "@/store/store";
+import NavUser from "./header-profile";
 
-function BreadCrumb() {
+function BreadCrumbs() {
     // Make breadcrumb component listen for redirect event to add or remove accordingly
     const {breadCrumbs, updateBreadCrumbs} = store();
 
@@ -56,11 +54,9 @@ export default function Header({user} : {user: User | null}) {
     
     return (
     <div className="flex flex-row items-center justify-between py-2 px-4 h-fit w-full bg-[rgba(255,255,255,0.2)] shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-[12.1px] border border-[rgba(255,255,255,0.3)]">
-        <BreadCrumb />
+        <BreadCrumbs />
         {user ? 
-        <BreadCrumbLink link={`/profile/${user.name}`} text="Profile">
-            <img className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]" src={pfp} alt={user.avatar} />
-        </BreadCrumbLink>
+        <NavUser user={user} />
         : 
         <Button variant={"default"} asChild><Link to={"/login"} onClick={() => addBreadCrumb({text: "Login", link: "/login"})}>Login</Link></Button>
         }

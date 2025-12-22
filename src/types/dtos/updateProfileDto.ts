@@ -2,7 +2,7 @@ import z from "zod";
 
 export const updateProfileDtoSchema = z.object({
     name: z.string().optional(),
-    password: z.string().optional(),
+    password: z.nullable(z.string()).optional(),
     email: z.string().optional()
 });
 

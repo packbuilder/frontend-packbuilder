@@ -46,31 +46,32 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
                 queryFn: () => getModpack(username, slug)
             })
         );
-
+        
         if(!suggestion || !modpack || user?.id !== suggestion.userId) {
             throw redirect({to:"/"});
         }
 
-        const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
-        const modificationModData = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modificationModData", modificationReferenceIds],
-                queryFn: () => getCurseForgeModData(modificationReferenceIds)
-            })
-        )
-
         const modpackModIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
+
+        const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
         const modpackReferenceIds = await queryClient.ensureQueryData(
             queryOptions({
                 queryKey: ["modpackReferenceIds", modpackModIds],
                 queryFn: () => getModReferenceIds(modpackModIds)
             })
         );
-
+        
         const modpackModData = await queryClient.ensureQueryData(
             queryOptions({
                 queryKey: ["modpackModData", modpackReferenceIds],
                 queryFn: () => getCurseForgeModData(modpackReferenceIds || [])
+            })
+        );
+
+        const modificationModData = await queryClient.ensureQueryData(
+            queryOptions({
+                queryKey: ["modificationModData", modificationReferenceIds],
+                queryFn: () => getCurseForgeModData(modificationReferenceIds)
             })
         );
 
