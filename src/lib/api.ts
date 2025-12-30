@@ -118,7 +118,8 @@ export async function getCurseForgeModData(referenceIds: string[]) {
                 'Authorization': `Bearer ${token}`,
             },
         });
-        const {mods} = response.data as {mods: CurseForgeMod[], pagination: CurseForgePagination}
+        console.log(response.data);
+        const mods = response.data as CurseForgeMod[]
         return mods;
     } catch (error) {
         const err = error as unknown as AxiosError

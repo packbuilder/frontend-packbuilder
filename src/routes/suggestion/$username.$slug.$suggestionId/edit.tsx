@@ -165,10 +165,9 @@ function EditMemoForm() {
     </form>
 }
 
-function CurseForgeModDisplay({curseforgeMod, modAction} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove"}) {
-    const {suggestion, queryClient} = Route.useLoaderData();
+function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean}) {
+    const {queryClient} = Route.useLoaderData();
     const {username, slug, suggestionId} = Route.useParams();
-    const [isEnabled, setIsEnabled] = useState(true);
     const router = useRouter();
 
     const mutation = useMutation({
@@ -204,15 +203,6 @@ function CurseForgeModDisplay({curseforgeMod, modAction} : {curseforgeMod: Curse
         const formData = new FormData(event.currentTarget);
         mutation.mutate(formData);
     }
-
-    useEffect(() => {
-        suggestion.modifications.forEach(modification => {
-            if(modification.mod.referenceId === curseforgeMod.referenceId) {
-                setIsEnabled(false);
-                return;
-            }
-        })
-    });
 
     return <div className="flex flex-col w-fit items-center justify-center gap-2 p-5 border-b-2 border-white w-full">
         <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
@@ -281,7 +271,7 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
 }
 
 function AddModsDialog() {
-    const {queryClient, modSearchResults} = Route.useLoaderData();
+    const {suggestion, queryClient, modSearchResults} = Route.useLoaderData();
     const {page, searchQuery} = Route.useSearch();
     const [sort, setSort] = useState("0");
     const navigate = useNavigate({from: Route.fullPath});
@@ -354,7 +344,14 @@ function AddModsDialog() {
                     {
                         modSearchResults && modSearchResults.mods.length > 0 ? 
                         modSearchResults?.mods.map((mod: CurseForgeMod, index: number) => {
-                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Add" />
+                            let isEnabled = true;
+                            suggestion.modifications.forEach(modification => {
+                                if(modification.mod.referenceId === mod.referenceId) {
+                                    isEnabled = false;
+                                    console.log(`Disabling ${mod.name} ${isEnabled}`)
+                                }
+                            });
+                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Add" isEnabled={isEnabled} />
                         })
                         :
                         <div className="size-full flex items-center justify-center">
@@ -368,7 +365,7 @@ function AddModsDialog() {
 }
 
 function RemoveModsDialog() {
-    const {modpackModData} = Route.useLoaderData();
+    const {suggestion, modpackModData} = Route.useLoaderData();
 
     return (
         <Dialog>
@@ -403,7 +400,14 @@ function RemoveModsDialog() {
                         }}
                     >
                         {modpackModData?.map((mod: CurseForgeMod, index: number) => {
-                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Remove"/>
+                            let isEnabled = true;
+                            suggestion.modifications.forEach(modification => {
+                                if(modification.mod.referenceId === mod.referenceId) {
+                                    isEnabled = false;
+                                    console.log(`Disabling ${mod.name} ${isEnabled}`)
+                                }
+                            });
+                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Remove" isEnabled={isEnabled}/>
                         })}
                     </div>
                 </div>
