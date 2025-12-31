@@ -13,10 +13,12 @@ export const suggestionSchema = z.object({
     
     username: z.string(),
     userId: z.number(),
+    isOutdated: z.boolean(),
     modpackSlug: z.string(),
     memo: z.string(),
     
     modifications: z.array(modificationSchema),
+    conflictingModifications: z.array(modificationSchema)
 });
 
 export type Suggestion = z.infer<typeof suggestionSchema>

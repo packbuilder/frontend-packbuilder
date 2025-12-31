@@ -31,7 +31,6 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
             throw redirect({to: "/"});
         }
 
-        // TODO: This is the kind of data that should be cached in redis when that is up and running to prevent reaching api rate limit and improve performance
         const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
         const modificationModData = await queryClient.ensureQueryData(
             queryOptions({
@@ -83,6 +82,7 @@ export default function SuggestionView() {
             </div>
         </section>
         
+        {/* TODO: Implement merge functionality for suggestions. Should hit up post route on modpack version controller. Merge button should also still be disabled if there are unresolved conflicts or the suggestion is marked as outdated*/}
         <div className="flex justify-center items-center gap-2">
             {suggestion.userId === curUser?.id ? 
             <BreadCrumbLink link={`suggestion/${username}/${slug}/${suggestionId}/edit`} text="Edit">

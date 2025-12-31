@@ -4,7 +4,7 @@ import type { VersionMod } from "@/types/versionMod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Edit, ExternalLink, Search, X } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
+import { useState, type FormEvent } from "react";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 import { SelectLabel } from "@radix-ui/react-select";
@@ -416,6 +416,7 @@ function RemoveModsDialog() {
     )
 }
 
+// TODO: Add a button somewhere that the user can click on to check for conflicts. That button should hit up the route that verifys the suggestion. Should also invalidate the query for the current suggestion so that tanstack gets the fresh suggestion
 export default function EditSuggestion() {
     const { suggestion, modificationModData } = Route.useLoaderData();
 
