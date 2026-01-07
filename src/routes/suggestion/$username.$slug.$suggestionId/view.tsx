@@ -1,12 +1,14 @@
 import placeholder from "@/Seed-Avatar.jpg"
-import { getCurseForgeModData, getModpack, getSuggestion } from "@/lib/api";
+import { createModpackVersion, getCurseForgeModData, getModpack, getSuggestion } from "@/lib/api";
 import { type Modification } from "@/types/modification";
 import { Button } from "@/components/ui/button";
-import { Check, Edit } from "lucide-react";
+import { Check, CloudAlert, CloudCheck, Edit, TriangleAlert } from "lucide-react";
 import BreadCrumbLink from "@/components/breadcrumb-link";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { queryOptions } from "@tanstack/react-query";
+import { useState } from "react";
+import ToolbarTooltip from "@/components/toolbar-tooltip";
 
 export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/view')({
     loader: async ({context, params}) => {
@@ -34,7 +36,7 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
         const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
         const modificationModData = await queryClient.ensureQueryData(
             queryOptions({
-                queryKey: ["modificationModData"],
+                queryKey: ["modificationModData", suggestionId],
                 queryFn: () => getCurseForgeModData(modificationReferenceIds)
             }),  
         );
@@ -51,22 +53,65 @@ function ModificationDisplay({modification, curseforgeMod} : {modification: Modi
             <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
             <h1 className="text-2xl">{curseforgeMod.name}</h1>
             <h1 className={`${modification.modAction === "Added" ? "bg-emerald-500" : "bg-red-500"} p-2`}>{modification.modAction}</h1>
+            <ToolbarTooltip side="top" content="This modification is conflicting with the latest version of the modpack.">
+                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
+                    <TriangleAlert className="text-black" />
+                </Button>
+            </ToolbarTooltip>
         </div>
     </section>
 }
 
 export default function SuggestionView() {
-    const { suggestion, curUser, modpack, modificationModData } = Route.useLoaderData();
+    const { suggestion, curUser, modpack, modificationModData, queryClient } = Route.useLoaderData();
     const {username, slug, suggestionId} = Route.useParams();
+    const [message, setMessage] = useState("");
+    const router = useRouter();
+
+    console.log(suggestion, modificationModData)
+
+    const mergeSuggestion = async () => {
+        if(suggestion.conflictingModifications.length > 0 || suggestion.isOutdated) {
+            setMessage("Could not merge suggestion. It is either outdated or has conflicts that need to be resolved by the suggestion creator.")
+            return;
+        }
+
+        const latestVersion = await createModpackVersion(username, slug, suggestionId);
+
+        if(!latestVersion) {
+            setMessage("There was a problem with merging this suggestion. Try again later.")
+            return;
+        }
+
+        await queryClient.invalidateQueries({queryKey: ["modpack", slug], exact: true});
+        await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionId], exact: true});
+        await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionId]})
+        await router.invalidate({sync: true});  
+
+        setMessage("This suggestion was successfully merged!")
+    }
 
     return <section className="flex flex-col items-center justify-center gap-4">
-        <div className="flex items-center justify-center gap-4">
+        <header className="flex flex-col items-center justify-center gap-4">
             <img className="cursor-pointer border-white border-2 rounded-[50%] size-20" src={placeholder} alt="" />
-            <div className="flex flex-col items-center justify-center">
-                <h1 className="text-xl font-bold">{suggestion.username + "'s Suggestion"}</h1>
-                <p className="text-md">{suggestion.memo}</p>
+            <div className="flex flex-col items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-1">
+                    <h1 className="text-xl font-bold">{suggestion.username + "'s Suggestion"}</h1>
+                    <div className={`${suggestion.isOutdated ? "" : "hidden"}`}>
+                        <ToolbarTooltip side="top" content="This suggestion is outdated and may contain conflicts">
+                            <CloudAlert className="text-red-500"/>
+                        </ToolbarTooltip>
+                    </div>
+    
+                    <div className={`${suggestion.isOutdated ? "hidden" : ""}`}>
+                        <ToolbarTooltip side="top" content="This suggestion is up to date">
+                            <CloudCheck />
+                        </ToolbarTooltip>
+                    </div>
+                </div>
+                <p className="text-md">{suggestion.memo}</p> 
             </div>
-        </div>
+        </header>
 
         <section className="max-w-5/6 w-fit max-h-1/2 overflow-y-auto overflow-x-clip flex items-start justify-center">
             <div className="flex flex-col justify-start items-start min-w-[300px] h-fit border w-1/2 border-black dark:border-gray-400 bg-gray-700 flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full">
@@ -82,14 +127,15 @@ export default function SuggestionView() {
             </div>
         </section>
         
-        {/* TODO: Implement merge functionality for suggestions. Should hit up post route on modpack version controller. Merge button should also still be disabled if there are unresolved conflicts or the suggestion is marked as outdated*/}
         <div className="flex justify-center items-center gap-2">
             {suggestion.userId === curUser?.id ? 
             <BreadCrumbLink link={`suggestion/${username}/${slug}/${suggestionId}/edit`} text="Edit">
                 <Button variant={"default"}>Edit <Edit /></Button> 
             </BreadCrumbLink>
             : ""}
-            {modpack?.userId === curUser?.id ? <Button variant={"default"}>Merge <Check /></Button> : ""} 
+            {modpack?.userId === curUser?.id || suggestion.isOutdated ? <Button variant={"default"} onClick={mergeSuggestion}>Merge <Check /></Button> : ""} 
+            
+            <h1 className="text-lg font-bold">{message}</h1>
         </div>
     </section>
 }

@@ -1,7 +1,7 @@
 import { createSuggestion, getModpack, getModpackSuggestions } from "@/lib/api";
 import type { Suggestion } from "@/types/suggestion";
 import { Button } from "@/components/ui/button";
-import { Plus, Save} from "lucide-react";
+import { CloudAlert, CloudCheck, FileWarningIcon, FolderX, MessageCircleWarning, MessageCircleWarningIcon, Plus, Save, SquareMinus, SquarePlus, TriangleAlert} from "lucide-react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { Input } from "@/components/ui/input";
 import placeholderAvatar from "@/Seed-Avatar.jpg"
@@ -48,9 +48,11 @@ function SuggestionView({suggestion} : {suggestion: Suggestion}) {
     const {username, slug} = Route.useParams()
     const addedMods = suggestion.modifications.filter(m => m.modAction === "Added");
     const removedMods = suggestion.modifications.filter(m => m.modAction === "Removed");
+
+    console.log(suggestion);
     
     return <BreadCrumbLink 
-        className="duration-100 cursor-pointer relative before:content-[''] before:absolute before:top-0 before:left-[-150%] before:w-[60%] before:h-full before:bg-white before:opacity-40 before:skew-x-[45deg] before:transition-all before:duration-500 before:ease-linear hover:before:left-[180%] hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full rounded overflow-hidden"
+        className="duration-100 cursor-pointer relative before:content-[''] before:absolute before:top-0 before:left-[-150%] before:w-[60%] before:h-full before:bg-white before:opacity-40 before:skew-x-[45deg] before:transition-all before:duration-500 before:ease-linear hover:before:left-[180%] hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full max-w-120 rounded overflow-hidden"
         link={`/suggestion/${username}/${slug}/${suggestion.id}/view`} 
         text={`View`}
         style={{
@@ -69,9 +71,36 @@ function SuggestionView({suggestion} : {suggestion: Suggestion}) {
                     <p className="text-left w-full">{suggestion.memo}</p>
                 </div>
             </div>
-            <div className="flex flex-col items-center justify-center">
-                <h1 className="text-green-400 text-nowrap font-bold">+{addedMods.length}</h1>
-                <h1 className="text-red-400 text-nowrap font-bold">-{removedMods.length}</h1>
+            <div className="flex flex-row items-center justify-center gap-2">
+                <div className={`${suggestion.isOutdated ? "" : "hidden"}`}>
+                    <ToolbarTooltip side="top" content="This suggestion is outdated and may contain conflicts">
+                        <CloudAlert className="text-red-500"/>
+                    </ToolbarTooltip>
+                </div>
+
+                <div className={`${suggestion.isOutdated ? "hidden" : ""}`}>
+                    <ToolbarTooltip side="top" content="This suggestion is up to date">
+                        <CloudCheck />
+                    </ToolbarTooltip>
+                </div>
+
+                <ToolbarTooltip side="top" content="Added mods">
+                    <Button variant={"default"} className="bg-green-500 hover:bg-green-500 text-lg font-bold">
+                        <SquarePlus /> {addedMods.length}
+                    </Button>
+                </ToolbarTooltip>
+
+                <ToolbarTooltip side="top" content="Removed mods">
+                    <Button variant={"default"} className="bg-red-500 hover:bg-red-500 text-lg font-bold">
+                        <SquareMinus /> {removedMods.length}
+                    </Button>
+                </ToolbarTooltip>
+
+                <ToolbarTooltip side="top" content="Conflicts">
+                    <Button variant={"default"} className="bg-yellow-500 hover:bg-yellow-500 text-lg font-bold">
+                        <TriangleAlert /> {suggestion.conflictingModifications.length}
+                    </Button>
+                </ToolbarTooltip>
             </div>
         </div>
     </BreadCrumbLink>

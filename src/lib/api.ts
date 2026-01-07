@@ -11,6 +11,7 @@ import type { Modification } from "@/types/modification";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import Cookies from "js-cookie";
 import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
+import type { Version } from "@/types/version";
 
 const api = useApi();
 
@@ -28,6 +29,25 @@ export async function login(email: string, password: string) {
     try {
         const response = await api.post(`/sessions`, {email, password});
         const data = response.data as string
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function verifySuggestion(suggestionId: number, username: string, slug: string) {
+    const token = getUserToken();
+
+    try {
+        const response = await api.post(`/${username}/modpacks/${slug}/suggestions/${suggestionId}/verify`, null, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = response.data as Suggestion;
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -196,6 +216,25 @@ export async function createModification(username: string, slug: string, suggest
         });
 
         const data = response.data as Modification;
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err);
+        return null;
+    }
+}
+
+export async function createModpackVersion(username: string, slug: string, suggestionId: string) {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.post(`/${username}/modpacks/${slug}/versions/${suggestionId}`, null, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = response.data as Version;
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError

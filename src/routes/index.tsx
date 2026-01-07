@@ -1,8 +1,8 @@
 import ModpackCard from '@/components/modpack-card';
-import { getUserModpacks } from '@/lib/api';
+import { appQueries } from '@/hooks/appQueries';
 import store from '@/store/store';
 import type { Modpack } from '@/types/modpack';
-import { queryOptions } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Plus } from 'lucide-react';
 
@@ -10,17 +10,7 @@ export const Route = createFileRoute("/")({
   loader: async ({
     context: { queryClient, user }
   }) => {
-    
-    if(!user) {
-      return {user, queryClient, modpacks: null}
-    }
-
-    const modpacks = await queryClient.ensureQueryData(
-      queryOptions({
-        queryKey: ["modpacks"],
-        queryFn: () => getUserModpacks(user)
-      })
-    );
+    const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(user));
 
     return {user, modpacks};
   },
@@ -29,7 +19,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
     const { addBreadCrumb } = store();
-    const {modpacks} = Route.useLoaderData();
+    const {user} = Route.useLoaderData();
+    const {data: modpacks} = useSuspenseQuery(appQueries.userModpacks(user));
 
     return <section className="flex flex-col justify-between items-center w-full mx-auto h-full">
         <div className="flex flex-row justify-around items-center mb-10">

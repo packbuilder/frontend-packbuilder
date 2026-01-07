@@ -1,6 +1,6 @@
 import { Edit, ExternalLink, Save, Trash2, Users } from "lucide-react";
 import modpackImage from "@/modpack.gif";
-import { getCurseForgeModData, getModpack, getModReferenceIds, updateModpack } from "@/lib/api";
+import { updateModpack } from "@/lib/api";
 import type { FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
@@ -10,44 +10,25 @@ import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import BreadCrumbLink from "@/components/breadcrumb-link";
-import { createFileRoute, redirect, useLocation, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { Link } from "@tanstack/react-router";
-import { queryOptions, useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { appQueries } from "@/hooks/appQueries";
 
 export const Route = createFileRoute('/modpack/$username/$slug/')({
   loader: async ({context, params}) => {
     const {user, queryClient} = context;
     const {username, slug} = params;
  
-    const modpack = await queryClient.ensureQueryData(
-        queryOptions({
-            queryKey: ["modpack", slug],
-            queryFn: () => getModpack(username, slug)
-        }),  
-    )
+    const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug))
  
     if(!modpack) {
         throw redirect({to: "/"});
     }
  
     const modIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
-    const referenceIds = await queryClient.ensureQueryData(
-        queryOptions({
-            queryKey: ["referenceIds"],
-            queryFn: () => getModReferenceIds(modIds)
-        })
-    )
- 
-    if(!referenceIds) {
-        return {curUser: user, modpack, queryClient, modData: null};
-    }
- 
-    const modData = await queryClient.ensureQueryData(
-        queryOptions({
-            queryKey: ["modData"],
-            queryFn: () => getCurseForgeModData(referenceIds)
-        })
-    )
+    const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
+    const modData = await queryClient.ensureQueryData(appQueries.curseForgeModData(referenceIds));
 
     return {curUser: user, modpack, queryClient, modData}
   },
@@ -67,22 +48,23 @@ function CurseForgeModDisplay({curseforgeMod} : {curseforgeMod: CurseForgeMod}) 
 }
 
 function EditModpackNameDropdown({curName} : {curName: string}) {
-    const {queryClient} = Route.useLoaderData();
+    const {curUser} = Route.useLoaderData();
+    const queryClient = useQueryClient();
     const router = useRouter();
-    const params = Route.useParams();
+    const {username, slug} = Route.useParams();
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const newName = formData.get("newName") as string;
-            await updateModpack(params.username, params.slug, {name: newName})
+            await updateModpack(username, slug, {name: newName})
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["modpack", params.slug],
-                refetchType: "all",
+                queryKey: appQueries.modpack(username, slug).queryKey,
+                refetchType: "all"
             });
             await queryClient.invalidateQueries({
-                queryKey: ["modpacks"],
+                queryKey: appQueries.userModpacks(curUser).queryKey,
                 refetchType: "all"
             });
             await router.invalidate({sync: true});
@@ -118,9 +100,20 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
 
 
 export default function ModpackView() {
-    const { modpack, curUser, modData } = Route.useLoaderData();
+    const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
     const {username, slug} = Route.useParams();
+    const navigate = useNavigate();
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
+
+    if(!modpack) {
+        navigate({to: "/"});
+        return;
+    }
+
+    const modIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
+    const {data: referenceIds} = useSuspenseQuery(appQueries.modReferenceIds(modIds));
+    const {data: modData} = useSuspenseQuery(appQueries.curseForgeModData(referenceIds));
 
     return <section className="flex flex-col items-center justify-center">
         <div className="flex flex-col justify-center items-center mb-4 gap-2">

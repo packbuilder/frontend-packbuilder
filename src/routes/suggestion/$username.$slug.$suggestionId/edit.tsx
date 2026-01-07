@@ -1,9 +1,9 @@
 import { Input } from "@/components/ui/input";
-import { createModification, deleteModification, getCurseForgeModData, getModpack, getModReferenceIds, getSuggestion, searchCurseforgeMods, updateSuggestion } from "@/lib/api";
+import { createModification, deleteModification, getCurseForgeModData, getModpack, getModReferenceIds, getSuggestion, searchCurseforgeMods, updateSuggestion, verifySuggestion } from "@/lib/api";
 import type { VersionMod } from "@/types/versionMod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Edit, ExternalLink, Search, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
@@ -18,6 +18,8 @@ import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tansta
 import { queryOptions, useMutation } from "@tanstack/react-query";
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
 import z from "zod";
+import placeholder from "@/Seed-Avatar.jpg"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -70,7 +72,7 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
 
         const modificationModData = await queryClient.ensureQueryData(
             queryOptions({
-                queryKey: ["modificationModData", modificationReferenceIds],
+                queryKey: ["modificationModData", suggestionId],
                 queryFn: () => getCurseForgeModData(modificationReferenceIds)
             })
         );
@@ -82,7 +84,7 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
             })
         );
 
-        return {curUser: user, suggestion, modpack, modificationModData, modpackModData: modpackModData || [], queryClient, modSearchResults }
+        return {curUser: user, suggestion, modpack, modificationModData, modificationReferenceIds, modpackModData: modpackModData || [], queryClient, modSearchResults }
     },
     component: EditSuggestion,
 });
@@ -123,7 +125,7 @@ function PaginationButtons({ paginationData, curPage } : {
     </div>
 }
 
-function EditMemoForm() {
+function EditMemoDropDown() {
     const {suggestion, queryClient} = Route.useLoaderData();
     const router = useRouter();
     const {username, slug, suggestionId} = Route.useParams();
@@ -153,19 +155,32 @@ function EditMemoForm() {
         const formData = new FormData(event.currentTarget);
         mutation.mutate(formData);
     }
-    
-    return <form id="editMemo" method="post" onSubmit={handleSubmit}>
-        <div className="flex flex-col justify-center items-center">
-            <h1 className="text-4xl font-bold">Edit your memo</h1>
-            <div className="flex items-center justify-center">
-                <Input className="w-full"style={{background: "white", color: "black"}} placeholder="Your message..." defaultValue={suggestion.memo} id="memo" name="memo" required/>
-                <Button type="submit" variant={"default"}><Edit /></Button>
+
+    return <Popover>
+        <ToolbarTooltip content="Edit memo" side="bottom">
+            <PopoverTrigger asChild>
+                <Button variant={"default"}>
+                    <Edit />
+                </Button>
+            </PopoverTrigger>
+        </ToolbarTooltip>
+        <PopoverContent className="p-2 bg-popover rounded-md">
+            <div className="w-fit">
+                <form id="editMemo" method="post" onSubmit={handleSubmit}>
+                    <div className="flex flex-col justify-center items-center">
+                        <h1>Edit memo</h1>
+                        <div className="flex items-center justify-center">
+                            <Input className="w-full"style={{background: "white", color: "black"}} placeholder="Your message..." defaultValue={suggestion.memo} id="memo" name="memo" required/>
+                            <Button type="submit" variant={"default"}><Edit /></Button>
+                        </div>
+                    </div>
+                </form>  
             </div>
-        </div>
-    </form>
+        </PopoverContent>
+    </Popover>
 }
 
-function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean}) {
+function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMessage} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean, disabledMessage: string}) {
     const {queryClient} = Route.useLoaderData();
     const {username, slug, suggestionId} = Route.useParams();
     const router = useRouter();
@@ -188,7 +203,11 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled} : {curseforg
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
-                queryKey: ["modificationModData"],
+                queryKey: ["modpack", slug],
+                refetchType: "all"
+            });
+            await queryClient.invalidateQueries({
+                queryKey: ["modificationModData", suggestionId],
                 refetchType: "all"
             });
             await router.invalidate();
@@ -212,7 +231,7 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled} : {curseforg
             <Input type="hidden" name="modReferenceId" value={curseforgeMod.referenceId}/>
             <Input type="hidden" name="modAction" value={modAction === "Add" ? ModAction.Added : ModAction.Removed} />
             {modAction === "Add" ? <Button type="submit" variant={"default"}>Add Mod</Button> : <Button type="submit" variant={"destructive"}>Remove Mod</Button>}
-        </form> : <Button variant={"outline"}>This mod is in your list of changes</Button>}
+        </form> : <Button variant={"outline"}>{disabledMessage}</Button>}
     </div>
 }
 
@@ -236,7 +255,7 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
-                queryKey: ["modificationModData"],
+                queryKey: ["modificationModData", suggestionId],
                 refetchType: "all"
             });
             await router.invalidate();
@@ -252,10 +271,15 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
         mutation.mutate(formData);
     }
 
-    return <div className="flex flex-row items-center justify-start gap-2 p-5 border-b-2 border-gray-300 w-full">
+    return <div className="flex flex-row items-center justify-start gap-2 p-5 border-b-2 border-gray-300 w-full flex-wrap">
         <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
         <h1 className="text-2xl">{curseforgeMod.name}</h1>
         <h1 className={`${modification.modAction === "Added" ? "bg-emerald-500" : "bg-red-500"} p-2`}>{modification.modAction}</h1>
+        <ToolbarTooltip side="top" content="This modification is conflicting, delete it to resolve the conflict.">
+            <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
+                <TriangleAlert className="text-black" />
+            </Button>
+        </ToolbarTooltip>
         <ToolbarTooltip content="Curseforge link" side="top">
             <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
                 <Button variant={"default"}><ExternalLink /></Button>
@@ -271,8 +295,8 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
 }
 
 function AddModsDialog() {
-    const {suggestion, queryClient, modSearchResults} = Route.useLoaderData();
-    const {page, searchQuery} = Route.useSearch();
+    const {suggestion, queryClient, modSearchResults, modpackModData} = Route.useLoaderData();
+    const {page, searchQuery, sortMethod} = Route.useSearch();
     const [sort, setSort] = useState("0");
     const navigate = useNavigate({from: Route.fullPath});
     const router = useRouter();
@@ -283,7 +307,8 @@ function AddModsDialog() {
         const newSearchQuery = formData.get("searchQuery") as string;
 
         await queryClient.invalidateQueries({
-            queryKey: ["modSearchResults"]
+            queryKey: ["modSearchResults", searchQuery, page, sortMethod],
+            refetchType: "all"
         });
 
         await router.invalidate();
@@ -294,7 +319,7 @@ function AddModsDialog() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-            <Button variant="default">Add mods</Button>
+            <Button variant="green">Add mods</Button>
             </DialogTrigger>
             <DialogContent 
                 className="flex-col items-center justify-center"
@@ -345,13 +370,23 @@ function AddModsDialog() {
                         modSearchResults && modSearchResults.mods.length > 0 ? 
                         modSearchResults?.mods.map((mod: CurseForgeMod, index: number) => {
                             let isEnabled = true;
+                            let disabledMessage = "";
+
                             suggestion.modifications.forEach(modification => {
                                 if(modification.mod.referenceId === mod.referenceId) {
                                     isEnabled = false;
-                                    console.log(`Disabling ${mod.name} ${isEnabled}`)
+                                    disabledMessage = "This mod is already in your list of changes."
                                 }
                             });
-                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Add" isEnabled={isEnabled} />
+
+                            modpackModData.forEach(({referenceId}) => {
+                                if(referenceId === mod.referenceId) {
+                                    isEnabled = false;
+                                    disabledMessage = "This mod has already been added to the modpack."
+                                }
+                            });
+                            
+                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Add" isEnabled={isEnabled} disabledMessage={disabledMessage} />
                         })
                         :
                         <div className="size-full flex items-center justify-center">
@@ -370,7 +405,7 @@ function RemoveModsDialog() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="default">Remove mods</Button>
+                <Button variant="destructive">Remove mods</Button>
             </DialogTrigger>
             <DialogContent 
                 className="flex-col items-center justify-center"
@@ -389,7 +424,7 @@ function RemoveModsDialog() {
                 </DialogHeader>
                 <div className="flex flex-col items-center justify-center">
                     <div 
-                        className="flex flex-col justify-start items-start max-w-5/6 w-fit border border-white flex flex-col overflow-y-auto overflow-x-clip" 
+                        className="flex flex-col justify-start items-start max-w-5/6 w-fit border border-white flex flex-col overflow-y-auto overflow-x-clip h-96" 
                         style={{
                             background:"rgba(255, 255, 255, 0.2)",
                             borderRadius: "16px",
@@ -401,13 +436,15 @@ function RemoveModsDialog() {
                     >
                         {modpackModData?.map((mod: CurseForgeMod, index: number) => {
                             let isEnabled = true;
+                            let disabledMessage = "";
                             suggestion.modifications.forEach(modification => {
                                 if(modification.mod.referenceId === mod.referenceId) {
                                     isEnabled = false;
+                                    disabledMessage = "This mod is already in your list of changes."
                                     console.log(`Disabling ${mod.name} ${isEnabled}`)
                                 }
                             });
-                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Remove" isEnabled={isEnabled}/>
+                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Remove" isEnabled={isEnabled} disabledMessage={disabledMessage}/>
                         })}
                     </div>
                 </div>
@@ -416,19 +453,61 @@ function RemoveModsDialog() {
     )
 }
 
-// TODO: Add a button somewhere that the user can click on to check for conflicts. That button should hit up the route that verifys the suggestion. Should also invalidate the query for the current suggestion so that tanstack gets the fresh suggestion
+
 export default function EditSuggestion() {
-    const { suggestion, modificationModData } = Route.useLoaderData();
+    const { suggestion, modificationModData, queryClient } = Route.useLoaderData();
+    const {username, slug, suggestionId} = Route.useParams();
+    const router = useRouter();
+
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const verifiedSuggestion = await verifySuggestion(suggestion.id, username, slug);
+
+            if(!verifiedSuggestion) {
+                throw new Error("Problem with verifying suggestion.");
+            }
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ["suggestion", suggestionId],
+                refetchType: "all",
+            });
+            await queryClient.invalidateQueries({
+                queryKey: ["modificationModData", suggestionId],
+                refetchType: "all"
+            });
+            await router.invalidate();
+        },
+        onError: (error) => {
+            console.error(error.message);
+        }
+    });
 
     return <section className="pb-4">
-        <EditMemoForm />
-        <div className="flex flex-col items-center justify-center">
-            <h1 className="text-4xl font-bold">Your changes</h1>
-            <div className="flex flex-row items-center justify-center gap-2">
-                <AddModsDialog />
-                <RemoveModsDialog />
+        <header className="flex flex-col items-center justify-center gap-4">
+            <img className="cursor-pointer border-white border-2 rounded-[50%] size-20" src={placeholder} alt="" />
+            <div className="flex flex-col items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-1">
+                    <h1 className="text-xl font-bold">{suggestion.username + "'s Suggestion"}</h1>
+                    <div className={`${suggestion.isOutdated ? "" : "hidden"}`}>
+                        <ToolbarTooltip side="top" content="This suggestion is outdated and may contain conflicts">
+                            <CloudAlert className="text-red-500"/>
+                        </ToolbarTooltip>
+                    </div>
+    
+                    <div className={`${suggestion.isOutdated ? "hidden" : ""}`}>
+                        <ToolbarTooltip side="top" content="This suggestion is up to date">
+                            <CloudCheck />
+                        </ToolbarTooltip>
+                    </div>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                    <p className="text-md">{suggestion.memo}</p> <EditMemoDropDown />
+                </div>
             </div>
-            <section className="max-w-5/6 w-fit max-h-1/2 overflow-y-auto overflow-x-clip flex items-start justify-center">
+        </header>
+        <div className="flex flex-col items-center justify-center">
+            <section className="max-w-5/6 w-fit max-h-1/2 overflow-y-auto overflow-x-clip flex items-start flex-col gap-4 justify-center">
                 <div className="flex flex-col justify-start items-start min-w-[300px] h-fit border w-1/2 border-black dark:border-gray-400 bg-gray-700 flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full">
                     {suggestion.modifications?.map((modification, index) => {
                         const modData = modificationModData?.find(modData => modification.mod.referenceId === modData.referenceId);
@@ -439,6 +518,14 @@ export default function EditSuggestion() {
 
                         return <ModificationDisplay curseforgeMod={modData} modification={modification} key={index} />;
                     })}
+                </div>
+
+                <div className="flex items-center justify-center gap-2 w-full">
+                    <AddModsDialog />
+                    <RemoveModsDialog />
+                    <Button className="self-end" variant={"default"} onClick={() => mutation.mutate()}>
+                        Check for conflicts <CloudCog />
+                    </Button>
                 </div>
             </section>
         </div>
