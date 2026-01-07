@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { createModification, deleteModification, getCurseForgeModData, getModpack, getModReferenceIds, getSuggestion, searchCurseforgeMods, updateSuggestion, verifySuggestion } from "@/lib/api";
+import { createModification, deleteModification, updateSuggestion, verifySuggestion } from "@/lib/api";
 import type { VersionMod } from "@/types/versionMod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,13 @@ import { ModPlatform } from "@/types/mod";
 import { createModificationDtoSchema } from "@/types/dtos/createModificationDto";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
-import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tanstack/react-router'
-import { queryOptions, useMutation } from "@tanstack/react-query";
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
 import z from "zod";
 import placeholder from "@/Seed-Avatar.jpg"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { appQueries } from "@/hooks/appQueries";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -35,54 +36,20 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
         sortMethod
     }),
     loader: async ({context: {user, queryClient}, params: {username, slug, suggestionId}, deps: {searchQuery, page, sortMethod}}) => {
-        const suggestion = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["suggestion", suggestionId],
-                queryFn: () => getSuggestion(username, slug, suggestionId)
-            })
-        );
-
-        const modpack = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modpack", slug],
-                queryFn: () => getModpack(username, slug)
-            })
-        );
+        const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(username, slug, suggestionId));
+        const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug));
         
         if(!suggestion || !modpack || user?.id !== suggestion.userId) {
             throw redirect({to:"/"});
         }
 
         const modpackModIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
-
         const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
-        const modpackReferenceIds = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modpackReferenceIds", modpackModIds],
-                queryFn: () => getModReferenceIds(modpackModIds)
-            })
-        );
-        
-        const modpackModData = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modpackModData", modpackReferenceIds],
-                queryFn: () => getCurseForgeModData(modpackReferenceIds || [])
-            })
-        );
 
-        const modificationModData = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modificationModData", suggestionId],
-                queryFn: () => getCurseForgeModData(modificationReferenceIds)
-            })
-        );
-
-        const modSearchResults = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modSearchResults", searchQuery, page, sortMethod],
-                queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod)
-            })
-        );
+        const modpackReferenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modpackModIds));
+        const modpackModData = await queryClient.ensureQueryData(appQueries.modpackModData(modpackReferenceIds));
+        const modificationModData = await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+        const modSearchResults = await queryClient.ensureQueryData(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
 
         return {curUser: user, suggestion, modpack, modificationModData, modificationReferenceIds, modpackModData: modpackModData || [], queryClient, modSearchResults }
     },
@@ -95,13 +62,11 @@ function PaginationButtons({ paginationData, curPage } : {
 }) {
     const {resultCount, pageSize } = paginationData;
     const navigate = useNavigate({from: Route.fullPath});
-    const router = useRouter();
     
     const nextPage = async () => {
         if(resultCount !== pageSize) {
             return;
         }
-        await router.invalidate();
         navigate({search: (prev) => ({page: prev.page + 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
     }
 
@@ -109,7 +74,6 @@ function PaginationButtons({ paginationData, curPage } : {
         if(curPage - 1 < 0) {
             return;
         }
-        await router.invalidate();
         navigate({search: (prev) => ({page: prev.page - 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
     }
 
@@ -126,9 +90,9 @@ function PaginationButtons({ paginationData, curPage } : {
 }
 
 function EditMemoDropDown() {
-    const {suggestion, queryClient} = Route.useLoaderData();
-    const router = useRouter();
     const {username, slug, suggestionId} = Route.useParams();
+    const queryClient = useQueryClient();
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -140,10 +104,9 @@ function EditMemoDropDown() {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["suggestion", suggestionId],
+                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
                 refetchType: "all",
             });
-            await router.invalidate();
         },
         onError: (error) => {
             console.error(error.message);
@@ -170,7 +133,7 @@ function EditMemoDropDown() {
                     <div className="flex flex-col justify-center items-center">
                         <h1>Edit memo</h1>
                         <div className="flex items-center justify-center">
-                            <Input className="w-full"style={{background: "white", color: "black"}} placeholder="Your message..." defaultValue={suggestion.memo} id="memo" name="memo" required/>
+                            <Input className="w-full"style={{background: "white", color: "black"}} placeholder="Your message..." defaultValue={suggestion?.memo} id="memo" name="memo" required/>
                             <Button type="submit" variant={"default"}><Edit /></Button>
                         </div>
                     </div>
@@ -181,9 +144,10 @@ function EditMemoDropDown() {
 }
 
 function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMessage} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean, disabledMessage: string}) {
-    const {queryClient} = Route.useLoaderData();
     const {username, slug, suggestionId} = Route.useParams();
-    const router = useRouter();
+    const queryClient = useQueryClient();
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
+    const modificationReferenceIds = suggestion ? suggestion.modifications.map(modification => modification.mod.referenceId) : null;
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -199,18 +163,17 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMess
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["suggestion", suggestionId],
+                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
-                queryKey: ["modpack", slug],
+                queryKey: appQueries.modpack(username, slug).queryKey,
                 refetchType: "all"
             });
             await queryClient.invalidateQueries({
-                queryKey: ["modificationModData", suggestionId],
+                queryKey: appQueries.modificationModData(suggestionId, modificationReferenceIds).queryKey,
                 refetchType: "all"
             });
-            await router.invalidate();
         },
         onError: (error) => {
             console.error(error.message);
@@ -236,9 +199,10 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMess
 }
 
 function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: CurseForgeMod, modification: Modification}) {
-    const {queryClient} = Route.useLoaderData();
     const {username, slug, suggestionId} = Route.useParams();
-    const router = useRouter();
+    const queryClient = useQueryClient();
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
+    const modificationReferenceIds = suggestion ? suggestion.modifications.map(modification => modification.mod.referenceId) : null;
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -251,14 +215,13 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["suggestion", suggestionId],
+                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
-                queryKey: ["modificationModData", suggestionId],
+                queryKey: appQueries.modificationModData(suggestionId, modificationReferenceIds).queryKey,
                 refetchType: "all"
             });
-            await router.invalidate();
         },
         onError: (error) => {
             console.error(error.message);
@@ -295,11 +258,18 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
 }
 
 function AddModsDialog() {
-    const {suggestion, queryClient, modSearchResults, modpackModData} = Route.useLoaderData();
+    const {username, slug, suggestionId} = Route.useParams();
     const {page, searchQuery, sortMethod} = Route.useSearch();
     const [sort, setSort] = useState("0");
     const navigate = useNavigate({from: Route.fullPath});
-    const router = useRouter();
+    const queryClient = useQueryClient();
+
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
+    const modpackModIds = modpack!.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
+    const {data: modpackReferenceIds} = useSuspenseQuery(appQueries.modReferenceIds(modpackModIds));
+    const {data: modpackModData} = useSuspenseQuery(appQueries.modpackModData(modpackReferenceIds));
+    const {data: modSearchResults} = useSuspenseQuery(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -307,11 +277,9 @@ function AddModsDialog() {
         const newSearchQuery = formData.get("searchQuery") as string;
 
         await queryClient.invalidateQueries({
-            queryKey: ["modSearchResults", searchQuery, page, sortMethod],
+            queryKey: appQueries.curseForgeSearchResults(searchQuery, page, sortMethod).queryKey,
             refetchType: "all"
         });
-
-        await router.invalidate();
 
         navigate({search: () => ({page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
     }
@@ -355,7 +323,7 @@ function AddModsDialog() {
                                 <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search mods..." defaultValue={searchQuery} required/>
                                 <Button variant={"default"} type="submit"><Search/></Button>
                             </div>
-                            {/* put error message here */}
+                            {/* TODO: put error message here */}
                             <div>{}</div>
                         </div>
                     </form>
@@ -372,14 +340,14 @@ function AddModsDialog() {
                             let isEnabled = true;
                             let disabledMessage = "";
 
-                            suggestion.modifications.forEach(modification => {
+                            suggestion?.modifications.forEach(modification => {
                                 if(modification.mod.referenceId === mod.referenceId) {
                                     isEnabled = false;
                                     disabledMessage = "This mod is already in your list of changes."
                                 }
                             });
 
-                            modpackModData.forEach(({referenceId}) => {
+                            modpackModData?.forEach(({referenceId}) => {
                                 if(referenceId === mod.referenceId) {
                                     isEnabled = false;
                                     disabledMessage = "This mod has already been added to the modpack."
@@ -400,7 +368,12 @@ function AddModsDialog() {
 }
 
 function RemoveModsDialog() {
-    const {suggestion, modpackModData} = Route.useLoaderData();
+    const {username, slug, suggestionId} = Route.useParams();
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
+    const modpackModIds = modpack!.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
+    const {data: modpackReferenceIds} = useSuspenseQuery(appQueries.modReferenceIds(modpackModIds));
+    const {data: modpackModData} = useSuspenseQuery(appQueries.modpackModData(modpackReferenceIds));
 
     return (
         <Dialog>
@@ -437,7 +410,7 @@ function RemoveModsDialog() {
                         {modpackModData?.map((mod: CurseForgeMod, index: number) => {
                             let isEnabled = true;
                             let disabledMessage = "";
-                            suggestion.modifications.forEach(modification => {
+                            suggestion!.modifications.forEach(modification => {
                                 if(modification.mod.referenceId === mod.referenceId) {
                                     isEnabled = false;
                                     disabledMessage = "This mod is already in your list of changes."
@@ -453,11 +426,21 @@ function RemoveModsDialog() {
     )
 }
 
-
 export default function EditSuggestion() {
-    const { suggestion, modificationModData, queryClient } = Route.useLoaderData();
     const {username, slug, suggestionId} = Route.useParams();
-    const router = useRouter();
+    const queryClient = useQueryClient();
+    const navigate = useNavigate();
+
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
+    
+    if(!suggestion || !modpack) {
+        navigate({to: "/"});
+        return;
+    }
+
+    const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
+    const {data: modificationModData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
     const mutation = useMutation({
         mutationFn: async () => {
@@ -469,14 +452,14 @@ export default function EditSuggestion() {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ["suggestion", suggestionId],
+                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
-                queryKey: ["modificationModData", suggestionId],
+                queryKey: appQueries.modificationModData(suggestionId, modificationReferenceIds).queryKey,
                 refetchType: "all"
             });
-            await router.invalidate();
+            // TODO: Give feedback to user that the suggestion was checked and has no conflicts!
         },
         onError: (error) => {
             console.error(error.message);

@@ -1,7 +1,7 @@
-import { createSuggestion, getModpack, getModpackSuggestions } from "@/lib/api";
+import { createSuggestion } from "@/lib/api";
 import type { Suggestion } from "@/types/suggestion";
 import { Button } from "@/components/ui/button";
-import { CloudAlert, CloudCheck, FileWarningIcon, FolderX, MessageCircleWarning, MessageCircleWarningIcon, Plus, Save, SquareMinus, SquarePlus, TriangleAlert} from "lucide-react";
+import { CloudAlert, CloudCheck, Plus, Save, SquareMinus, SquarePlus, TriangleAlert} from "lucide-react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { Input } from "@/components/ui/input";
 import placeholderAvatar from "@/Seed-Avatar.jpg"
@@ -9,8 +9,9 @@ import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger  } from
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { useState, type FormEvent } from "react";
 import BreadCrumbLink from "@/components/breadcrumb-link"; 
-import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
-import { queryOptions, useMutation } from "@tanstack/react-query";
+import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { appQueries } from "@/hooks/appQueries";
 
 export const Route = createFileRoute('/modpack/$username/$slug/suggestions')({
     loader: async ({context, params}) => {
@@ -21,23 +22,13 @@ export const Route = createFileRoute('/modpack/$username/$slug/suggestions')({
             throw redirect({to: "/"});
         }
 
-        const modpack = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modpack", slug],
-                queryFn: () => getModpack(username, slug)
-            }),  
-        )
-
+        const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug));
+        
         if(!modpack) {
             throw redirect({to: "/"});
         }
 
-        const suggestions = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modpackSuggestions"],
-                queryFn: () => getModpackSuggestions(username, slug)
-            }),  
-        )
+        const suggestions = await queryClient.ensureQueryData(appQueries.modpackSuggestions(username, slug));
 
         return {curUser: user, modpack, suggestions, queryClient}
     },
@@ -48,11 +39,9 @@ function SuggestionView({suggestion} : {suggestion: Suggestion}) {
     const {username, slug} = Route.useParams()
     const addedMods = suggestion.modifications.filter(m => m.modAction === "Added");
     const removedMods = suggestion.modifications.filter(m => m.modAction === "Removed");
-
-    console.log(suggestion);
     
     return <BreadCrumbLink 
-        className="duration-100 cursor-pointer relative before:content-[''] before:absolute before:top-0 before:left-[-150%] before:w-[60%] before:h-full before:bg-white before:opacity-40 before:skew-x-[45deg] before:transition-all before:duration-500 before:ease-linear hover:before:left-[180%] hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full max-w-120 rounded overflow-hidden"
+        className="duration-100 cursor-pointer relative hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full max-w-120 rounded overflow-hidden"
         link={`/suggestion/${username}/${slug}/${suggestion.id}/view`} 
         text={`View`}
         style={{
@@ -108,10 +97,9 @@ function SuggestionView({suggestion} : {suggestion: Suggestion}) {
 
 function CreateSuggestionDialog() {
     const [isOpen, setOpen] = useState(false);
-    const {queryClient} = Route.useLoaderData();
+    const queryClient = useQueryClient();
     const {username, slug} = Route.useParams();
     const router = useRouter();
-    const navigate = useNavigate();
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -127,13 +115,15 @@ function CreateSuggestionDialog() {
         },
         onSuccess: async (data) => {
             await queryClient.invalidateQueries({
-                queryKey: ["modpackSuggestions"],
+                queryKey: appQueries.modpackSuggestions(username, slug).queryKey,
                 refetchType: "all"
             });
 
             await router.invalidate({sync: true});
+
+            console.log(data);
             
-            navigate({to:`suggestion/${username}/${slug}/${data.id}/edit`, from: "/"});
+            // navigate({to:`suggestion/${username}/${slug}/${data.id}/edit`, from: "/"});
         },
         onError: (error) => {
             console.error(error.message)
@@ -172,18 +162,14 @@ function CreateSuggestionDialog() {
 }
 
 export default function ModpackSuggestions() {
-    const {suggestions, curUser} = Route.useLoaderData();
-
-    if(!suggestions) {
-        return <div>
-            Data not found.
-        </div>
-    }
+    const {curUser} = Route.useLoaderData();
+    const {username, slug} = Route.useParams();
+    const {data: suggestions} = useSuspenseQuery(appQueries.modpackSuggestions(username, slug));
 
     return <section className="flex flex-col justify-center items-center gap-5">
         <h1 className="text-5xl font-bold">Suggestions</h1>
         <div className="flex flex-col items-center justify-center gap-2 w-3/4">
-            {suggestions.length === 0 ?  
+            {!suggestions || suggestions.length === 0 ?  
                 <h1>
                     There are currently no suggestions for this modpack.
                 </h1>

@@ -28,7 +28,7 @@ export const Route = createFileRoute('/modpack/$username/$slug/')({
  
     const modIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
-    const modData = await queryClient.ensureQueryData(appQueries.curseForgeModData(referenceIds));
+    const modData = await queryClient.ensureQueryData(appQueries.modpackModData(referenceIds));
 
     return {curUser: user, modpack, queryClient, modData}
   },
@@ -113,7 +113,7 @@ export default function ModpackView() {
 
     const modIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const {data: referenceIds} = useSuspenseQuery(appQueries.modReferenceIds(modIds));
-    const {data: modData} = useSuspenseQuery(appQueries.curseForgeModData(referenceIds));
+    const {data: modData} = useSuspenseQuery(appQueries.modpackModData(referenceIds));
 
     return <section className="flex flex-col items-center justify-center">
         <div className="flex flex-col justify-center items-center mb-4 gap-2">

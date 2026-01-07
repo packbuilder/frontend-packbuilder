@@ -1,4 +1,4 @@
-import { getCurseForgeModData, getModpack, getModReferenceIds, getSuggestion, getUserModpacks } from "@/lib/api";
+import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, getUserModpacks, searchCurseforgeMods } from "@/lib/api";
 import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -24,11 +24,25 @@ export const appQueries = {
         queryFn: () => getModReferenceIds(modIds)
     }),
 
-    curseForgeModData: (referenceIds: string[] | null) => queryOptions({
-        queryKey: referenceIds ? ["modData", referenceIds] : ["modData", []],
+    modpackModData: (referenceIds: string[] | null) => queryOptions({
+        queryKey: referenceIds ? ["modpackModData", referenceIds] : ["modpackModData", []],
         queryFn: () => getCurseForgeModData(referenceIds!),
         enabled: !!referenceIds
     }),
 
-    
+    modpackSuggestions: (username: string, slug: string) => queryOptions({
+        queryKey: ["modpackSuggestions", slug],
+        queryFn: () => getModpackSuggestions(username, slug)
+    }),  
+
+    modificationModData: (suggestionId: string, modificationReferenceIds: string[] | null) => queryOptions({
+        queryKey: ["modificationModData", suggestionId],
+        queryFn: () => getCurseForgeModData(modificationReferenceIds!),
+        enabled: !!modificationReferenceIds
+    }),
+
+    curseForgeSearchResults: (searchQuery: string, page: number, sortMethod: "0" | "1" | "2" | "3") => queryOptions({
+        queryKey: ["modSearchResults", searchQuery, page, sortMethod],
+        queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod)
+    })
 };

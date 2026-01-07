@@ -6,40 +6,25 @@ import { Check, CloudAlert, CloudCheck, Edit, TriangleAlert } from "lucide-react
 import BreadCrumbLink from "@/components/breadcrumb-link";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
+import { appQueries } from "@/hooks/appQueries";
 
 export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/view')({
     loader: async ({context, params}) => {
         const {user, queryClient} = context;
         const {username, slug, suggestionId} = params;
 
-        const suggestion = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["suggestion", suggestionId],
-                queryFn: () => getSuggestion(username, slug, suggestionId)
-            })
-        );
-
-        const modpack = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modpack", slug],
-                queryFn: () => getModpack(username, slug)
-            }),  
-        );
+        const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(username, slug, suggestionId));
+        const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug));
 
         if(!suggestion) {
             throw redirect({to: "/"});
         }
 
         const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
-        const modificationModData = await queryClient.ensureQueryData(
-            queryOptions({
-                queryKey: ["modificationModData", suggestionId],
-                queryFn: () => getCurseForgeModData(modificationReferenceIds)
-            }),  
-        );
+        const modificationModData = await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
         return {curUser: user, suggestion, modpack, modificationModData: modificationModData || [], queryClient};
 
@@ -63,11 +48,22 @@ function ModificationDisplay({modification, curseforgeMod} : {modification: Modi
 }
 
 export default function SuggestionView() {
-    const { suggestion, curUser, modpack, modificationModData, queryClient } = Route.useLoaderData();
+    const { curUser } = Route.useLoaderData();
     const {username, slug, suggestionId} = Route.useParams();
+    const queryClient = useQueryClient();
     const [message, setMessage] = useState("");
     const router = useRouter();
-
+    const navigate = useNavigate();
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
+    const modificationReferenceIds = suggestion ? suggestion.modifications.map(modification => modification.mod.referenceId) : null;
+    const {data: modificationModData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+    
+    if(!suggestion || !modpack) {
+        navigate({to: "/"});
+        return;
+    }
+    
     console.log(suggestion, modificationModData)
 
     const mergeSuggestion = async () => {
@@ -116,7 +112,7 @@ export default function SuggestionView() {
         <section className="max-w-5/6 w-fit max-h-1/2 overflow-y-auto overflow-x-clip flex items-start justify-center">
             <div className="flex flex-col justify-start items-start min-w-[300px] h-fit border w-1/2 border-black dark:border-gray-400 bg-gray-700 flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full">
                 {suggestion.modifications.map((modification, index) => {
-                    const modData = modificationModData.find(modData => modification.mod.referenceId === modData.referenceId);
+                    const modData = modificationModData?.find(modData => modification.mod.referenceId === modData.referenceId);
 
                     if(!modData) {
                         return <div>Error fetching mod data for modification</div>
