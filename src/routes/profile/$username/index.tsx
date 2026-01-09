@@ -1,35 +1,46 @@
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
-import pfp from "../../Seed-Avatar.jpg"
+import pfp from "@/Seed-Avatar.jpg"
 import { Button } from "@/components/ui/button";
-import { Edit, LogOut, X } from "lucide-react";
+import { Edit, X } from "lucide-react";
 import Cookies from "js-cookie";
 import { updateProfileDtoSchema } from "@/types/dtos/updateProfileDto";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRef, useState, type FormEvent } from "react";
 import { updateProfile } from '@/lib/api';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
+import { appQueries } from '@/hooks/appQueries';
+import type { Modpack } from '@/types/modpack';
+import {ModpackCardCompact} from '@/components/modpack-card';
+import type { User } from '@/types/user';
+import type { Suggestion } from '@/types/suggestion';
+import SuggestionCard from '@/components/suggestion-card';
 
-export const Route = createFileRoute('/profile/')({
-  loader: ({context}) => {
-    const {user, queryClient} = context;
-
-    if(!user) {
-      throw redirect({to: "/login"})
+export const Route = createFileRoute('/profile/$username/')({
+  loader: async ({context, params}) => {
+    const {user: curUser, queryClient} = context;
+    const {username} = params;
+    const userData = await queryClient.ensureQueryData(appQueries.userData(username));
+    
+    if(!userData) {
+      throw redirect({to:"/"});
     }
 
-    return {user, queryClient}
+    const userModpacks = await queryClient.ensureQueryData(appQueries.userModpacks(userData));
+    const userSuggestions = await queryClient.ensureQueryData(appQueries.userSuggestions(userData));
+
+    return {curUser, userData, userModpacks, userSuggestions, queryClient}
   },
-  component: ProfileEdit,
+  component: ProfileView,
 });
 
-export default function ProfileEdit() {
-    const {user} = Route.useLoaderData();
-    const [hideForm, setHideForm] = useState(true);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
-    const navigate = useNavigate({from: "/"});
-    const router = useRouter();
-    const formRef = useRef(null);
+function ProfileEdit() {
+  const {curUser} = Route.useLoaderData();
+  const [hideForm, setHideForm] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const navigate = useNavigate({from: "/"});
+  const router = useRouter();
+  const formRef = useRef(null);
 
     const handleLogout = async () => {
       Cookies.remove("_packbuilder_jwt");
@@ -58,7 +69,7 @@ export default function ProfileEdit() {
         }
 
         const updateUserDto = updateProfileDtoSchema.parse({ name: newName, email, password: password.length > 0 ? password : null });
-        const updatedProfile = await updateProfile(user.name, updateUserDto);
+        const updatedProfile = await updateProfile(curUser!.name, updateUserDto);
 
         if(!updatedProfile) {
           throw new Error("There was a problem with updating your profile information, please try again.")
@@ -80,9 +91,9 @@ export default function ProfileEdit() {
     // TODO: Maybe display total number of modpacks or something else to fill the void
     return <section className="flex flex-col justify-center items-center">
         <div className="flex flex-col justify-center items-center mb-4">
-            <img className="rounded-full w-24" alt={user.avatar} src={pfp} />
+            <img className="rounded-full w-40 border-white border-2" alt={curUser!.avatar} src={pfp} />
             <div className={`flex flex-col items-center justify-center ${hideForm ? "" : "hidden"}`}>
-                <h1 className="font-bold text-2xl m-2">{user.name}'s profile</h1>
+                <h1 className="font-bold text-2xl m-2">{curUser!.name}'s profile</h1>
             </div>
         </div>
         <form ref={formRef} onSubmit={handleSubmit} className={`${hideForm ? "hidden" : ""} mb-4`} id={"profile-edit"} method="post">
@@ -97,7 +108,7 @@ export default function ProfileEdit() {
                         className="w-full"
                         style={{background: "white", color: "black"}} 
                         placeholder="New username..." 
-                        defaultValue={user.name}
+                        defaultValue={curUser!.name}
                         id={"username"}
                         name={"username"}
                     />
@@ -110,7 +121,7 @@ export default function ProfileEdit() {
                         className="w-full"
                         style={{background: "white", color: "black"}} 
                         placeholder="New email..."
-                        defaultValue={user.email}
+                        defaultValue={curUser!.email}
                         id={"email"}
                         name={"email"}
                     />
@@ -148,7 +159,95 @@ export default function ProfileEdit() {
         <div className="flex items-center justify-center gap-2">
             <Button type="submit" variant={"default"} className={`${hideForm ? "hidden" : ""}`} onClick={() => submitForm()}>Save changes<Edit /></Button>
             <Button variant={"destructive"} className={`${hideForm ? "hidden" : ""}`} onClick={() => setHideForm(true)}>Cancel<X/></Button>
-            <Button variant={"default"} className={`${hideForm ? "" : "hidden"}`} onClick={() => setHideForm(false)}>Edit <Edit/></Button>
+            <Button variant={"default"} className={`${hideForm ? "" : "hidden"} w-full`} onClick={() => setHideForm(false)}>Edit Profile<Edit/></Button>
         </div>
     </section>
+}
+
+function UserModpacksDisplay({userModpacks, user} : {userModpacks: Modpack[] | null, user: User}) {
+
+  if(!userModpacks) {
+    return (
+      <div>
+        <h1>This user has not created any modpacks</h1>
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex flex-col items-center justify-center'>
+      <h1 className="font-bold text-2xl m-2">{user.name}'s modpacks</h1>
+      <div className='flex flex-wrap items-center justify-center'>
+        {userModpacks.map((modpack, index) => {
+          return (
+            <ModpackCardCompact modpack={modpack} key={index} />
+          )
+        })}
+      </div>
+    </div>
+  )
+
+}
+
+function UserSuggestionsDisplay({userSuggestions, user} : {userSuggestions: Suggestion[] | null, user: User}) {
+
+  if(!userSuggestions) {
+    return (
+      <div>
+        This user has not created any suggestions.
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex items-center justify-center flex-col w-full'>
+      <h1 className="font-bold text-2xl m-2">{user.name}'s suggestions</h1>
+      <div className='flex items-center justify-center flex-wrap'>
+        {userSuggestions.map((suggestion, index) => {
+          return (
+            <SuggestionCard suggestion={suggestion} key={index} />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export default function ProfileView() {
+  const {curUser} = Route.useLoaderData();
+  const {username} = Route.useParams();
+  const {data: user} = useSuspenseQuery(appQueries.userData(username));
+  const {data: userModpacks} = useSuspenseQuery(appQueries.userModpacks(user));
+  const {data: userSuggestions} = useSuspenseQuery(appQueries.userSuggestions(user));
+
+  if(!user) {
+    return (
+      <div>
+        <h1>This profile does not exist.</h1>
+      </div>
+    )
+  }
+
+
+  return (
+    <section className='flex flex-wrap gap-4 items-center justify-center'>
+      <div className='flex items-center justify-end'>
+        {curUser?.id === user.id ? <ProfileEdit />
+          :
+          <div className="flex flex-col justify-center items-center mb-4">
+            <img className="rounded-full w-40 border-white border-2" alt={curUser!.avatar} src={pfp} />
+            <div className={`flex flex-col items-center justify-center`}>
+                <h1 className="font-bold text-2xl m-2">{curUser!.name}'s profile</h1>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div className="flex flex-col items-center justify-center gap-4">
+        <UserSuggestionsDisplay userSuggestions={userSuggestions} user={user} />
+        <UserModpacksDisplay userModpacks={userModpacks} user={user} />
+      </div>
+      
+    </section>
+  );
 }

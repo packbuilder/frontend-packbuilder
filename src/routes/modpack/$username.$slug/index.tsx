@@ -79,7 +79,7 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
     
     return (
         <Popover>
-            <ToolbarTooltip content="Change name" side="bottom">
+            <ToolbarTooltip content="Change name" side="top">
                 <PopoverTrigger asChild>
                     <Button variant={"default"}>
                         <Edit />
@@ -118,20 +118,18 @@ export default function ModpackView() {
     return <section className="flex flex-col items-center justify-center">
         <div className="flex flex-col justify-center items-center mb-4 gap-2">
             <img src={modpackImage} alt="Modpack logo" className="bg-black aspect-square w-28 h-28 md:w-40 md:h-40" />
-            <h1 className="text-5xl font-bold">{modpack.name}</h1>
-            <div className="flex flex-row items-center justify-center gap-2">
+            <div className="flex items-end justify-center gap-2">
+                <h1 className="text-5xl font-bold">{modpack.name}</h1>
                 {curUser ? <EditModpackNameDropdown curName={modpack.name}/> : ""}
-                <CopyButton text={pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />
+            </div>
+            <div className="flex flex-row items-center justify-center gap-2">
+                <CopyButton text={"http:localhost:3000" + pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />
                 <BreadCrumbLink link={`modpack/${username}/${slug}/suggestions`} text="Suggestions">
-                    <ToolbarTooltip content="Suggestions">
-                        <Button variant={"default"}>
-                            <Users />
-                        </Button>
-                    </ToolbarTooltip>
+                    <Button variant={"default"}>
+                        Suggestions <Users />
+                    </Button>
                 </BreadCrumbLink>
-                <ToolbarTooltip content="Delete Modpack">
-                    <Button variant={"destructive"}><Trash2 /></Button>
-                </ToolbarTooltip>
+                <Button variant={"destructive"}>Delete <Trash2 /></Button>
             </div>
         </div>
 

@@ -487,6 +487,13 @@ export default function EditSuggestion() {
                 <div className="flex items-center justify-center gap-2">
                     <p className="text-md">{suggestion.memo}</p> <EditMemoDropDown />
                 </div>
+                <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+                    <AddModsDialog />
+                    <RemoveModsDialog />
+                    <Button className="self-end" variant={"default"} onClick={() => mutation.mutate()}>
+                        Check for conflicts <CloudCog />
+                    </Button>
+                </div>
             </div>
         </header>
         <div className="flex flex-col items-center justify-center">
@@ -501,14 +508,6 @@ export default function EditSuggestion() {
 
                         return <ModificationDisplay curseforgeMod={modData} modification={modification} key={index} />;
                     })}
-                </div>
-
-                <div className="flex items-center justify-center gap-2 w-full">
-                    <AddModsDialog />
-                    <RemoveModsDialog />
-                    <Button className="self-end" variant={"default"} onClick={() => mutation.mutate()}>
-                        Check for conflicts <CloudCog />
-                    </Button>
                 </div>
             </section>
         </div>

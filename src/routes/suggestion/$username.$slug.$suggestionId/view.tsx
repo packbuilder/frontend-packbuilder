@@ -106,6 +106,16 @@ export default function SuggestionView() {
                     </div>
                 </div>
                 <p className="text-md">{suggestion.memo}</p> 
+                <div className="flex justify-center items-center gap-2">
+                    {suggestion.userId === curUser?.id ? 
+                    <BreadCrumbLink link={`suggestion/${username}/${slug}/${suggestionId}/edit`} text="Edit">
+                        <Button variant={"default"}>Edit <Edit /></Button> 
+                    </BreadCrumbLink>
+                    : ""}
+                    {modpack?.userId === curUser?.id || suggestion.isOutdated ? <Button variant={"default"} onClick={mergeSuggestion}>Merge <Check /></Button> : ""} 
+                    
+                    <h1 className="text-lg font-bold">{message}</h1>
+                </div>
             </div>
         </header>
 
@@ -122,16 +132,5 @@ export default function SuggestionView() {
                 })}
             </div>
         </section>
-        
-        <div className="flex justify-center items-center gap-2">
-            {suggestion.userId === curUser?.id ? 
-            <BreadCrumbLink link={`suggestion/${username}/${slug}/${suggestionId}/edit`} text="Edit">
-                <Button variant={"default"}>Edit <Edit /></Button> 
-            </BreadCrumbLink>
-            : ""}
-            {modpack?.userId === curUser?.id || suggestion.isOutdated ? <Button variant={"default"} onClick={mergeSuggestion}>Merge <Check /></Button> : ""} 
-            
-            <h1 className="text-lg font-bold">{message}</h1>
-        </div>
     </section>
 }

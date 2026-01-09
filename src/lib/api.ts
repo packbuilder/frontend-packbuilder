@@ -75,16 +75,53 @@ export async function searchCurseforgeMods(searchQuery: string, page: number, so
     }
 }
 
-export async function getUserModpacks(curUser: User) {
+export async function getUserByUsername(username: string) {
     const token = getUserToken();
 
     try {
-        const response = await api.get(`${curUser.name}/modpacks`, {
+        const response = await api.get(`users/${username}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = response.data as User;
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function getUserModpacks(user: User) {
+    const token = getUserToken();
+
+    try {
+        const response = await api.get(`${user.name}/modpacks/${user.id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             }
         });
         const data = response.data as Modpack[];
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function getUserSuggestions(userId: number) {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.get(`user/${userId}/suggestions`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+        const data = response.data as Suggestion[];
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError

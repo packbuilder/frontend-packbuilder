@@ -65,7 +65,7 @@ export default function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer">
-                <BreadCrumbLink link="profile/edit" text="Profile" className="w-full">
+                <BreadCrumbLink link={`profile/${user.name}`} text="Profile" className="w-full">
                   <div className="flex items-center justify-start gap-2">
                     <BadgeCheck />
                     Profile

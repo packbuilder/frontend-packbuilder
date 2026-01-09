@@ -1,4 +1,4 @@
-import ModpackCard from '@/components/modpack-card';
+import {ModpackCardLarge} from '@/components/modpack-card';
 import { appQueries } from '@/hooks/appQueries';
 import store from '@/store/store';
 import type { Modpack } from '@/types/modpack';
@@ -8,19 +8,19 @@ import { Plus } from 'lucide-react';
 
 export const Route = createFileRoute("/")({
   loader: async ({
-    context: { queryClient, user }
+    context: { queryClient, user: curUser }
   }) => {
-    const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(user));
+    const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
 
-    return {user, modpacks};
+    return {curUser, modpacks};
   },
   component: Home,
 });
 
 function Home() {
     const { addBreadCrumb } = store();
-    const {user} = Route.useLoaderData();
-    const {data: modpacks} = useSuspenseQuery(appQueries.userModpacks(user));
+    const {curUser} = Route.useLoaderData();
+    const {data: modpacks} = useSuspenseQuery(appQueries.userModpacks(curUser));
 
     return <section className="flex flex-col justify-between items-center w-full mx-auto h-full">
         <div className="flex flex-row justify-around items-center mb-10">
@@ -29,7 +29,7 @@ function Home() {
         </div>
         <div id="modpacks" className="flex flex-row flex-wrap gap-4 min-w-full justify-center items-center">
             {modpacks ? modpacks.map((modpack: Modpack, index: number) => {
-              return <ModpackCard modpack={modpack} key={index}/>
+              return <ModpackCardLarge modpack={modpack} key={index}/>
             }) : <h1>Log in to create modpacks!</h1>}
         </div>
     </section>
