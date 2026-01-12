@@ -30,12 +30,13 @@ export const appQueries = {
         enabled: !!user
     }),
 
-    modReferenceIds: (modIds: number[]) => queryOptions({
-        queryKey: ["referenceIds", modIds],
-        queryFn: () => getModReferenceIds(modIds)
+    modReferenceIds: (modIds: number[] | null | undefined) => queryOptions({
+        queryKey: modIds ? ["referenceIds", modIds] : ["referenceIds", []],
+        queryFn: () => getModReferenceIds(modIds!),
+        enabled: !!modIds
     }),
 
-    modpackModData: (referenceIds: string[] | null) => queryOptions({
+    modpackModData: (referenceIds: string[] | null | undefined) => queryOptions({
         queryKey: referenceIds ? ["modpackModData", referenceIds] : ["modpackModData", []],
         queryFn: () => getCurseForgeModData(referenceIds!),
         enabled: !!referenceIds
@@ -46,8 +47,8 @@ export const appQueries = {
         queryFn: () => getModpackSuggestions(username, slug)
     }),  
 
-    modificationModData: (suggestionId: string, modificationReferenceIds: string[] | null) => queryOptions({
-        queryKey: ["modificationModData", suggestionId],
+    modificationModData: (suggestionId: string, modificationReferenceIds: string[] | null | undefined) => queryOptions({
+        queryKey: modificationReferenceIds ? ["modificationModData", suggestionId, modificationReferenceIds] : ["modificationModData", suggestionId, []],
         queryFn: () => getCurseForgeModData(modificationReferenceIds!),
         enabled: !!modificationReferenceIds
     }),

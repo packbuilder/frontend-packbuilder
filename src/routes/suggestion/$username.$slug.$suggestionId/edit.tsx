@@ -4,7 +4,7 @@ import type { VersionMod } from "@/types/versionMod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 import { SelectLabel } from "@radix-ui/react-select";
@@ -15,12 +15,13 @@ import { createModificationDtoSchema } from "@/types/dtos/createModificationDto"
 import { DialogDescription } from "@radix-ui/react-dialog";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
 import z from "zod";
 import placeholder from "@/Seed-Avatar.jpg"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { appQueries } from "@/hooks/appQueries";
+import { Spinner } from "@/components/ui/spinner";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -47,24 +48,24 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
         const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
 
         const modpackReferenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modpackModIds));
-        const modpackModData = await queryClient.ensureQueryData(appQueries.modpackModData(modpackReferenceIds));
-        const modificationModData = await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
-        const modSearchResults = await queryClient.ensureQueryData(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
 
-        return {curUser: user, suggestion, modpack, modificationModData, modificationReferenceIds, modpackModData: modpackModData || [], queryClient, modSearchResults }
+        await queryClient.ensureQueryData(appQueries.modpackModData(modpackReferenceIds));
+        await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+        await queryClient.ensureQueryData(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
+
+        return {curUser: user}
     },
     component: EditSuggestion,
 });
 
 function PaginationButtons({ paginationData, curPage } : { 
-    paginationData: CurseForgePagination, 
+    paginationData: CurseForgePagination | undefined, 
     curPage: number, 
 }) {
-    const {resultCount, pageSize } = paginationData;
     const navigate = useNavigate({from: Route.fullPath});
     
     const nextPage = async () => {
-        if(resultCount !== pageSize) {
+        if(!paginationData || paginationData.resultCount !== paginationData.pageSize) {
             return;
         }
         navigate({search: (prev) => ({page: prev.page + 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
@@ -89,10 +90,9 @@ function PaginationButtons({ paginationData, curPage } : {
     </div>
 }
 
-function EditMemoDropDown() {
+function EditMemoDropDown({currentMemo} : {currentMemo: string}) {
     const {username, slug, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -133,7 +133,7 @@ function EditMemoDropDown() {
                     <div className="flex flex-col justify-center items-center">
                         <h1>Edit memo</h1>
                         <div className="flex items-center justify-center">
-                            <Input className="w-full"style={{background: "white", color: "black"}} placeholder="Your message..." defaultValue={suggestion?.memo} id="memo" name="memo" required/>
+                            <Input className="w-full"style={{background: "white", color: "black"}} placeholder="Your message..." defaultValue={currentMemo} id="memo" name="memo" required/>
                             <Button type="submit" variant={"default"}><Edit /></Button>
                         </div>
                     </div>
@@ -143,11 +143,9 @@ function EditMemoDropDown() {
     </Popover>
 }
 
-function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMessage} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean, disabledMessage: string}) {
+function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMessage, modificationReferenceIds} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean, disabledMessage: string, modificationReferenceIds: string[]}) {
     const {username, slug, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
-    const modificationReferenceIds = suggestion ? suggestion.modifications.map(modification => modification.mod.referenceId) : null;
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -198,11 +196,9 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMess
     </div>
 }
 
-function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: CurseForgeMod, modification: Modification}) {
+function ModificationDisplay({curseforgeMod, modification, modificationReferenceIds} : {curseforgeMod: CurseForgeMod, modification: Modification, modificationReferenceIds: string[]}) {
     const {username, slug, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
-    const modificationReferenceIds = suggestion ? suggestion.modifications.map(modification => modification.mod.referenceId) : null;
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -257,19 +253,28 @@ function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: Cur
     </div>
 }
 
-function AddModsDialog() {
-    const {username, slug, suggestionId} = Route.useParams();
-    const {page, searchQuery, sortMethod} = Route.useSearch();
+function AddModsDialog({modpackReferenceIds, modificationReferenceIds} : {modpackReferenceIds: string[] | null | undefined, modificationReferenceIds: string[]}) {
+    const {page, searchQuery, sortMethod} = Route.useSearch({
+        select: (search) => ({
+            page: search.page,
+            searchQuery: search.searchQuery,
+            sortMethod: search.sortMethod,
+        })
+    });
     const [sort, setSort] = useState("0");
     const navigate = useNavigate({from: Route.fullPath});
     const queryClient = useQueryClient();
+    const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
 
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
-    const modpackModIds = modpack!.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
-    const {data: modpackReferenceIds} = useSuspenseQuery(appQueries.modReferenceIds(modpackModIds));
-    const {data: modpackModData} = useSuspenseQuery(appQueries.modpackModData(modpackReferenceIds));
-    const {data: modSearchResults} = useSuspenseQuery(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
+    const modificationReferenceIdSet = useMemo(
+        () => new Set(modificationReferenceIds.map((referenceId) => referenceId)),
+        [modificationReferenceIds]
+    );
+
+    const modpackReferenceIdSet = useMemo(
+        () => new Set(modpackReferenceIds?.map((referenceId) => referenceId)),
+        [modpackReferenceIds]
+    );
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -278,7 +283,6 @@ function AddModsDialog() {
 
         await queryClient.invalidateQueries({
             queryKey: appQueries.curseForgeSearchResults(searchQuery, page, sortMethod).queryKey,
-            refetchType: "all"
         });
 
         navigate({search: () => ({page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
@@ -327,53 +331,49 @@ function AddModsDialog() {
                             <div>{}</div>
                         </div>
                     </form>
-                    {
-                        modSearchResults ? <div>
-                            <PaginationButtons paginationData={modSearchResults.pagination} curPage={page}/>
-                        </div> : ""
-                    }
+                    
+                    <div>
+                        <PaginationButtons paginationData={modSearchResults?.pagination} curPage={page}/>
+                    </div>
                 </DialogHeader>
                 <div className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-[80%]">
-                    {
-                        modSearchResults && modSearchResults.mods.length > 0 ? 
-                        modSearchResults?.mods.map((mod: CurseForgeMod, index: number) => {
-                            let isEnabled = true;
-                            let disabledMessage = "";
-
-                            suggestion?.modifications.forEach(modification => {
-                                if(modification.mod.referenceId === mod.referenceId) {
-                                    isEnabled = false;
-                                    disabledMessage = "This mod is already in your list of changes."
-                                }
-                            });
-
-                            modpackModData?.forEach(({referenceId}) => {
-                                if(referenceId === mod.referenceId) {
-                                    isEnabled = false;
-                                    disabledMessage = "This mod has already been added to the modpack."
-                                }
-                            });
-                            
-                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Add" isEnabled={isEnabled} disabledMessage={disabledMessage} />
-                        })
-                        :
-                        <div className="size-full flex items-center justify-center">
-                            No search results
+                    {pendingSearchResults ? (
+                        <div className="size-full flex items-center justify-center w-full">
+                            <Spinner className="size-20" />
                         </div>
-                    }
+                    ) : modSearchResults && modSearchResults.mods.length > 0 ? (
+                        modSearchResults.mods.map((mod: CurseForgeMod) => {
+                        let disabledMessage = "";
+
+                        if (modificationReferenceIdSet.has(mod.referenceId)) {
+                            disabledMessage = "This mod is already in your list of changes.";
+                        } else if (modpackReferenceIdSet.has(mod.referenceId)) {
+                            disabledMessage = "This mod has already been added to the modpack.";
+                        }
+
+                        return (
+                            <CurseForgeModDisplay
+                            key={mod.referenceId}
+                            curseforgeMod={mod}
+                            modAction="Add"
+                            isEnabled={!disabledMessage}
+                            modificationReferenceIds={modificationReferenceIds}
+                            disabledMessage={disabledMessage}
+                            />
+                        );
+                        })
+                    ) : (
+                        <div className="size-full flex items-center justify-center w-full">
+                        No search results
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
     )
 }
 
-function RemoveModsDialog() {
-    const {username, slug, suggestionId} = Route.useParams();
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
-    const modpackModIds = modpack!.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
-    const {data: modpackReferenceIds} = useSuspenseQuery(appQueries.modReferenceIds(modpackModIds));
-    const {data: modpackModData} = useSuspenseQuery(appQueries.modpackModData(modpackReferenceIds));
+function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[]}) {
 
     return (
         <Dialog>
@@ -410,14 +410,14 @@ function RemoveModsDialog() {
                         {modpackModData?.map((mod: CurseForgeMod, index: number) => {
                             let isEnabled = true;
                             let disabledMessage = "";
-                            suggestion!.modifications.forEach(modification => {
-                                if(modification.mod.referenceId === mod.referenceId) {
+                            modificationReferenceIds.forEach(referenceId => {
+                                if(referenceId === mod.referenceId) {
                                     isEnabled = false;
                                     disabledMessage = "This mod is already in your list of changes."
                                     console.log(`Disabling ${mod.name} ${isEnabled}`)
                                 }
                             });
-                            return <CurseForgeModDisplay curseforgeMod={mod} key={index} modAction="Remove" isEnabled={isEnabled} disabledMessage={disabledMessage}/>
+                            return <CurseForgeModDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={mod} key={index} modAction="Remove" isEnabled={isEnabled} disabledMessage={disabledMessage}/>
                         })}
                     </div>
                 </div>
@@ -431,16 +431,36 @@ export default function EditSuggestion() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
-    
-    if(!suggestion || !modpack) {
-        navigate({to: "/"});
+    const {data: modpack} = useSuspenseQuery({
+        ...appQueries.modpack(username, slug),
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false
+    });
+    const {data: suggestion} = useSuspenseQuery({
+        ...appQueries.suggestion(username, slug, suggestionId),
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+    });
+
+    if (!suggestion || !modpack) {
+        navigate({ to: "/" });
         return;
     }
 
-    const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
-    const {data: modificationModData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+    const modificationReferenceIds = useMemo(
+        () => suggestion.modifications.map(modification => modification.mod.referenceId), 
+        [suggestion.modifications]
+    );
+    const modpackModIds = useMemo(
+        () => modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId), 
+        [modpack.versions[0].versionMods]
+    );
+
+    const {data: modpackReferenceIds} = useQuery(appQueries.modReferenceIds(modpackModIds));
+    const {data: modpackModData} = useQuery(appQueries.modpackModData(modpackReferenceIds));
+    const {data: modificationModData, isPending: pendingModificationData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
     const mutation = useMutation({
         mutationFn: async () => {
@@ -485,11 +505,11 @@ export default function EditSuggestion() {
                     </div>
                 </div>
                 <div className="flex items-center justify-center gap-2">
-                    <p className="text-md">{suggestion.memo}</p> <EditMemoDropDown />
+                    <p className="text-md">{suggestion.memo}</p> <EditMemoDropDown currentMemo={suggestion.memo} />
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-                    <AddModsDialog />
-                    <RemoveModsDialog />
+                    <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} />
+                    <RemoveModsDialog modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} />
                     <Button className="self-end" variant={"default"} onClick={() => mutation.mutate()}>
                         Check for conflicts <CloudCog />
                     </Button>
@@ -499,14 +519,19 @@ export default function EditSuggestion() {
         <div className="flex flex-col items-center justify-center">
             <section className="max-w-5/6 w-fit max-h-1/2 overflow-y-auto overflow-x-clip flex items-start flex-col gap-4 justify-center">
                 <div className="flex flex-col justify-start items-start min-w-[300px] h-fit border w-1/2 border-black dark:border-gray-400 bg-gray-700 flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full">
-                    {suggestion.modifications?.map((modification, index) => {
+                    {pendingModificationData ? (
+                        <div className="size-full flex items-center justify-center w-full">
+                            <Spinner className="size-20" />
+                        </div>
+                    ) :
+                    suggestion.modifications?.map((modification, index) => {
                         const modData = modificationModData?.find(modData => modification.mod.referenceId === modData.referenceId);
 
                         if(!modData) {
                             return <div>Error fetching mod data for modification</div>
                         }
 
-                        return <ModificationDisplay curseforgeMod={modData} modification={modification} key={index} />;
+                        return <ModificationDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={modData} modification={modification} key={index} />;
                     })}
                 </div>
             </section>
