@@ -1,13 +1,13 @@
 import placeholder from "@/Seed-Avatar.jpg"
-import { createModpackVersion, getCurseForgeModData, getModpack, getSuggestion } from "@/lib/api";
+import { createModpackVersion } from "@/lib/api";
 import { type Modification } from "@/types/modification";
 import { Button } from "@/components/ui/button";
 import { Check, CloudAlert, CloudCheck, Edit, TriangleAlert } from "lucide-react";
 import BreadCrumbLink from "@/components/breadcrumb-link";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
-import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { appQueries } from "@/hooks/appQueries";
 
@@ -19,14 +19,14 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
         const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(username, slug, suggestionId));
         const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug));
 
-        if(!suggestion) {
+        if(!suggestion || !modpack) {
             throw redirect({to: "/"});
         }
 
         const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
-        const modificationModData = await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+        await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
-        return {curUser: user, suggestion, modpack, modificationModData: modificationModData || [], queryClient};
+        return {curUser: user};
 
     },
     component: SuggestionView,
@@ -54,17 +54,29 @@ export default function SuggestionView() {
     const [message, setMessage] = useState("");
     const router = useRouter();
     const navigate = useNavigate();
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
-    const modificationReferenceIds = suggestion ? suggestion.modifications.map(modification => modification.mod.referenceId) : null;
-    const {data: modificationModData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+    const {data: modpack} = useSuspenseQuery({
+        ...appQueries.modpack(username, slug),
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false
+    });
+    const {data: suggestion} = useSuspenseQuery({
+        ...appQueries.suggestion(username, slug, suggestionId),
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+    });
     
     if(!suggestion || !modpack) {
         navigate({to: "/"});
         return;
     }
-    
-    console.log(suggestion, modificationModData)
+
+    const modificationReferenceIds = useMemo(
+        () => suggestion.modifications.map(modification => modification.mod.referenceId),
+        [suggestion.modifications]
+    );
+    const {data: modificationModData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
     const mergeSuggestion = async () => {
         if(suggestion.conflictingModifications.length > 0 || suggestion.isOutdated) {

@@ -1,15 +1,13 @@
 import { createSuggestion } from "@/lib/api";
 import type { Suggestion } from "@/types/suggestion";
 import { Button } from "@/components/ui/button";
-import { CloudAlert, CloudCheck, Plus, Save, SquareMinus, SquarePlus, TriangleAlert} from "lucide-react";
+import { Plus, Save} from "lucide-react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { Input } from "@/components/ui/input";
-import placeholderAvatar from "@/Seed-Avatar.jpg"
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger  } from "@/components/ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
-import { useState, type FormEvent } from "react";
-import BreadCrumbLink from "@/components/breadcrumb-link"; 
-import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
+import { useState, type FormEvent } from "react"; 
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
 import SuggestionCard from "@/components/suggestion-card";
