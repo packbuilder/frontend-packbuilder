@@ -13,8 +13,12 @@ import { appQueries } from '@/hooks/appQueries';
 import type { Modpack } from '@/types/modpack';
 import {ModpackCardCompact} from '@/components/modpack-card';
 import type { User } from '@/types/user';
-import type { Suggestion } from '@/types/suggestion';
+import type { Suggestion, suggestionSchema } from '@/types/suggestion';
 import SuggestionCard from '@/components/suggestion-card';
+import { fallback, zodValidator } from '@tanstack/zod-adapter';
+import z from 'zod';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 export const Route = createFileRoute('/profile/$username/')({
   loader: async ({context, params}) => {
@@ -164,58 +168,10 @@ function ProfileEdit() {
     </section>
 }
 
-function UserModpacksDisplay({userModpacks, user} : {userModpacks: Modpack[] | null, user: User}) {
-
-  if(!userModpacks) {
-    return (
-      <div>
-        <h1>This user has not created any modpacks</h1>
-      </div>
-    )
-  }
-
-  return (
-    <div className='flex flex-col items-center justify-center'>
-      <h1 className="font-bold text-2xl m-2">{user.name}'s modpacks</h1>
-      <div className='flex flex-wrap items-center justify-center'>
-        {userModpacks.map((modpack, index) => {
-          return (
-            <ModpackCardCompact modpack={modpack} key={index} />
-          )
-        })}
-      </div>
-    </div>
-  )
-
-}
-
-function UserSuggestionsDisplay({userSuggestions, user} : {userSuggestions: Suggestion[] | null, user: User}) {
-
-  if(!userSuggestions) {
-    return (
-      <div>
-        This user has not created any suggestions.
-      </div>
-    )
-  }
-
-  return (
-    <div className='flex items-center justify-center flex-col w-full'>
-      <h1 className="font-bold text-2xl m-2">{user.name}'s suggestions</h1>
-      <div className='flex items-center justify-center flex-wrap'>
-        {userSuggestions.map((suggestion, index) => {
-          return (
-            <SuggestionCard suggestion={suggestion} key={index} />
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 export default function ProfileView() {
   const {curUser} = Route.useLoaderData();
   const {username} = Route.useParams();
+  const [dataType, setDataType] = useState("modpack");
   const {data: user} = useSuspenseQuery(appQueries.userData(username));
   const {data: userModpacks} = useSuspenseQuery(appQueries.userModpacks(user));
   const {data: userSuggestions} = useSuspenseQuery(appQueries.userSuggestions(user));
@@ -228,9 +184,10 @@ export default function ProfileView() {
     )
   }
 
+  // TODO: Properly style for mobile and desktop
 
   return (
-    <section className='flex flex-wrap gap-4 items-center justify-center'>
+    <section className='flex flex-wrap gap-4 items-center justify-center mt-10'>
       <div className='flex items-center justify-end'>
         {curUser?.id === user.id ? <ProfileEdit />
           :
@@ -243,9 +200,38 @@ export default function ProfileView() {
         }
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-4">
-        <UserSuggestionsDisplay userSuggestions={userSuggestions} user={user} />
-        <UserModpacksDisplay userModpacks={userModpacks} user={user} />
+      <div className="flex flex-col items-center gap-4 min-w-1/2 max-w-[90vw] min-h-[50vh] bg-gray-900 rounded-lg py-4">
+        <header className="flex items-center justify-center gap-2">
+          <h1 className='font-bold text-xl'>
+            {user.name}s {dataType}s
+          </h1>
+          <div className="flex items-center justify-center gap-2">
+              <Select value={dataType} onValueChange={setDataType}>
+                  <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                      <SelectValue placeholder="Set sort method..."/>
+                  </SelectTrigger> 
+                  <SelectContent className="bg-white text-black">
+                      <SelectGroup>     
+                          <SelectLabel>Sort</SelectLabel>
+                          <SelectItem className="cursor-pointer" value="modpack">Modpacks</SelectItem>
+                          <SelectItem className="cursor-pointer" value="suggestion">Suggestions</SelectItem>
+                      </SelectGroup>
+                  </SelectContent>
+              </Select>
+          </div>
+        </header>
+        <Separator className='mb-4' />
+        <div className='flex flex-col justify-center items-center p-4 gap-2 dark:white size-full overflow-y-auto overflow-x-clip'>
+            {
+              dataType === "modpack" && userModpacks ? userModpacks.map(modpack => {
+                return <ModpackCardCompact modpack={modpack}/>
+              }) : 
+              dataType === "suggestion" && userSuggestions ? userSuggestions.map(suggestion => {
+                return <SuggestionCard suggestion={suggestion} />
+              }) : 
+              <h1>There are no {dataType}'s to display here</h1>
+            }
+        </div>
       </div>
       
     </section>

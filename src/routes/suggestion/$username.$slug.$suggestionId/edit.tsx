@@ -331,7 +331,6 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds} : {modpac
                             <div>{}</div>
                         </div>
                     </form>
-                    
                     <div>
                         <PaginationButtons paginationData={modSearchResults?.pagination} curPage={page}/>
                     </div>
