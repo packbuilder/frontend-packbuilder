@@ -4,7 +4,7 @@ import { versionModSchema } from "./versionMod";
 export const versionSchema = z.object({
     id: z.number(),
     modpackId: z.number(),
-    iteration: z.number(),
+    iterations: z.number(),
 
     versionMods: z.array(versionModSchema)
 })

@@ -10,13 +10,8 @@ import { useRef, useState, type FormEvent } from "react";
 import { updateProfile } from '@/lib/api';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import { appQueries } from '@/hooks/appQueries';
-import type { Modpack } from '@/types/modpack';
 import {ModpackCardCompact} from '@/components/modpack-card';
-import type { User } from '@/types/user';
-import type { Suggestion, suggestionSchema } from '@/types/suggestion';
 import SuggestionCard from '@/components/suggestion-card';
-import { fallback, zodValidator } from '@tanstack/zod-adapter';
-import z from 'zod';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
