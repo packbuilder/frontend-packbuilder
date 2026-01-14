@@ -223,6 +223,25 @@ export async function getSuggestion(username: string, slug: string, id: string) 
     }
 }
 
+export async function getMinecraftVersions() {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.get(`/curseforge/minecraft/versions`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = response.data as string[];
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
 export async function createSuggestion(username: string, slug: string, memo: string) {
     const token = getUserToken();
     

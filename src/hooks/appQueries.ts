@@ -1,4 +1,4 @@
-import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername } from "@/lib/api";
+import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername, getMinecraftVersions } from "@/lib/api";
 import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -56,5 +56,10 @@ export const appQueries = {
     curseForgeSearchResults: (searchQuery: string, page: number, sortMethod: "0" | "1" | "2" | "3") => queryOptions({
         queryKey: ["modSearchResults", searchQuery, page, sortMethod],
         queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod)
-    })
+    }),
+
+    minecraftVersions: () => queryOptions({
+        queryKey: ["minecraftVersions"],
+        queryFn: () => getMinecraftVersions()
+    }),
 };
