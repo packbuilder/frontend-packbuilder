@@ -16,7 +16,7 @@ export const modificationSchema = z.object({
     modId: z.number(),
     suggestionId: z.number(),
     isConflicting: z.boolean(),
-    modAction: z.enum(["Added", "Removed", "Updated"]),
+    modAction: z.enum(ModAction),
     mod: modSchema,
 });
 

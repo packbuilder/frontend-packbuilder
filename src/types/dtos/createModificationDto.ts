@@ -4,8 +4,8 @@ import { ModAction } from "../modification";
 
 export const createModificationDtoSchema = z.object({
     modReferenceId: z.string(),
-    modAction: z.nativeEnum(ModAction),
-    modPlatform: z.nativeEnum(ModPlatform)
+    modAction: z.enum(ModAction),
+    modPlatform: z.enum(ModPlatform)
 });
 
 export type CreateModificationDto = z.infer<typeof createModificationDtoSchema>

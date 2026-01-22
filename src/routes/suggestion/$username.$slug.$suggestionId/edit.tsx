@@ -22,6 +22,7 @@ import placeholder from "@/Seed-Avatar.jpg"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { appQueries } from "@/hooks/appQueries";
 import { Spinner } from "@/components/ui/spinner";
+import { SuggestionState } from "@/types/suggestion";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -233,7 +234,7 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
     return <div className="flex flex-row items-center justify-start gap-2 p-5 border-b-2 border-gray-300 w-full flex-wrap">
         <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
         <h1 className="text-2xl">{curseforgeMod.name}</h1>
-        <h1 className={`${modification.modAction === "Added" ? "bg-emerald-500" : "bg-red-500"} p-2`}>{modification.modAction}</h1>
+        <h1 className={`${modification.modAction === ModAction.Added ? "bg-emerald-500" : "bg-red-500"} p-2`}>{modification.modAction}</h1>
         <ToolbarTooltip side="top" content="This modification is conflicting, delete it to resolve the conflict.">
             <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
                 <TriangleAlert className="text-black" />
@@ -491,14 +492,14 @@ export default function EditSuggestion() {
             <div className="flex flex-col items-center justify-center gap-2">
                 <div className="flex items-center justify-center gap-1">
                     <h1 className="text-xl font-bold">{suggestion.username + "'s Suggestion"}</h1>
-                    <div className={`${suggestion.isOutdated ? "" : "hidden"}`}>
-                        <ToolbarTooltip side="top" content="This suggestion is outdated and may contain conflicts">
+                    <div className={`${suggestion.state !== SuggestionState.Verified ? "" : "hidden"}`}>
+                        <ToolbarTooltip side="top" content="This suggestion has not been verified and may contain conflicts">
                             <CloudAlert className="text-red-500"/>
                         </ToolbarTooltip>
                     </div>
     
-                    <div className={`${suggestion.isOutdated ? "hidden" : ""}`}>
-                        <ToolbarTooltip side="top" content="This suggestion is up to date">
+                    <div className={`${suggestion.state === SuggestionState.Verified ? "hidden" : ""}`}>
+                        <ToolbarTooltip side="top" content="This suggestion has been verified, making changes will unverify this suggestion">
                             <CloudCheck />
                         </ToolbarTooltip>
                     </div>

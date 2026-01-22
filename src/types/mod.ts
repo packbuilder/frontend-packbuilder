@@ -12,7 +12,7 @@ export const modSchema = z.object({
     updatedAt: dateSchema,
     
     referenceId: z.string(),
-    platform: z.nativeEnum(ModPlatform),
+    platform: z.enum(ModPlatform),
 });
 
 export type Mod = z.infer<typeof modSchema>

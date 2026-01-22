@@ -3,6 +3,13 @@ import { dateSchema } from ".";
 import { userSchema } from "./user";
 import { modpackSchema } from "./modpack";
 import { modificationSchema } from "./modification";
+import { modLoader } from "./version";
+
+export enum SuggestionState {
+    Unverified = "0",
+    Verified = "1",
+    VerificationPending = "2"
+}
 
 export const suggestionSchema = z.object({
     id: z.number(),
@@ -13,7 +20,9 @@ export const suggestionSchema = z.object({
     
     username: z.string(),
     userId: z.number(),
-    isOutdated: z.boolean(),
+    state: z.enum(SuggestionState),
+    gameVersion: z.string(),
+    modLoader: z.enum(modLoader),
     modpackSlug: z.string(),
     memo: z.string(),
     
