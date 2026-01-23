@@ -3,13 +3,7 @@ import { dateSchema } from ".";
 import { userSchema } from "./user";
 import { modpackSchema } from "./modpack";
 import { modificationSchema } from "./modification";
-import { modLoader } from "./version";
-
-export enum SuggestionState {
-    Unverified = "0",
-    Verified = "1",
-    VerificationPending = "2"
-}
+import { ModLoader, SuggestionState } from "./enums";
 
 export const suggestionSchema = z.object({
     id: z.number(),
@@ -22,7 +16,7 @@ export const suggestionSchema = z.object({
     userId: z.number(),
     state: z.enum(SuggestionState),
     gameVersion: z.string(),
-    modLoader: z.enum(modLoader),
+    modLoader: z.enum(ModLoader),
     modpackSlug: z.string(),
     memo: z.string(),
     

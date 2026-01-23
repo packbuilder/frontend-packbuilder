@@ -1,10 +1,7 @@
 import z from "zod";
 import { dateSchema } from ".";
+import { ModPlatform } from "./enums";
 
-export enum ModPlatform {
-    Thunderstore = "0",
-    CurseForge = "1"
-}
 
 export const modSchema = z.object({
     id: z.number(),

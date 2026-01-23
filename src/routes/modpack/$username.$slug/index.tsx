@@ -16,6 +16,8 @@ import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tansta
 import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { enumNameFromValue } from "@/lib/utils";
+import { ModLoader } from "@/types/enums";
 
 export const Route = createFileRoute('/modpack/$username/$slug/')({
   loader: async ({context, params}) => {
@@ -118,6 +120,7 @@ export default function ModpackView() {
     }
 
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
+    const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
     const modIds = useMemo(
         () => modpack.versions.find(version => version.iterations.toString() === versionIteration)!.versionMods.map((versionMod: VersionMod) => versionMod.modId),
         [modpack.versions, versionIteration]
@@ -127,6 +130,7 @@ export default function ModpackView() {
 
     const handleValueChange = async (newValue: string) => {
         setVersionIteration(newValue);
+        setDisplayedVersion(modpack.versions.find(version => version.iterations.toString() === versionIteration)!);
 
         await queryClient.invalidateQueries({
             queryKey: appQueries.modReferenceIds(modIds).queryKey
@@ -146,22 +150,25 @@ export default function ModpackView() {
             <div className="flex items-center justify-center gap-2">
                 <h1 className="font-bold text-2xl">Version:</h1>
                 <Select value={versionIteration} onValueChange={handleValueChange}>
-                  <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                      <SelectValue placeholder="Set sort method..."/>
-                  </SelectTrigger> 
-                  <SelectContent className="bg-white text-black">
-                      <SelectGroup>     
-                          <SelectLabel>Select version</SelectLabel>
-                          {
-                            modpack.versions.map((version, index) => {
-                                return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
-                                    {version.iterations}
-                                </SelectItem>
-                            })
-                          }
-                      </SelectGroup>
-                  </SelectContent>
-              </Select>
+                    <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                        <SelectValue placeholder="Set sort method..."/>
+                    </SelectTrigger> 
+                    <SelectContent className="bg-white text-black">
+                        <SelectGroup>     
+                            <SelectLabel>Select version</SelectLabel>
+                            {
+                                modpack.versions.map((version, index) => {
+                                    return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
+                                        {version.iterations}
+                                    </SelectItem>
+                                })
+                            }
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="flex items-center justify-center">
+                <h1 className="text-lg">Minecraft {displayedVersion.gameVersion} using {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())}</h1>
             </div>
             <div className="flex flex-row items-center justify-center gap-2">
                 <CopyButton text={"http:localhost:3000" + pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />

@@ -1,6 +1,6 @@
 import placeholder from "@/Seed-Avatar.jpg"
 import { createModpackVersion } from "@/lib/api";
-import { ModAction, type Modification } from "@/types/modification";
+import { type Modification } from "@/types/modification";
 import { Button } from "@/components/ui/button";
 import { Check, CloudAlert, CloudCheck, Edit, TriangleAlert } from "lucide-react";
 import BreadCrumbLink from "@/components/breadcrumb-link";
@@ -10,7 +10,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { appQueries } from "@/hooks/appQueries";
-import { SuggestionState } from "@/types/suggestion";
+import { SuggestionState, ModAction } from "@/types/enums";
 
 export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/view')({
     loader: async ({context, params}) => {

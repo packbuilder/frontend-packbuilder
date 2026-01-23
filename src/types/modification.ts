@@ -1,12 +1,7 @@
 import z from "zod";
 import { dateSchema } from ".";
 import { modSchema } from "./mod";
-
-export enum ModAction {
-    Added = "0",
-    Removed = "1",
-    Updated = "2"
-}
+import { ModAction } from "./enums";
 
 export const modificationSchema = z.object({
     id: z.number(),

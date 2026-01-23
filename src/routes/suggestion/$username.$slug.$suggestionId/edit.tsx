@@ -9,8 +9,7 @@ import type { CurseForgePagination } from "@/types/curseforge/curseforgePaginati
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 import { SelectLabel } from "@radix-ui/react-select";
 import { Dialog , DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ModAction, type Modification } from "@/types/modification";
-import { ModPlatform } from "@/types/mod";
+import { type Modification } from "@/types/modification";
 import { createModificationDtoSchema } from "@/types/dtos/createModificationDto";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
@@ -22,7 +21,7 @@ import placeholder from "@/Seed-Avatar.jpg"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { appQueries } from "@/hooks/appQueries";
 import { Spinner } from "@/components/ui/spinner";
-import { SuggestionState } from "@/types/suggestion";
+import { SuggestionState, ModAction, ModPlatform } from "@/types/enums";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),

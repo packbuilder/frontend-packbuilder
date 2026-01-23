@@ -12,6 +12,8 @@ import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import Cookies from "js-cookie";
 import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
 import type { Version } from "@/types/version";
+import type { ModLoader } from "@/types/enums";
+import type { CreateSuggestionDto } from "@/types/dtos/createSuggestionDto";
 
 const api = useApi();
 
@@ -242,11 +244,11 @@ export async function getMinecraftVersions() {
     }
 }
 
-export async function createSuggestion(username: string, slug: string, memo: string) {
+export async function createSuggestion(username: string, slug: string, body: CreateSuggestionDto) {
     const token = getUserToken();
     
     try {
-        const response = await api.post(`/${username}/modpacks/${slug}/suggestions`, {memo}, {
+        const response = await api.post(`/${username}/modpacks/${slug}/suggestions`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },

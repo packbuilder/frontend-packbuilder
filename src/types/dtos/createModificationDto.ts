@@ -1,6 +1,5 @@
 import z from "zod";
-import { ModPlatform } from "../mod";
-import { ModAction } from "../modification";
+import { ModAction, ModPlatform } from "../enums";
 
 export const createModificationDtoSchema = z.object({
     modReferenceId: z.string(),
