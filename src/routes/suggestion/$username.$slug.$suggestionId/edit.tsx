@@ -3,12 +3,12 @@ import { createModification, deleteModification, updateSuggestion, verifySuggest
 import type { VersionMod } from "@/types/versionMod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog } from "lucide-react";
+import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog, ChevronsUpDown, Save } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 import { SelectLabel } from "@radix-ui/react-select";
-import { Dialog , DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog , DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { type Modification } from "@/types/modification";
 import { createModificationDtoSchema } from "@/types/dtos/createModificationDto";
 import { DialogDescription } from "@radix-ui/react-dialog";
@@ -22,6 +22,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { appQueries } from "@/hooks/appQueries";
 import { Spinner } from "@/components/ui/spinner";
 import { SuggestionState, ModAction, ModPlatform } from "@/types/enums";
+import type { Suggestion } from "@/types/suggestion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -51,7 +53,7 @@ export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/
 
         await queryClient.ensureQueryData(appQueries.modpackModData(modpackReferenceIds));
         await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
-        await queryClient.ensureQueryData(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
+        await queryClient.ensureQueryData(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader));
 
         return {curUser: user}
     },
@@ -253,7 +255,7 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
     </div>
 }
 
-function AddModsDialog({modpackReferenceIds, modificationReferenceIds} : {modpackReferenceIds: string[] | null | undefined, modificationReferenceIds: string[]}) {
+function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestion} : {modpackReferenceIds: string[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion}) {
     const {page, searchQuery, sortMethod} = Route.useSearch({
         select: (search) => ({
             page: search.page,
@@ -264,7 +266,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds} : {modpac
     const [sort, setSort] = useState("0");
     const navigate = useNavigate({from: Route.fullPath});
     const queryClient = useQueryClient();
-    const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod));
+    const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader));
 
     const modificationReferenceIdSet = useMemo(
         () => new Set(modificationReferenceIds.map((referenceId) => referenceId)),
@@ -282,7 +284,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds} : {modpac
         const newSearchQuery = formData.get("searchQuery") as string;
 
         await queryClient.invalidateQueries({
-            queryKey: appQueries.curseForgeSearchResults(searchQuery, page, sortMethod).queryKey,
+            queryKey: appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader).queryKey,
         });
 
         navigate({search: () => ({page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
@@ -293,17 +295,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds} : {modpac
             <DialogTrigger asChild>
             <Button variant="green">Add mods</Button>
             </DialogTrigger>
-            <DialogContent 
-                className="flex-col items-center justify-center"
-                style={{
-                    background:"rgba(255, 255, 255, 0.2)",
-                    borderRadius: "16px",
-                    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-                    backdropFilter: "blur(12.1px)",
-                    WebkitBackdropFilter: "blur(10px)",
-                    border:" 1px solid rgba(255, 255, 255, 0.3)"
-                }}
-            >
+            <DialogContent className="flex-col items-center justify-center">
                 <DialogHeader className="mt-4 flex justify-center items-center">
                     <DialogTitle className="text-3xl font-bold">Add mods</DialogTitle>
                     <DialogDescription>Suggest mods to add by browsing curseforge mods!</DialogDescription>
@@ -379,33 +371,13 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
             <DialogTrigger asChild>
                 <Button variant="destructive">Remove mods</Button>
             </DialogTrigger>
-            <DialogContent 
-                className="flex-col items-center justify-center"
-                style={{
-                    background:"rgba(255, 255, 255, 0.2)",
-                    borderRadius: "16px",
-                    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-                    backdropFilter: "blur(12.1px)",
-                    WebkitBackdropFilter: "blur(10px)",
-                    border:" 1px solid rgba(255, 255, 255, 0.3)"
-                }}
-            >
+            <DialogContent className="flex-col items-center justify-center">
                 <DialogHeader className="mt-4 flex justify-center items-center">
                     <DialogTitle className="text-3xl font-bold">Remove mods</DialogTitle>
                     <DialogDescription>Suggest mods to remove from the modpack!</DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center justify-center">
-                    <div 
-                        className="flex flex-col justify-start items-start max-w-5/6 w-fit border border-white flex flex-col overflow-y-auto overflow-x-clip h-96" 
-                        style={{
-                            background:"rgba(255, 255, 255, 0.2)",
-                            borderRadius: "16px",
-                            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-                            backdropFilter: "blur(12.1px)",
-                            WebkitBackdropFilter: "blur(5px)",
-                            border:" 1px solid rgba(255, 255, 255, 0.3)"
-                        }}
-                    >
+                    <div className="flex flex-col justify-start items-start max-w-5/6 w-fit border border-white flex flex-col overflow-y-auto overflow-x-clip h-96" >
                         {modpackModData?.map((mod: CurseForgeMod, index: number) => {
                             let isEnabled = true;
                             let disabledMessage = "";
@@ -425,9 +397,92 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
     )
 }
 
-export default function EditSuggestion() {
+// TODO: Finish styling and adding content. Begin testing redis job dispatching
+export function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {suggestion: Suggestion, modificationReferenceIds: string[]}) {
     const {username, slug, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
+    const [isOpen, setIsOpen] = useState(false);
+    
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const verifiedSuggestion = await verifySuggestion(suggestion.id, username, slug);
+
+            if(!verifiedSuggestion) {
+                throw new Error("Problem with verifying suggestion.");
+            }
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
+                refetchType: "all",
+            });
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.modificationModData(suggestionId, modificationReferenceIds).queryKey,
+                refetchType: "all"
+            });
+        },
+        onError: (error) => {
+            console.error(error.message);
+        }
+    });
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant={"default"}>
+                    Verify suggestion <CloudCog />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="flex-col items-center justify-center">
+                <DialogHeader className="mt-4 flex justify-center items-center">
+                    <DialogTitle className="text-3xl font-bold">Verifying your suggestion</DialogTitle>
+                    <DialogDescription>What to expect when verifying your suggestion?</DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center justify-center">
+                    <div 
+                        className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-[80%]"
+                    >
+                        <Collapsible
+                        open={isOpen}
+                        onOpenChange={setIsOpen}
+                        className="flex w-[350px] flex-col gap-2"
+                        >
+                            <div className="flex items-center justify-between gap-4 px-4">
+                                <h1 className="font-bold text-xl">How verification works.</h1>
+                                <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="icon" className="size-8">
+                                    <ChevronsUpDown />
+                                    <span className="sr-only">Toggle details</span>
+                                </Button>
+                                </CollapsibleTrigger>
+                            </div>
+                            <CollapsibleContent className="flex flex-col gap-2">
+                                <div className="rounded-md border px-4 py-2 ">
+                                    <h1> 1. Verification of your suggestion happens automatically but may take some time.</h1>
+                                    <h1> 2. During verification, your suggestion will be put in a queue to be verified and will enter a pending state.</h1>
+                                    <h1> 3. You cannot make changes to your suggestion while it's in a pending state.</h1>
+                                    <h1> 4. Once your suggestion is verified, it is able to be merged by the modpack owner.</h1>
+                                    <h1> 5. You can make changes to your suggestion after it's verified, however doing so will un-verify the suggestion and you will have to re-verify after you make additional changes.</h1>
+                                </div>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </div>
+                </div>
+                <DialogFooter className="w-full px-2">
+                    <div className="w-full flex flex-row justify-start items-center gap-2">
+                        <Button variant={"default"} onClick={() => mutation.mutate()} type="submit">Begin Verification <Save/></Button>
+                        <DialogClose asChild>
+                            <Button variant={"destructive"}>Cancel <X/></Button>
+                        </DialogClose>
+                    </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+export default function EditSuggestion() {
+    const {username, slug, suggestionId} = Route.useParams();
     const navigate = useNavigate();
 
     const {data: modpack} = useSuspenseQuery({
@@ -461,63 +516,43 @@ export default function EditSuggestion() {
     const {data: modpackModData} = useQuery(appQueries.modpackModData(modpackReferenceIds));
     const {data: modificationModData, isPending: pendingModificationData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
-    const mutation = useMutation({
-        mutationFn: async () => {
-            const verifiedSuggestion = await verifySuggestion(suggestion.id, username, slug);
-
-            if(!verifiedSuggestion) {
-                throw new Error("Problem with verifying suggestion.");
-            }
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
-                refetchType: "all",
-            });
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.modificationModData(suggestionId, modificationReferenceIds).queryKey,
-                refetchType: "all"
-            });
-            // TODO: Give feedback to user that the suggestion was checked and has no conflicts!
-        },
-        onError: (error) => {
-            console.error(error.message);
-        }
-    });
-
-    return <section className="pb-4">
+    return <section className="flex flex-col items-center justify-center pb-4">
         <header className="flex flex-col items-center justify-center gap-4">
             <img className="cursor-pointer border-white border-2 rounded-[50%] size-20" src={placeholder} alt="" />
             <div className="flex flex-col items-center justify-center gap-2">
                 <div className="flex items-center justify-center gap-1">
                     <h1 className="text-xl font-bold">{suggestion.username + "'s Suggestion"}</h1>
-                    <div className={`${suggestion.state !== SuggestionState.Verified ? "" : "hidden"}`}>
-                        <ToolbarTooltip side="top" content="This suggestion has not been verified and may contain conflicts">
-                            <CloudAlert className="text-red-500"/>
-                        </ToolbarTooltip>
-                    </div>
-    
-                    <div className={`${suggestion.state === SuggestionState.Verified ? "hidden" : ""}`}>
-                        <ToolbarTooltip side="top" content="This suggestion has been verified, making changes will unverify this suggestion">
-                            <CloudCheck />
-                        </ToolbarTooltip>
-                    </div>
                 </div>
+                {
+                    suggestion.state.toString() === SuggestionState.Unverified ?     
+                    <div className="flex items-center justify-center">
+                        <CloudAlert className="text-red-500"/>
+                        <h1>This suggestion has not been verified and cannot be merged.</h1>
+                    </div>
+                    : suggestion.state.toString() === SuggestionState.VerificationPending ?
+                    <div className="flex items-center justify-center">
+                        <CloudCog />
+                        <h1>This suggestion is undergoing verification and cannot be merged or edited.</h1>
+                    </div>
+                    : 
+                    <div className="flex items-center justify-center">
+                        <CloudCheck />
+                        <h1>This suggestion has been verified and is able to be merged.</h1>
+                    </div>
+                }
                 <div className="flex items-center justify-center gap-2">
-                    <p className="text-md">{suggestion.memo}</p> <EditMemoDropDown currentMemo={suggestion.memo} />
+                    <p className="text-md">Memo: {suggestion.memo}</p> <EditMemoDropDown currentMemo={suggestion.memo} />
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-                    <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} />
+                    <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <RemoveModsDialog modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} />
-                    <Button className="self-end" variant={"default"} onClick={() => mutation.mutate()}>
-                        Check for conflicts <CloudCog />
-                    </Button>
+                    <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                 </div>
             </div>
         </header>
-        <div className="flex flex-col items-center justify-center">
-            <section className="max-w-5/6 w-fit max-h-1/2 overflow-y-auto overflow-x-clip flex items-start flex-col gap-4 justify-center">
-                <div className="flex flex-col justify-start items-start min-w-[300px] h-fit border w-1/2 border-black dark:border-gray-400 bg-gray-700 flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full">
+        <div className="flex flex-col justify-center items-center w-3/4">
+            <h1 className="text-4xl font-bold self-start">Modifications</h1>
+            <div className="flex flex-col justify-start items-start min-w-[300px] min-h-[400px] border w-1/2 border-black dark:border-gray-400 bg-gray-900 flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-full">        
                     {pendingModificationData ? (
                         <div className="size-full flex items-center justify-center w-full">
                             <Spinner className="size-20" />
@@ -531,9 +566,11 @@ export default function EditSuggestion() {
                         }
 
                         return <ModificationDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={modData} modification={modification} key={index} />;
-                    })}
+                })}
+                <div className={`flex items-center justify-center size-full ${!modificationModData || modificationModData.length > 0 ? "" : "hidden"}`}>
+                    <h1 className="text-xl">It's looking empty in here...</h1>
                 </div>
-            </section>
+            </div>
         </div>
     </section>
 }

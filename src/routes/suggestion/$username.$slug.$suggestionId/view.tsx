@@ -2,7 +2,7 @@ import placeholder from "@/Seed-Avatar.jpg"
 import { createModpackVersion } from "@/lib/api";
 import { type Modification } from "@/types/modification";
 import { Button } from "@/components/ui/button";
-import { Check, CloudAlert, CloudCheck, Edit, TriangleAlert } from "lucide-react";
+import { Check, Cloud, CloudAlert, CloudCheck, CloudCog, Edit, TriangleAlert } from "lucide-react";
 import BreadCrumbLink from "@/components/breadcrumb-link";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
@@ -106,19 +106,27 @@ export default function SuggestionView() {
             <div className="flex flex-col items-center justify-center gap-2">
                 <div className="flex items-center justify-center gap-1">
                     <h1 className="text-xl font-bold">{suggestion.username + "'s Suggestion"}</h1>
-                    <div className={`${suggestion.state !== SuggestionState.Verified ? "" : "hidden"}`}>
-                        <ToolbarTooltip side="top" content="This suggestion is has not been verified and may contain conflicts.">
-                            <CloudAlert className="text-red-500"/>
-                        </ToolbarTooltip>
-                    </div>
-    
-                    <div className={`${suggestion.state === SuggestionState.Verified ? "hidden" : ""}`}>
-                        <ToolbarTooltip side="top" content="This suggestion has been verified, making changes will unverify this suggestion">
-                            <CloudCheck />
-                        </ToolbarTooltip>
-                    </div>
                 </div>
-                <p className="text-md">{suggestion.memo}</p> 
+                {
+                    suggestion.state.toString() === SuggestionState.Unverified ?     
+                    <div className="flex items-center justify-center">
+                        <CloudAlert className="text-red-500"/>
+                        <h1>This suggestion has not been verified and cannot be merged.</h1>
+                    </div>
+                    : suggestion.state.toString() === SuggestionState.VerificationPending ?
+                    <div className="flex items-center justify-center">
+                        <CloudCog />
+                        <h1>This suggestion is undergoing verification and cannot be merged or edited.</h1>
+                    </div>
+                    : 
+                    <div className="flex items-center justify-center">
+                        <CloudCheck />
+                        <h1>This suggestion has been verified and is able to be merged.</h1>
+                    </div>
+                }
+                <div className="flex justify-center items-center gap-2">
+                    <p className="text-md">Memo: {suggestion.memo}</p> 
+                </div>
                 <div className="flex justify-center items-center gap-2">
                     {suggestion.userId === curUser?.id ? 
                     <BreadCrumbLink link={`suggestion/${username}/${slug}/${suggestionId}/edit`} text="Edit">
@@ -132,8 +140,9 @@ export default function SuggestionView() {
             </div>
         </header>
 
-        <section className="max-w-5/6 w-fit max-h-1/2 overflow-y-auto overflow-x-clip flex items-start justify-center">
-            <div className="flex flex-col justify-start items-start min-w-[300px] h-fit border w-1/2 border-black dark:border-gray-400 bg-gray-700 flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full">
+        <div className="flex flex-col justify-center items-center w-3/4">
+            <h1 className="text-4xl font-bold self-start">Modifications</h1>
+            <div className="flex flex-col justify-start items-start min-w-[300px] min-h-[400px] border w-1/2 border-black dark:border-gray-400 bg-gray-900 flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-full">        
                 {suggestion.modifications.map((modification, index) => {
                     const modData = modificationModData?.find(modData => modification.mod.referenceId === modData.referenceId);
 
@@ -143,7 +152,10 @@ export default function SuggestionView() {
 
                     return <ModificationDisplay curseforgeMod={modData} modification={modification} key={index} />;
                 })}
+                <div className={`flex items-center justify-center size-full ${!modificationModData || modificationModData.length > 0 ? "" : "hidden"}`}>
+                    <h1 className="text-xl">It's looking empty in here...</h1>
+                </div>
             </div>
-        </section>
+        </div>
     </section>
 }

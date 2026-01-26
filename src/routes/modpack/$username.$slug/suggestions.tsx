@@ -63,7 +63,7 @@ function CreateSuggestionDialog() {
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const memo = formData.get("memo") as string;
-            const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader})
+            const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
             const suggestion = await createSuggestion(username, slug, body);
 
             if(!suggestion) {
@@ -92,7 +92,7 @@ function CreateSuggestionDialog() {
     const submitForm = () => {
         setOpen(false);
         const form = formRef.current as unknown as HTMLFormElement;
-        form.submit();
+        form.requestSubmit();
     }
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -176,6 +176,7 @@ export default function ModpackSuggestions() {
     const {username, slug} = Route.useParams();
     const {data: suggestions} = useSuspenseQuery(appQueries.modpackSuggestions(username, slug));
 
+    // TODO: Turn into shadcn table component (Should look kinda like streamxps implementation)
     return <section className="flex flex-col justify-center items-center gap-5">
         <h1 className="text-5xl font-bold">Suggestions</h1>
         <div className="flex flex-col items-center justify-center gap-2 w-3/4">

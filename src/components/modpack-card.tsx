@@ -5,6 +5,7 @@ import ToolbarTooltip from "./toolbar-tooltip";
 import { Button } from "./ui/button";
 import { File } from "lucide-react";
 
+// TODO: Turn into shadcn item component?
 export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
     return <BreadCrumbLink 
     link={`/modpack/${modpack.user.name}/${modpack.slug}`}

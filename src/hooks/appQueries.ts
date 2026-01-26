@@ -1,4 +1,5 @@
 import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername, getMinecraftVersions } from "@/lib/api";
+import type { ModLoader } from "@/types/enums";
 import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -53,9 +54,9 @@ export const appQueries = {
         enabled: !!modificationReferenceIds
     }),
 
-    curseForgeSearchResults: (searchQuery: string, page: number, sortMethod: "0" | "1" | "2" | "3") => queryOptions({
+    curseForgeSearchResults: (searchQuery: string, page: number, sortMethod: "0" | "1" | "2" | "3", gameVersion: string, modLoader: ModLoader) => queryOptions({
         queryKey: ["modSearchResults", searchQuery, page, sortMethod],
-        queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod)
+        queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod, gameVersion, modLoader)
     }),
 
     minecraftVersions: () => queryOptions({

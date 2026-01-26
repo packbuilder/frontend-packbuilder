@@ -58,11 +58,11 @@ export async function verifySuggestion(suggestionId: number, username: string, s
     }
 }
 
-export async function searchCurseforgeMods(searchQuery: string, page: number, sortMethod: SortMethod) {
+export async function searchCurseforgeMods(searchQuery: string, page: number, sortMethod: SortMethod, gameVersion: string, modLoader: ModLoader) {
     const token = getUserToken();
 
     try {
-        const response = await api.get(`/curseforge/search/432?sortField=${sortMethod}&searchQuery=${searchQuery}&index=${page}&pageSize=${"10"}`, {
+        const response = await api.get(`/curseforge/search/432?sortField=${sortMethod}&searchQuery=${searchQuery}&index=${page}&pageSize=${10}&gameVersion=${gameVersion}&modLoader=${modLoader}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },

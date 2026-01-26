@@ -6,8 +6,8 @@ import { Link, useLocation } from "@tanstack/react-router";
 import store from "@/store/store";
 import NavUser from "./header-profile";
 
+// TODO: Use shadcn breadcrumb component? Also fix bug with breadcrumbs sometimes dissapearing
 function BreadCrumbs() {
-    // Make breadcrumb component listen for redirect event to add or remove accordingly
     const {breadCrumbs, updateBreadCrumbs} = store();
 
     return <div className="flex flex-row justify-around gap-4 items-center max-w-3/4 h-full p-2 max-sm:overflow-scroll">

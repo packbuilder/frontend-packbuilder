@@ -1,13 +1,14 @@
 import type { Suggestion } from "@/types/suggestion";
-import { CloudAlert, CloudCheck, SquarePlus, SquareMinus, TriangleAlert } from "lucide-react";
+import { CloudAlert, CloudCheck, SquarePlus, SquareMinus, TriangleAlert, CloudCog } from "lucide-react";
 import BreadCrumbLink from "./breadcrumb-link";
 import ToolbarTooltip from "./toolbar-tooltip";
 import { Button } from "./ui/button";
 import placeholderAvatar from "@/Seed-Avatar.jpg"
+import { ModAction, SuggestionState } from "@/types/enums";
 
 export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) {
-    const addedMods = suggestion.modifications.filter(m => m.modAction === "Added");
-    const removedMods = suggestion.modifications.filter(m => m.modAction === "Removed");
+    const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
+    const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
     
     return <BreadCrumbLink 
         className="duration-100 cursor-pointer relative hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full max-w-120 rounded overflow-hidden"
@@ -30,17 +31,20 @@ export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) 
                 </div>
             </div>
             <div className="flex flex-row items-center justify-center gap-2">
-                <div className={`${suggestion.isOutdated ? "" : "hidden"}`}>
+                {
+                    suggestion.state.toString() === SuggestionState.Unverified ?
                     <ToolbarTooltip side="top" content="This suggestion is outdated and may contain conflicts">
                         <CloudAlert className="text-red-500"/>
                     </ToolbarTooltip>
-                </div>
-
-                <div className={`${suggestion.isOutdated ? "hidden" : ""}`}>
+                    : suggestion.state.toString() === SuggestionState.VerificationPending ?
+                    <ToolbarTooltip side="top" content="This suggestion is up to date">
+                        <CloudCog />
+                    </ToolbarTooltip>
+                    :
                     <ToolbarTooltip side="top" content="This suggestion is up to date">
                         <CloudCheck />
                     </ToolbarTooltip>
-                </div>
+                }
 
                 <ToolbarTooltip side="top" content="Added mods">
                     <Button variant={"default"} className="bg-green-500 hover:bg-green-500 text-lg font-bold">
