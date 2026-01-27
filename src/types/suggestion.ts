@@ -1,5 +1,4 @@
 import z from "zod";
-import { dateSchema } from ".";
 import { userSchema } from "./user";
 import { modpackSchema } from "./modpack";
 import { modificationSchema } from "./modification";
@@ -7,16 +6,14 @@ import { ModLoader, SuggestionState } from "./enums";
 
 export const suggestionSchema = z.object({
     id: z.number(),
-    createdAt: dateSchema,
-    updatedAt: dateSchema,
-    user: userSchema,
-    modpack: modpackSchema,
+    user: userSchema.nullable(),
+    modpack: modpackSchema.nullable(),
     
     username: z.string(),
     userId: z.number(),
-    state: z.enum(SuggestionState),
+    state: z.coerce.string().pipe(z.enum(SuggestionState)),
     gameVersion: z.string(),
-    modLoader: z.enum(ModLoader),
+    modLoader: z.coerce.string().pipe(z.enum(ModLoader)),
     modpackSlug: z.string(),
     memo: z.string(),
     

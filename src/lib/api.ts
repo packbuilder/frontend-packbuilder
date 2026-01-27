@@ -1,19 +1,21 @@
 import { useApi } from "@/hooks/useApi";
-import type { Modpack } from "@/types/modpack";
-import type { User } from "@/types/user";
-import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
-import type { Suggestion } from "@/types/suggestion";
+import { modpackSchema, type Modpack } from "@/types/modpack";
+import { userSchema, type User } from "@/types/user";
+import { curseForgeModSchema, type CurseForgeMod } from "@/types/curseforge/curseforgeMod";
+import { suggestionSchema, type Suggestion } from "@/types/suggestion";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
 import { AxiosError } from "axios";
 import type { CreateModificationDto } from "@/types/dtos/createModificationDto";
-import type { Modification } from "@/types/modification";
+import { modificationSchema, type Modification } from "@/types/modification";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import Cookies from "js-cookie";
 import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
-import type { Version } from "@/types/version";
+import { versionSchema, type Version } from "@/types/version";
 import type { ModLoader } from "@/types/enums";
 import type { CreateSuggestionDto } from "@/types/dtos/createSuggestionDto";
+import z from "zod";
+import { curseForgeModListResponseSchema } from "@/types/curseforge/curseforgeModArrayResponse";
 
 const api = useApi();
 
@@ -49,7 +51,7 @@ export async function verifySuggestion(suggestionId: number, username: string, s
             },
         });
 
-        const data = response.data as Suggestion;
+        const data = suggestionSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -68,7 +70,7 @@ export async function searchCurseforgeMods(searchQuery: string, page: number, so
             },
         });
 
-        const data = response.data as {mods: CurseForgeMod[], pagination: CurseForgePagination};
+        const data = curseForgeModListResponseSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -87,7 +89,7 @@ export async function getUserByUsername(username: string) {
             },
         });
 
-        const data = response.data as User;
+        const data = userSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -105,7 +107,7 @@ export async function getUserModpacks(user: User) {
                 'Authorization': `Bearer ${token}`,
             }
         });
-        const data = response.data as Modpack[];
+        const data = z.array(modpackSchema).parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -123,7 +125,7 @@ export async function getUserSuggestions(userId: number) {
                 'Authorization': `Bearer ${token}`,
             }
         });
-        const data = response.data as Suggestion[];
+        const data = z.array(suggestionSchema).parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -141,7 +143,7 @@ export async function getModpack(username: string, modpackSlug: string) {
                 'Authorization': `Bearer ${token}`,
             }
         });
-        const data = response.data as Modpack;
+        const data = modpackSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -177,8 +179,8 @@ export async function getCurseForgeModData(referenceIds: string[]) {
                 'Authorization': `Bearer ${token}`,
             },
         });
-        console.log(response.data);
-        const mods = response.data as CurseForgeMod[]
+
+        const mods = z.array(curseForgeModSchema).parse(response.data); 
         return mods;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -197,7 +199,7 @@ export async function getModpackSuggestions(username: string, slug: string) {
             },
         });
 
-        const data = response.data as Suggestion[];
+        const data = z.array(suggestionSchema).parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -216,7 +218,7 @@ export async function getSuggestion(username: string, slug: string, id: string) 
             },
         });
 
-        const data = response.data as Suggestion;
+        const data = suggestionSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -254,7 +256,7 @@ export async function createSuggestion(username: string, slug: string, body: Cre
             },
         });
 
-        const data = response.data as Suggestion;
+        const data = suggestionSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -273,7 +275,7 @@ export async function createModification(username: string, slug: string, suggest
             },
         });
 
-        const data = response.data as Modification;
+        const data = modificationSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -292,7 +294,7 @@ export async function createModpackVersion(username: string, slug: string, sugge
             },
         });
 
-        const data = response.data as Version;
+        const data = versionSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -311,7 +313,7 @@ export async function updateSuggestion(username: string, slug: string, memo: str
             },
         });
 
-        const data = response.data as Suggestion;
+        const data = suggestionSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -330,7 +332,7 @@ export async function updateProfile(username: string, body: UpdateUserDto) {
             },
         });
 
-        const data = response.data as User;
+        const data = userSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -349,7 +351,7 @@ export async function updateModpack(username: string, slug: string, body: Update
             },
         });
 
-        const data = response.data as Modpack;
+        const data = modpackSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -368,7 +370,7 @@ export async function deleteModification(username: string, slug: string, modific
             }
         });
 
-        const data = response.data as Modification;
+        const data = modificationSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError

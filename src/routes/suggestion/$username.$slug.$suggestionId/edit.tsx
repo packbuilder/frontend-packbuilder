@@ -22,8 +22,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { appQueries } from "@/hooks/appQueries";
 import { Spinner } from "@/components/ui/spinner";
 import { SuggestionState, ModAction, ModPlatform } from "@/types/enums";
-import type { Suggestion } from "@/types/suggestion";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { suggestionSchema, type Suggestion } from "@/types/suggestion";
+import { Separator } from "@/components/ui/separator";
+import type { enumNameFromValue } from "@/lib/utils";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -232,26 +233,34 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
         mutation.mutate(formData);
     }
 
+    console.log(modification.modAction.toString())
+
     return <div className="flex flex-row items-center justify-start gap-2 p-5 border-b-2 border-gray-300 w-full flex-wrap">
-        <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
-        <h1 className="text-2xl">{curseforgeMod.name}</h1>
-        <h1 className={`${modification.modAction === ModAction.Added ? "bg-emerald-500" : "bg-red-500"} p-2`}>{modification.modAction}</h1>
-        <ToolbarTooltip side="top" content="This modification is conflicting, delete it to resolve the conflict.">
-            <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
-                <TriangleAlert className="text-black" />
-            </Button>
-        </ToolbarTooltip>
-        <ToolbarTooltip content="Curseforge link" side="top">
-            <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
-                <Button variant={"default"}><ExternalLink /></Button>
-            </Link>
-        </ToolbarTooltip>
-        <ToolbarTooltip content="Delete modification" side="top">
-            <form method="delete" id="deleteModification" onSubmit={handleSubmit}>
-                <Input type="hidden" name="modificationId" value={modification.id} />
-                <Button type="submit" variant={"destructive"}><X /></Button>
-            </form>
-        </ToolbarTooltip>
+        <div className="flex items-center justify-center gap-2">
+            <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
+            <h1 className="text-2xl">{curseforgeMod.name}</h1>
+        </div>
+        <div className="flex items-center justify-center gap-2">
+            <h1 className={`${modification.modAction === ModAction.Added ? "bg-emerald-500" : "bg-red-500"} p-2`}>
+                {modification.modAction === ModAction.Added ? "Added" : "Removed"}
+            </h1>
+            <ToolbarTooltip side="top" content="This modification is conflicting, delete it to resolve the conflict.">
+                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
+                    <TriangleAlert className="text-black" />
+                </Button>
+            </ToolbarTooltip>
+            <ToolbarTooltip content="Curseforge link" side="top">
+                <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
+                    <Button variant={"default"}><ExternalLink /></Button>
+                </Link>
+            </ToolbarTooltip>
+            <ToolbarTooltip content="Delete modification" side="top">
+                <form method="delete" id="deleteModification" onSubmit={handleSubmit}>
+                    <Input type="hidden" name="modificationId" value={modification.id} />
+                    <Button type="submit" variant={"destructive"}><X /></Button>
+                </form>
+            </ToolbarTooltip>
+        </div>
     </div>
 }
 
@@ -397,11 +406,9 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
     )
 }
 
-// TODO: Finish styling and adding content. Begin testing redis job dispatching
 export function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {suggestion: Suggestion, modificationReferenceIds: string[]}) {
     const {username, slug, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
-    const [isOpen, setIsOpen] = useState(false);
     
     const mutation = useMutation({
         mutationFn: async () => {
@@ -439,33 +446,28 @@ export function VerifySuggestionDialog({suggestion, modificationReferenceIds} : 
                     <DialogDescription>What to expect when verifying your suggestion?</DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center justify-center">
-                    <div 
-                        className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-[80%]"
-                    >
-                        <Collapsible
-                        open={isOpen}
-                        onOpenChange={setIsOpen}
-                        className="flex w-[350px] flex-col gap-2"
-                        >
-                            <div className="flex items-center justify-between gap-4 px-4">
-                                <h1 className="font-bold text-xl">How verification works.</h1>
-                                <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="icon" className="size-8">
-                                    <ChevronsUpDown />
-                                    <span className="sr-only">Toggle details</span>
-                                </Button>
-                                </CollapsibleTrigger>
+                    <div className="flex border flex-col justify-start items-start w-full flex flex-col h-96 w-96 overflow-y-auto w-[80%]">
+                        <div className="flex flex-col items-start justify-center">
+                            <h1 className="font-bold text-xl px-4 py-2">How the proccess works</h1>
+                            <Separator />
+                            <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
+                                <h1> 1. Verification of your suggestion happens automatically but may take some time.</h1>
+                                <h1> 2. During verification, your suggestion will be put in a queue to be verified and will enter a pending state.</h1>
+                                <h1> 3. You cannot make changes to your suggestion while it's in a pending state.</h1>
+                                <h1> 4. Once your suggestion is verified, it is able to be merged by the modpack owner.</h1>
+                                <h1> 5. You can make changes to your suggestion after it's verified, however doing so will un-verify the suggestion and you will have to re-verify after you make additional changes.</h1>
                             </div>
-                            <CollapsibleContent className="flex flex-col gap-2">
-                                <div className="rounded-md border px-4 py-2 ">
-                                    <h1> 1. Verification of your suggestion happens automatically but may take some time.</h1>
-                                    <h1> 2. During verification, your suggestion will be put in a queue to be verified and will enter a pending state.</h1>
-                                    <h1> 3. You cannot make changes to your suggestion while it's in a pending state.</h1>
-                                    <h1> 4. Once your suggestion is verified, it is able to be merged by the modpack owner.</h1>
-                                    <h1> 5. You can make changes to your suggestion after it's verified, however doing so will un-verify the suggestion and you will have to re-verify after you make additional changes.</h1>
-                                </div>
-                            </CollapsibleContent>
-                        </Collapsible>
+                        </div>
+                        <Separator />
+                        <div className="flex flex-col items-start justify-center">
+                            <h1 className="font-bold text-xl px-4 py-2">What happens during verification.</h1>
+                            <Separator />
+                            <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
+                                <h1> 1. All missing mod dependencies are resolved automatically and added to your suggestion.</h1>
+                                <h1> 2. Any conflicting mods that exist within the modpack already that werent suggested to be removed will be added as part of the suggestion</h1>
+                                <h1> 3. Any conflicting mods that are in the suggestion will automatically be removed.</h1>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <DialogFooter className="w-full px-2">
@@ -502,6 +504,7 @@ export default function EditSuggestion() {
         navigate({ to: "/" });
         return;
     }
+    console.log(suggestionSchema.parse(suggestion).state)
 
     const modificationReferenceIds = useMemo(
         () => suggestion.modifications.map(modification => modification.mod.referenceId), 
@@ -567,7 +570,7 @@ export default function EditSuggestion() {
 
                         return <ModificationDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={modData} modification={modification} key={index} />;
                 })}
-                <div className={`flex items-center justify-center size-full ${!modificationModData || modificationModData.length > 0 ? "" : "hidden"}`}>
+                <div className={`flex items-center justify-center size-full ${!modificationModData || modificationModData.length == 0 ? "" : "hidden"}`}>
                     <h1 className="text-xl">It's looking empty in here...</h1>
                 </div>
             </div>

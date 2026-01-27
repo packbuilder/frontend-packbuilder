@@ -33,15 +33,15 @@ export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) 
             <div className="flex flex-row items-center justify-center gap-2">
                 {
                     suggestion.state.toString() === SuggestionState.Unverified ?
-                    <ToolbarTooltip side="top" content="This suggestion is outdated and may contain conflicts">
+                    <ToolbarTooltip side="top" content="This suggestion is unverified and cannot be merged.">
                         <CloudAlert className="text-red-500"/>
                     </ToolbarTooltip>
                     : suggestion.state.toString() === SuggestionState.VerificationPending ?
-                    <ToolbarTooltip side="top" content="This suggestion is up to date">
+                    <ToolbarTooltip side="top" content="This suggestion is pending verification and will soon be able to be merged.">
                         <CloudCog />
                     </ToolbarTooltip>
                     :
-                    <ToolbarTooltip side="top" content="This suggestion is up to date">
+                    <ToolbarTooltip side="top" content="This suggestion has been verified and can be merged.">
                         <CloudCheck />
                     </ToolbarTooltip>
                 }
@@ -57,7 +57,7 @@ export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) 
                         <SquareMinus /> {removedMods.length}
                     </Button>
                 </ToolbarTooltip>
-
+                {/* TODO: Remove as its not neccessary anymore? */}
                 <ToolbarTooltip side="top" content="Conflicts">
                     <Button variant={"default"} className="bg-yellow-500 hover:bg-yellow-500 text-lg font-bold">
                         <TriangleAlert /> {suggestion.conflictingModifications.length}

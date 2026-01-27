@@ -38,7 +38,9 @@ function ModificationDisplay({modification, curseforgeMod} : {modification: Modi
         <div className="flex flex-row items-center justify-start gap-2 p-5 border-b-2 border-gray-300 w-full">
             <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
             <h1 className="text-2xl">{curseforgeMod.name}</h1>
-            <h1 className={`${modification.modAction === ModAction.Added ? "bg-emerald-500" : "bg-red-500"} p-2`}>{modification.modAction}</h1>
+            <h1 className={`${modification.modAction === ModAction.Added ? "bg-emerald-500" : "bg-red-500"} p-2`}>
+                {modification.modAction === ModAction.Added ? "Added" : "Removed"}
+            </h1>
             <ToolbarTooltip side="top" content="This modification is conflicting with the latest version of the modpack.">
                 <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
                     <TriangleAlert className="text-black" />
@@ -152,7 +154,7 @@ export default function SuggestionView() {
 
                     return <ModificationDisplay curseforgeMod={modData} modification={modification} key={index} />;
                 })}
-                <div className={`flex items-center justify-center size-full ${!modificationModData || modificationModData.length > 0 ? "" : "hidden"}`}>
+                <div className={`flex items-center justify-center size-full ${!modificationModData || modificationModData.length === 0 ? "" : "hidden"}`}>
                     <h1 className="text-xl">It's looking empty in here...</h1>
                 </div>
             </div>

@@ -9,7 +9,7 @@ export const curseForgeModSchema = z.object({
     websiteLink: z.string(),
     
     dependencies: z.array(z.string()),
-    modVersions: z.array(curseForgeModVersionSchema),
+    modVersions: z.array(curseForgeModVersionSchema).optional(),
 });
 
 export type CurseForgeMod = z.infer<typeof curseForgeModSchema>

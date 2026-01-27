@@ -7,7 +7,7 @@ export const versionSchema = z.object({
     modpackId: z.number(),
     iterations: z.number(),
     gameVersion: z.string(),
-    modLoader: z.enum(ModLoader),
+    modLoader: z.coerce.string().pipe(z.enum(ModLoader)),
 
     versionMods: z.array(versionModSchema)
 })
