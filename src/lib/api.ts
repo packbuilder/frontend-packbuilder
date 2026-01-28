@@ -275,8 +275,7 @@ export async function createModification(username: string, slug: string, suggest
             },
         });
 
-        const data = modificationSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err);
@@ -370,8 +369,7 @@ export async function deleteModification(username: string, slug: string, modific
             }
         });
 
-        const data = modificationSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);

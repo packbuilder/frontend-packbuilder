@@ -24,7 +24,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { SuggestionState, ModAction, ModPlatform } from "@/types/enums";
 import { suggestionSchema, type Suggestion } from "@/types/suggestion";
 import { Separator } from "@/components/ui/separator";
-import type { enumNameFromValue } from "@/lib/utils";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -101,6 +100,7 @@ function EditMemoDropDown({currentMemo} : {currentMemo: string}) {
         mutationFn: async (formData: FormData) => {
             const newMemo = formData.get("memo") as string;
             const updatedSuggestion = await updateSuggestion(username, slug, newMemo, suggestionId);
+
             if(!updatedSuggestion) {
                 throw new Error("Problem with updating suggestion on backend");
             }
@@ -156,9 +156,10 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMess
             const modAction = formData.get("modAction") as ModAction;
             const modPlatform = formData.get("modPlatform") as ModPlatform;
             const createModificationDto = createModificationDtoSchema.parse({modAction, modReferenceId, modPlatform});
-            const modification = await createModification(username, slug, suggestionId, createModificationDto);
 
-            if(!modification) {
+            const status = await createModification(username, slug, suggestionId, createModificationDto);
+
+            if(!status || status < 200 || status > 200) {
                 throw new Error("Problem with creating modification to add mod to suggestion list");
             }
         },
@@ -206,10 +207,10 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const modificationId = formData.get("modificationId") as string;
-            const deletedModification = await deleteModification(username, slug, modificationId, suggestionId);
+            const status = await deleteModification(username, slug, modificationId, suggestionId);
 
-            if(!deletedModification) {
-                throw new Error("Problem with deleting modification");
+            if(!status || status < 200 || status > 200) {
+                throw new Error("Problem with deleting modification from this suggestion");
             }
         },
         onSuccess: async () => {
@@ -232,8 +233,6 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
         const formData = new FormData(event.currentTarget);
         mutation.mutate(formData);
     }
-
-    console.log(modification.modAction.toString())
 
     return <div className="flex flex-row items-center justify-start gap-2 p-5 border-b-2 border-gray-300 w-full flex-wrap">
         <div className="flex items-center justify-center gap-2">
