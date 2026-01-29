@@ -63,7 +63,11 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const newName = formData.get("newName") as string;
-            await updateModpack(username, slug, {name: newName})
+            const status = await updateModpack(username, slug, {name: newName});
+
+            if(!status || status < 200 || status > 200) {
+                throw new Error("Problem with updating modpack name");
+            }
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
@@ -75,6 +79,9 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
                 refetchType: "all"
             });
             await router.invalidate({sync: true});
+        },
+        onError: (error: Error) => {
+            console.log(error.message);
         }
     });
 
@@ -168,7 +175,7 @@ export default function ModpackView() {
                 </Select>
             </div>
             <div className="flex items-center justify-center">
-                <h1 className="text-lg">Minecraft {displayedVersion.gameVersion} using {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())}</h1>
+                <h1 className="text-lg">Using minecraft version {displayedVersion.gameVersion} with {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())} mod loader.</h1>
             </div>
             <div className="flex flex-row items-center justify-center gap-2">
                 <CopyButton text={"http:localhost:3000" + pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />

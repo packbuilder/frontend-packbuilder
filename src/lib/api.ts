@@ -1,17 +1,15 @@
 import { useApi } from "@/hooks/useApi";
-import { modpackSchema, type Modpack } from "@/types/modpack";
+import { modpackSchema } from "@/types/modpack";
 import { userSchema, type User } from "@/types/user";
-import { curseForgeModSchema, type CurseForgeMod } from "@/types/curseforge/curseforgeMod";
-import { suggestionSchema, type Suggestion } from "@/types/suggestion";
-import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
+import { curseForgeModSchema } from "@/types/curseforge/curseforgeMod";
+import { suggestionSchema } from "@/types/suggestion";
 import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
 import { AxiosError } from "axios";
 import type { CreateModificationDto } from "@/types/dtos/createModificationDto";
-import { modificationSchema, type Modification } from "@/types/modification";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import Cookies from "js-cookie";
 import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
-import { versionSchema, type Version } from "@/types/version";
+import { versionSchema } from "@/types/version";
 import type { ModLoader } from "@/types/enums";
 import type { CreateSuggestionDto } from "@/types/dtos/createSuggestionDto";
 import z from "zod";
@@ -51,8 +49,7 @@ export async function verifySuggestion(suggestionId: number, username: string, s
             },
         });
 
-        const data = suggestionSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
@@ -256,8 +253,7 @@ export async function createSuggestion(username: string, slug: string, body: Cre
             },
         });
 
-        const data = suggestionSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
@@ -293,8 +289,7 @@ export async function createModpackVersion(username: string, slug: string, sugge
             },
         });
 
-        const data = versionSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err);
@@ -312,8 +307,7 @@ export async function updateSuggestion(username: string, slug: string, memo: str
             },
         });
 
-        const data = suggestionSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
@@ -331,8 +325,7 @@ export async function updateProfile(username: string, body: UpdateUserDto) {
             },
         });
 
-        const data = userSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
@@ -350,8 +343,7 @@ export async function updateModpack(username: string, slug: string, body: Update
             },
         });
 
-        const data = modpackSchema.parse(response.data);
-        return data;
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);

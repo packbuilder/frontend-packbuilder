@@ -92,6 +92,7 @@ function PaginationButtons({ paginationData, curPage } : {
     </div>
 }
 
+//TODO: Edit this dropdown to include making changes to suggestion version and mod loader
 function EditMemoDropDown({currentMemo} : {currentMemo: string}) {
     const {username, slug, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
@@ -99,9 +100,9 @@ function EditMemoDropDown({currentMemo} : {currentMemo: string}) {
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const newMemo = formData.get("memo") as string;
-            const updatedSuggestion = await updateSuggestion(username, slug, newMemo, suggestionId);
+            const status = await updateSuggestion(username, slug, newMemo, suggestionId);
 
-            if(!updatedSuggestion) {
+            if(!status || status < 200 || status > 200) {
                 throw new Error("Problem with updating suggestion on backend");
             }
         },
@@ -411,9 +412,9 @@ export function VerifySuggestionDialog({suggestion, modificationReferenceIds} : 
     
     const mutation = useMutation({
         mutationFn: async () => {
-            const verifiedSuggestion = await verifySuggestion(suggestion.id, username, slug);
+            const status = await verifySuggestion(suggestion.id, username, slug);
 
-            if(!verifiedSuggestion) {
+            if(!status || status < 200 || status > 200 ) {
                 throw new Error("Problem with verifying suggestion.");
             }
         },
@@ -462,9 +463,9 @@ export function VerifySuggestionDialog({suggestion, modificationReferenceIds} : 
                             <h1 className="font-bold text-xl px-4 py-2">What happens during verification.</h1>
                             <Separator />
                             <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
-                                <h1> 1. All missing mod dependencies are resolved automatically and added to your suggestion.</h1>
-                                <h1> 2. Any conflicting mods that exist within the modpack already that werent suggested to be removed will be added as part of the suggestion</h1>
-                                <h1> 3. Any conflicting mods that are in the suggestion will automatically be removed.</h1>
+                                <h1> 1. All missing required mod dependencies are resolved automatically and added to your suggestion as modifications to be added.</h1>
+                                <h1> 2. Any incompatible mods that are already in the modpack will be added to your suggestion list as mods to be removed.</h1>
+                                <h1> 3. Any conflicting modifications that are in your suggestion will automatically be deleted.</h1>
                             </div>
                         </div>
                     </div>

@@ -57,18 +57,8 @@ export default function SuggestionView() {
     const [message, setMessage] = useState("");
     const router = useRouter();
     const navigate = useNavigate();
-    const {data: modpack} = useSuspenseQuery({
-        ...appQueries.modpack(username, slug),
-        staleTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false
-    });
-    const {data: suggestion} = useSuspenseQuery({
-        ...appQueries.suggestion(username, slug, suggestionId),
-        staleTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-    });
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
     
     if(!suggestion || !modpack) {
         navigate({to: "/"});
@@ -82,14 +72,18 @@ export default function SuggestionView() {
     const {data: modificationModData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
     const mergeSuggestion = async () => {
-        if(suggestion.conflictingModifications.length > 0 || suggestion.state !== SuggestionState.Verified) {
+
+        if(suggestion.state !== SuggestionState.Verified) {
             setMessage("Could not merge suggestion. It is either outdated or has conflicts that need to be resolved by the suggestion creator.")
+            return;
+        } else if(suggestion.modifications.length <= 0) {
+            setMessage("You cannot merge suggestions with no modifications.");
             return;
         }
 
-        const latestVersion = await createModpackVersion(username, slug, suggestionId);
+        const status = await createModpackVersion(username, slug, suggestionId);
 
-        if(!latestVersion) {
+        if(!status || status < 200 || status > 200) {
             setMessage("There was a problem with merging this suggestion. Try again later.")
             return;
         }

@@ -68,9 +68,10 @@ function ProfileEdit() {
         }
 
         const updateUserDto = updateProfileDtoSchema.parse({ name: newName, email, password: password.length > 0 ? password : null });
-        const updatedProfile = await updateProfile(curUser!.name, updateUserDto);
 
-        if(!updatedProfile) {
+        const status = await updateProfile(curUser!.name, updateUserDto);
+
+        if(!status || status < 200 || status > 200) {
           throw new Error("There was a problem with updating your profile information, please try again.")
         }
       },

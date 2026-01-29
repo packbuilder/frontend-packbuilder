@@ -14,7 +14,6 @@ import SuggestionCard from "@/components/suggestion-card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ModLoader } from "@/types/enums";
 import { enumNameFromValue } from "@/lib/utils";
-import { Label } from "@radix-ui/react-dropdown-menu";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 
 export const Route = createFileRoute('/modpack/$username/$slug/suggestions')({
@@ -64,25 +63,19 @@ function CreateSuggestionDialog() {
         mutationFn: async (formData: FormData) => {
             const memo = formData.get("memo") as string;
             const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
-            const suggestion = await createSuggestion(username, slug, body);
+            const status = await createSuggestion(username, slug, body);
 
-            if(!suggestion) {
+            if(!status || status < 200 || status > 200) {
                 throw new Error("There was a problem with creating this suggestion");
             }
-
-            return suggestion;
         },
-        onSuccess: async (data) => {
+        onSuccess: async () => {
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpackSuggestions(username, slug).queryKey,
                 refetchType: "all"
             });
 
             await router.invalidate({sync: true});
-
-            console.log(data);
-            
-            // navigate({to:`suggestion/${username}/${slug}/${data.id}/edit`, from: "/"});
         },
         onError: (error) => {
             console.error(error.message)
