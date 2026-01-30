@@ -12,10 +12,6 @@ export const Route = createFileRoute("/")({
   }) => {
     const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
 
-    const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
-
-    console.log(minecraftVersions);
-
     return {curUser, modpacks};
   },
   component: Home,

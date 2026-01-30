@@ -17,8 +17,7 @@ export const suggestionSchema = z.object({
     modpackSlug: z.string(),
     memo: z.string(),
     
-    modifications: z.array(modificationSchema),
-    conflictingModifications: z.array(modificationSchema)
+    modifications: z.array(modificationSchema)
 });
 
 export type Suggestion = z.infer<typeof suggestionSchema>

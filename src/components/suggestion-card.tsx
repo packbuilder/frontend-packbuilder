@@ -57,12 +57,6 @@ export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) 
                         <SquareMinus /> {removedMods.length}
                     </Button>
                 </ToolbarTooltip>
-                {/* TODO: Remove as its not neccessary anymore? */}
-                <ToolbarTooltip side="top" content="Conflicts">
-                    <Button variant={"default"} className="bg-yellow-500 hover:bg-yellow-500 text-lg font-bold">
-                        <TriangleAlert /> {suggestion.conflictingModifications.length}
-                    </Button>
-                </ToolbarTooltip>
             </div>
         </div>
     </BreadCrumbLink>

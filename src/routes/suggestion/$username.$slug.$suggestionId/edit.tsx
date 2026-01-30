@@ -3,8 +3,8 @@ import { createModification, deleteModification, updateSuggestion, verifySuggest
 import type { VersionMod } from "@/types/versionMod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog, ChevronsUpDown, Save } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog, Save, Plus } from "lucide-react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 import { SelectLabel } from "@radix-ui/react-select";
@@ -13,17 +13,18 @@ import { type Modification } from "@/types/modification";
 import { createModificationDtoSchema } from "@/types/dtos/createModificationDto";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
 import z from "zod";
 import placeholder from "@/Seed-Avatar.jpg"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { appQueries } from "@/hooks/appQueries";
 import { Spinner } from "@/components/ui/spinner";
-import { SuggestionState, ModAction, ModPlatform } from "@/types/enums";
+import { SuggestionState, ModAction, ModPlatform, ModLoader } from "@/types/enums";
 import { suggestionSchema, type Suggestion } from "@/types/suggestion";
 import { Separator } from "@/components/ui/separator";
+import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
+import { enumNameFromValue } from "@/lib/utils";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -92,30 +93,44 @@ function PaginationButtons({ paginationData, curPage } : {
     </div>
 }
 
-//TODO: Edit this dropdown to include making changes to suggestion version and mod loader
-function EditMemoDropDown({currentMemo} : {currentMemo: string}) {
-    const {username, slug, suggestionId} = Route.useParams();
+function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
+    const [isOpen, setOpen] = useState(false);
     const queryClient = useQueryClient();
+    const {username, slug, suggestionId} = Route.useParams();
+    const router = useRouter();
+    const formRef = useRef(null);
+    const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
+    const [minecraftVersion, setMinecraftVersion] = useState(suggestion.gameVersion);
+    const [modLoader, setModLoader] = useState(suggestion.modLoader.toString());
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
-            const newMemo = formData.get("memo") as string;
-            const status = await updateSuggestion(username, slug, newMemo, suggestionId);
+            const memo = formData.get("memo") as string;
+            const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
+            const status = await updateSuggestion(username, slug, body, parseInt(suggestionId));
 
             if(!status || status < 200 || status > 200) {
-                throw new Error("Problem with updating suggestion on backend");
+                throw new Error("There was a problem with updating this suggestion");
             }
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
-                refetchType: "all",
+                refetchType: "all"
             });
+
+            await router.invalidate({sync: true});
         },
         onError: (error) => {
-            console.error(error.message);
+            console.error(error.message)
         }
     });
+
+    const submitForm = () => {
+        setOpen(false);
+        const form = formRef.current as unknown as HTMLFormElement;
+        form.requestSubmit();
+    }
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -123,28 +138,74 @@ function EditMemoDropDown({currentMemo} : {currentMemo: string}) {
         mutation.mutate(formData);
     }
 
-    return <Popover>
-        <ToolbarTooltip content="Edit memo" side="bottom">
-            <PopoverTrigger asChild>
-                <Button variant={"default"}>
-                    <Edit />
-                </Button>
-            </PopoverTrigger>
-        </ToolbarTooltip>
-        <PopoverContent className="p-2 bg-popover rounded-md">
-            <div className="w-fit">
-                <form id="editMemo" method="post" onSubmit={handleSubmit}>
-                    <div className="flex flex-col justify-center items-center">
-                        <h1>Edit memo</h1>
-                        <div className="flex items-center justify-center">
-                            <Input className="w-full"style={{background: "white", color: "black"}} placeholder="Your message..." defaultValue={currentMemo} id="memo" name="memo" required/>
-                            <Button type="submit" variant={"default"}><Edit /></Button>
-                        </div>
-                    </div>
-                </form>  
-            </div>
-        </PopoverContent>
-    </Popover>
+    return <Dialog open={isOpen} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+            <Button variant={"default"}>
+                Edit details <Edit />
+            </Button>   
+        </DialogTrigger>
+        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
+            <DialogHeader className="w-full px-2">
+                <DialogTitle>
+                    Update suggestion
+                </DialogTitle>
+                <DialogDescription>
+                    Update your suggestion details!
+                </DialogDescription>
+            </DialogHeader>
+            <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
+                <div className="flex flex-col justify-center items-start gap-2">
+                    <h1 className="font-bold text-lg">Memo</h1>
+                    <Input id="memo" type="text" name="memo" defaultValue={suggestion.memo} placeholder="Your message..."/>
+                </div>
+                <h1 className="font-bold text-lg">Game Version & Mod Loader</h1>
+                <div className={`flex items-center justify-center gap-2`}>
+                    <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
+                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                            <SelectValue placeholder="Select game version..."/>
+                        </SelectTrigger> 
+                        <SelectContent className="bg-white text-black" side="bottom">
+                            <SelectGroup>     
+                                <SelectLabel>Select version</SelectLabel>
+                                {
+                                    minecraftVersions?.map((version, index) => {
+                                        return <SelectItem className="cursor-pointer" key={index} value={version}>
+                                            {version}
+                                        </SelectItem>
+                                    })
+                                }
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <Select value={modLoader.toString()} onValueChange={setModLoader}>
+                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                            <SelectValue placeholder="Select game version..."/>
+                        </SelectTrigger> 
+                        <SelectContent className="bg-white text-black" side="bottom">
+                            <SelectGroup>     
+                                <SelectLabel>Select mod loader</SelectLabel>
+                                {
+                                    Object.values(ModLoader).map((modLoader, index) => {
+                                        return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
+                                            {enumNameFromValue(ModLoader, modLoader)}
+                                        </SelectItem>
+                                    })
+                                }
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </form>
+            <DialogFooter className="w-full px-2">
+                <div className="w-full flex flex-row justify-start items-center gap-2">
+                    <Button variant={"default"} onClick={submitForm} type="submit">Update Suggestion <Save/></Button>
+                    <DialogClose asChild>
+                        <Button variant={"destructive"}>Cancel <X/></Button>
+                    </DialogClose>
+                </div>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 }
 
 function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMessage, modificationReferenceIds} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean, disabledMessage: string, modificationReferenceIds: string[]}) {
@@ -406,7 +467,7 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
     )
 }
 
-export function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {suggestion: Suggestion, modificationReferenceIds: string[]}) {
+function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {suggestion: Suggestion, modificationReferenceIds: string[]}) {
     const {username, slug, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
     
@@ -544,9 +605,12 @@ export default function EditSuggestion() {
                     </div>
                 }
                 <div className="flex items-center justify-center gap-2">
-                    <p className="text-md">Memo: {suggestion.memo}</p> <EditMemoDropDown currentMemo={suggestion.memo} />
+                    <h1 className="text-lg">Minecraft version: {suggestion.gameVersion}</h1>
+                    <h1 className="text-lg">Mod loader: {enumNameFromValue(ModLoader, suggestion.modLoader)}</h1>
+                    <h1 className="text-lg">Memo: {suggestion.memo}</h1>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+                    <UpdateSuggestionDialog suggestion={suggestion} />
                     <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <RemoveModsDialog modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} />
                     <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />

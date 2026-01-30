@@ -297,11 +297,11 @@ export async function createModpackVersion(username: string, slug: string, sugge
     }
 }
 
-export async function updateSuggestion(username: string, slug: string, memo: string, suggestionId: string) {
+export async function updateSuggestion(username: string, slug: string, body: CreateSuggestionDto, suggestionId: Number) {
     const token = getUserToken();
     
     try {
-        const response = await api.put(`/${username}/modpacks/${slug}/suggestions/${suggestionId}`, {memo}, {
+        const response = await api.put(`/${username}/modpacks/${slug}/suggestions/${suggestionId}`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -315,11 +315,11 @@ export async function updateSuggestion(username: string, slug: string, memo: str
     }
 }
 
-export async function updateProfile(username: string, body: UpdateUserDto) {
+export async function updateProfile(userId: number, body: UpdateUserDto) {
     const token = getUserToken();
     
     try {
-        const response = await api.put(`/users/${username}`, body, {
+        const response = await api.put(`/users/${userId}`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
