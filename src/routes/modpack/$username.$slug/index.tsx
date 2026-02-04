@@ -30,7 +30,7 @@ export const Route = createFileRoute('/modpack/$username/$slug/')({
         throw redirect({to: "/"});
     }
  
-    const modIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
+    const modIds = modpack.versions[0]?.versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
     const modData = await queryClient.ensureQueryData(appQueries.modpackModData(referenceIds));
 
@@ -112,7 +112,7 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
     )
 }
 
-
+// TODO: Clean up ternary operator usage throughout the app
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
@@ -158,7 +158,7 @@ export default function ModpackView() {
                 <h1 className="font-bold text-2xl">Version:</h1>
                 <Select value={versionIteration} onValueChange={handleValueChange}>
                     <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                        <SelectValue placeholder="Set sort method..."/>
+                        <SelectValue placeholder="Select modpack version..."/>
                     </SelectTrigger> 
                     <SelectContent className="bg-white text-black">
                         <SelectGroup>     

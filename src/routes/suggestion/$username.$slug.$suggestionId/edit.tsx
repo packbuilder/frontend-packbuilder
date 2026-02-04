@@ -525,7 +525,7 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
                             <Separator />
                             <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
                                 <h1> 1. All missing required mod dependencies are resolved automatically and added to your suggestion as modifications to be added.</h1>
-                                <h1> 2. Any incompatible mods that are already in the modpack will be added to your suggestion list as mods to be removed.</h1>
+                                <h1> 2. Any incompatible mods that are already in the modpack will be added to your modifications list as mods to be removed.</h1>
                                 <h1> 3. Any conflicting modifications that are in your suggestion will automatically be deleted.</h1>
                             </div>
                         </div>

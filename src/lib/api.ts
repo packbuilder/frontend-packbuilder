@@ -14,6 +14,7 @@ import type { ModLoader } from "@/types/enums";
 import type { CreateSuggestionDto } from "@/types/dtos/createSuggestionDto";
 import z from "zod";
 import { curseForgeModListResponseSchema } from "@/types/curseforge/curseforgeModArrayResponse";
+import type { CreateModpackDto } from "@/types/dtos/createModpackDto";
 
 const api = useApi();
 
@@ -236,6 +237,24 @@ export async function getMinecraftVersions() {
 
         const data = response.data as string[];
         return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function createModpack(username: string, body: CreateModpackDto) {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.post(`/${username}/modpacks/`, body, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
