@@ -25,6 +25,7 @@ import { suggestionSchema, type Suggestion } from "@/types/suggestion";
 import { Separator } from "@/components/ui/separator";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import { enumNameFromValue } from "@/lib/utils";
+import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -32,16 +33,16 @@ const addModSearchSchema = z.object({
     searchQuery: fallback(z.string(), "").default('')
 });
 
-export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/edit')({
+export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggestionId/edit')({
     validateSearch: zodValidator(addModSearchSchema),
     loaderDeps: ({search: {searchQuery, page, sortMethod}}) => ({
         searchQuery,
         page,
         sortMethod
     }),
-    loader: async ({context: {user, queryClient}, params: {username, slug, suggestionId}, deps: {searchQuery, page, sortMethod}}) => {
-        const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(username, slug, suggestionId));
-        const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug));
+    loader: async ({context: {user, queryClient}, params: {modpackId, suggestionId}, deps: {searchQuery, page, sortMethod}}) => {
+        const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(modpackId, suggestionId));
+        const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId));
         
         if(!suggestion || !modpack || user?.id !== suggestion.userId) {
             throw redirect({to:"/"});
@@ -71,14 +72,14 @@ function PaginationButtons({ paginationData, curPage } : {
         if(!paginationData || paginationData.resultCount !== paginationData.pageSize) {
             return;
         }
-        navigate({search: (prev) => ({page: prev.page + 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
+        navigate({search: (prev: {page: number, searchQuery: string, sortMethod: SortMethod}) => ({page: prev.page + 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
     }
 
     const previousPage = async () => {
         if(curPage - 1 < 0) {
             return;
         }
-        navigate({search: (prev) => ({page: prev.page - 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
+        navigate({search: (prev: {page: number, searchQuery: string, sortMethod: SortMethod}) => ({page: prev.page - 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
     }
 
 
@@ -96,7 +97,7 @@ function PaginationButtons({ paginationData, curPage } : {
 function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
     const [isOpen, setOpen] = useState(false);
     const queryClient = useQueryClient();
-    const {username, slug, suggestionId} = Route.useParams();
+    const {username, modpackId, suggestionId} = Route.useParams();
     const router = useRouter();
     const formRef = useRef(null);
     const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
@@ -107,7 +108,7 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
         mutationFn: async (formData: FormData) => {
             const memo = formData.get("memo") as string;
             const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
-            const status = await updateSuggestion(username, slug, body, parseInt(suggestionId));
+            const status = await updateSuggestion(modpackId, body, parseInt(suggestionId));
 
             if(!status || status < 200 || status > 200) {
                 throw new Error("There was a problem with updating this suggestion");
@@ -115,7 +116,7 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
+                queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
                 refetchType: "all"
             });
 
@@ -209,7 +210,7 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
 }
 
 function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMessage, modificationReferenceIds} : {curseforgeMod: CurseForgeMod, modAction: "Add" | "Remove", isEnabled: boolean, disabledMessage: string, modificationReferenceIds: string[]}) {
-    const {username, slug, suggestionId} = Route.useParams();
+    const {modpackId, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
@@ -219,7 +220,7 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMess
             const modPlatform = formData.get("modPlatform") as ModPlatform;
             const createModificationDto = createModificationDtoSchema.parse({modAction, modReferenceId, modPlatform});
 
-            const status = await createModification(username, slug, suggestionId, createModificationDto);
+            const status = await createModification(modpackId, suggestionId, createModificationDto);
 
             if(!status || status < 200 || status > 200) {
                 throw new Error("Problem with creating modification to add mod to suggestion list");
@@ -227,11 +228,11 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMess
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
+                queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modpack(username, slug).queryKey,
+                queryKey: appQueries.modpack(modpackId).queryKey,
                 refetchType: "all"
             });
             await queryClient.invalidateQueries({
@@ -263,13 +264,13 @@ function CurseForgeModDisplay({curseforgeMod, modAction, isEnabled, disabledMess
 }
 
 function ModificationDisplay({curseforgeMod, modification, modificationReferenceIds} : {curseforgeMod: CurseForgeMod, modification: Modification, modificationReferenceIds: string[]}) {
-    const {username, slug, suggestionId} = Route.useParams();
+    const {modpackId, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const modificationId = formData.get("modificationId") as string;
-            const status = await deleteModification(username, slug, modificationId, suggestionId);
+            const status = await deleteModification(modpackId, modificationId, suggestionId);
 
             if(!status || status < 200 || status > 200) {
                 throw new Error("Problem with deleting modification from this suggestion");
@@ -277,7 +278,7 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
+                queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
@@ -468,12 +469,12 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
 }
 
 function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {suggestion: Suggestion, modificationReferenceIds: string[]}) {
-    const {username, slug, suggestionId} = Route.useParams();
+    const {modpackId, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
     
     const mutation = useMutation({
         mutationFn: async () => {
-            const status = await verifySuggestion(suggestion.id, username, slug);
+            const status = await verifySuggestion(suggestion.id, modpackId);
 
             if(!status || status < 200 || status > 200 ) {
                 throw new Error("Problem with verifying suggestion.");
@@ -481,7 +482,7 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(username, slug, suggestionId).queryKey,
+                queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
                 refetchType: "all",
             });
             await queryClient.invalidateQueries({
@@ -545,17 +546,17 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
 }
 
 export default function EditSuggestion() {
-    const {username, slug, suggestionId} = Route.useParams();
+    const {modpackId, suggestionId} = Route.useParams();
     const navigate = useNavigate();
 
     const {data: modpack} = useSuspenseQuery({
-        ...appQueries.modpack(username, slug),
+        ...appQueries.modpack(modpackId),
         staleTime: Infinity,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false
     });
     const {data: suggestion} = useSuspenseQuery({
-        ...appQueries.suggestion(username, slug, suggestionId),
+        ...appQueries.suggestion(modpackId, suggestionId),
         staleTime: Infinity,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,

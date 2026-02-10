@@ -14,7 +14,7 @@ export const suggestionSchema = z.object({
     state: z.coerce.string().pipe(z.enum(SuggestionState)),
     gameVersion: z.string(),
     modLoader: z.coerce.string().pipe(z.enum(ModLoader)),
-    modpackSlug: z.string(),
+    modpackId: z.number(),
     memo: z.string(),
     
     modifications: z.array(modificationSchema)

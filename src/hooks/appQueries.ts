@@ -4,14 +4,14 @@ import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
 
 export const appQueries = {
-    suggestion: (username: string, slug: string, suggestionId: string) => queryOptions({
+    suggestion: (modpackId: string, suggestionId: string) => queryOptions({
         queryKey: ["suggestion", suggestionId],
-        queryFn: () => getSuggestion(username, slug, suggestionId),
+        queryFn: () => getSuggestion(modpackId, suggestionId),
     }),
 
-    modpack: (username: string, slug: string) => queryOptions({
-        queryKey: ["modpack", slug],
-        queryFn: () => getModpack(username, slug),
+    modpack: (modpackId: string) => queryOptions({
+        queryKey: ["modpack", modpackId],
+        queryFn: () => getModpack(modpackId),
     }),
 
     userData: (username: string) => queryOptions({
@@ -43,9 +43,9 @@ export const appQueries = {
         enabled: !!referenceIds
     }),
 
-    modpackSuggestions: (username: string, slug: string) => queryOptions({
-        queryKey: ["modpackSuggestions", slug],
-        queryFn: () => getModpackSuggestions(username, slug)
+    modpackSuggestions: (modpackId: string) => queryOptions({
+        queryKey: ["modpackSuggestions", modpackId],
+        queryFn: () => getModpackSuggestions(modpackId)
     }),  
 
     modificationModData: (suggestionId: string, modificationReferenceIds: string[] | null | undefined) => queryOptions({

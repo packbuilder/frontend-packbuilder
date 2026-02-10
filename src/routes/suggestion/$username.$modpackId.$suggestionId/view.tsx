@@ -12,13 +12,13 @@ import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { appQueries } from "@/hooks/appQueries";
 import { SuggestionState, ModAction } from "@/types/enums";
 
-export const Route = createFileRoute('/suggestion/$username/$slug/$suggestionId/view')({
+export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggestionId/view')({
     loader: async ({context, params}) => {
         const {user, queryClient} = context;
-        const {username, slug, suggestionId} = params;
+        const {modpackId, suggestionId} = params;
 
-        const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(username, slug, suggestionId));
-        const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug));
+        const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(modpackId, suggestionId));
+        const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId));
 
         if(!suggestion || !modpack) {
             throw redirect({to: "/"});
@@ -52,13 +52,13 @@ function ModificationDisplay({modification, curseforgeMod} : {modification: Modi
 
 export default function SuggestionView() {
     const { curUser } = Route.useLoaderData();
-    const {username, slug, suggestionId} = Route.useParams();
+    const {username, modpackId, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
     const [message, setMessage] = useState("");
     const router = useRouter();
     const navigate = useNavigate();
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(username, slug, suggestionId));
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
+    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(modpackId, suggestionId));
     
     if(!suggestion || !modpack) {
         navigate({to: "/"});
@@ -81,14 +81,14 @@ export default function SuggestionView() {
             return;
         }
 
-        const status = await createModpackVersion(username, slug, suggestionId);
+        const status = await createModpackVersion(modpackId, suggestionId);
 
         if(!status || status < 200 || status > 200) {
             setMessage("There was a problem with merging this suggestion. Try again later.")
             return;
         }
 
-        await queryClient.invalidateQueries({queryKey: ["modpack", slug], exact: true});
+        await queryClient.invalidateQueries({queryKey: ["modpack", modpackId], exact: true});
         await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionId], exact: true});
         await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionId]})
         await router.invalidate({sync: true});  
@@ -125,7 +125,7 @@ export default function SuggestionView() {
                 </div>
                 <div className="flex justify-center items-center gap-2">
                     {suggestion.userId === curUser?.id ? 
-                    <BreadCrumbLink link={`suggestion/${username}/${slug}/${suggestionId}/edit`} text="Edit">
+                    <BreadCrumbLink link={`suggestion/${username}/${modpackId}/${suggestionId}/edit`} text="Edit">
                         <Button variant={"default"}>Edit <Edit /></Button> 
                     </BreadCrumbLink>
                     : ""}

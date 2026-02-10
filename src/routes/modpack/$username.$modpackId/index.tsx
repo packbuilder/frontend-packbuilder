@@ -19,12 +19,12 @@ import { Separator } from "@/components/ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
 import { ModLoader } from "@/types/enums";
 
-export const Route = createFileRoute('/modpack/$username/$slug/')({
+export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
     const {user, queryClient} = context;
-    const {username, slug} = params;
+    const {modpackId} = params;
  
-    const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug))
+    const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId))
  
     if(!modpack) {
         throw redirect({to: "/"});
@@ -58,12 +58,12 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
     const {curUser} = Route.useLoaderData();
     const queryClient = useQueryClient();
     const router = useRouter();
-    const {username, slug} = Route.useParams();
+    const {modpackId} = Route.useParams();
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const newName = formData.get("newName") as string;
-            const status = await updateModpack(username, slug, {name: newName});
+            const status = await updateModpack(modpackId, {name: newName});
 
             if(!status || status < 200 || status > 200) {
                 throw new Error("Problem with updating modpack name");
@@ -71,7 +71,7 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modpack(username, slug).queryKey,
+                queryKey: appQueries.modpack(modpackId).queryKey,
                 refetchType: "all"
             });
             await queryClient.invalidateQueries({
@@ -116,10 +116,10 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
-    const {username, slug} = Route.useParams();
+    const {username, modpackId} = Route.useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(username, slug));
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
 
     if(!modpack) {
         navigate({to: "/"});
@@ -179,7 +179,7 @@ export default function ModpackView() {
             </div>
             <div className="flex flex-row items-center justify-center gap-2">
                 <CopyButton text={"http:localhost:3000" + pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />
-                <BreadCrumbLink link={`modpack/${username}/${slug}/suggestions`} text="Suggestions">
+                <BreadCrumbLink link={`modpack/${username}/${modpackId}/suggestions`} text="Suggestions">
                     <Button variant={"default"}>
                         Suggestions <Users />
                     </Button>

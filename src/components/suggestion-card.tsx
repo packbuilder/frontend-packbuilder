@@ -12,7 +12,7 @@ export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) 
     
     return <BreadCrumbLink 
         className="duration-100 cursor-pointer relative hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full max-w-120 rounded overflow-hidden"
-        link={`/suggestion/${suggestion.username}/${suggestion.modpackSlug}/${suggestion.id}/view`} 
+        link={`/suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} 
         text={`View`}
         style={{
             background:"rgba(255, 255, 255, 0.2)",

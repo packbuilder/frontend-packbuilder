@@ -40,11 +40,11 @@ export async function login(email: string, password: string) {
     }
 }
 
-export async function verifySuggestion(suggestionId: number, username: string, slug: string) {
+export async function verifySuggestion(suggestionId: number, modpackId: string) {
     const token = getUserToken();
 
     try {
-        const response = await api.post(`/${username}/modpacks/${slug}/suggestions/${suggestionId}/verify`, null, {
+        const response = await api.post(`/modpacks/${modpackId}/suggestions/${suggestionId}/verify`, null, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -100,7 +100,7 @@ export async function getUserModpacks(user: User) {
     const token = getUserToken();
 
     try {
-        const response = await api.get(`${user.name}/modpacks/${user.id}`, {
+        const response = await api.get(`/modpacks/${user.id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             }
@@ -132,16 +132,17 @@ export async function getUserSuggestions(userId: number) {
     }
 }
 
-export async function getModpack(username: string, modpackSlug: string) {
+export async function getModpack(modpackId: string) {
     const token = getUserToken();
     
     try {
-        const response = await api.get(`${username}/modpacks/${modpackSlug}`, {
+        const response = await api.get(`/modpacks/${modpackId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             }
         });
-        const data = modpackSchema.parse(response.data);
+
+        const data = modpackSchema.parse(response.data[0]);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -187,11 +188,11 @@ export async function getCurseForgeModData(referenceIds: string[]) {
     }
 }
 
-export async function getModpackSuggestions(username: string, slug: string) {
+export async function getModpackSuggestions(modpackId: string) {
     const token = getUserToken();
     
     try {
-        const response = await api.get(`/${username}/modpacks/${slug}/suggestions`, {
+        const response = await api.get(`/modpacks/${modpackId}/suggestions`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -206,11 +207,11 @@ export async function getModpackSuggestions(username: string, slug: string) {
     }
 }
 
-export async function getSuggestion(username: string, slug: string, id: string) {
+export async function getSuggestion(modpackId: string, id: string) {
     const token = getUserToken();
     
     try {
-        const response = await api.get(`/${username}/modpacks/${slug}/suggestions/${id}`, {
+        const response = await api.get(`/modpacks/${modpackId}/suggestions/${id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -244,11 +245,11 @@ export async function getMinecraftVersions() {
     }
 }
 
-export async function createModpack(username: string, body: CreateModpackDto) {
+export async function createModpack(body: CreateModpackDto) {
     const token = getUserToken();
     
     try {
-        const response = await api.post(`/${username}/modpacks/`, body, {
+        const response = await api.post(`/modpacks/`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -262,11 +263,11 @@ export async function createModpack(username: string, body: CreateModpackDto) {
     }
 }
 
-export async function importModpack(username: string, formData: FormData) {
+export async function importModpack(formData: FormData) {
     const token = getUserToken();
 
     try {
-         const response = await api.post(`/${username}/modpacks/import`, formData, {
+         const response = await api.post(`/modpacks/import`, formData, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -280,11 +281,11 @@ export async function importModpack(username: string, formData: FormData) {
     }
 }
 
-export async function createSuggestion(username: string, slug: string, body: CreateSuggestionDto) {
+export async function createSuggestion(modpackId: string, body: CreateSuggestionDto) {
     const token = getUserToken();
     
     try {
-        const response = await api.post(`/${username}/modpacks/${slug}/suggestions`, body, {
+        const response = await api.post(`/modpacks/${modpackId}/suggestions`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -298,11 +299,11 @@ export async function createSuggestion(username: string, slug: string, body: Cre
     }
 }
 
-export async function createModification(username: string, slug: string, suggestionId: string, body: CreateModificationDto) {
+export async function createModification(modpackId: string, suggestionId: string, body: CreateModificationDto) {
     const token = getUserToken();
     
     try {
-        const response = await api.post(`/${username}/modpacks/${slug}/suggestions/${suggestionId}/modifications`, body, {
+        const response = await api.post(`/modpacks/${modpackId}/suggestions/${suggestionId}/modifications`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -316,11 +317,11 @@ export async function createModification(username: string, slug: string, suggest
     }
 }
 
-export async function createModpackVersion(username: string, slug: string, suggestionId: string) {
+export async function createModpackVersion(modpackId: string, suggestionId: string) {
     const token = getUserToken();
     
     try {
-        const response = await api.post(`/${username}/modpacks/${slug}/versions/${suggestionId}`, null, {
+        const response = await api.post(`/modpacks/${modpackId}/versions/${suggestionId}`, null, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -334,11 +335,11 @@ export async function createModpackVersion(username: string, slug: string, sugge
     }
 }
 
-export async function updateSuggestion(username: string, slug: string, body: CreateSuggestionDto, suggestionId: Number) {
+export async function updateSuggestion(modpackId: string, body: CreateSuggestionDto, suggestionId: Number) {
     const token = getUserToken();
     
     try {
-        const response = await api.put(`/${username}/modpacks/${slug}/suggestions/${suggestionId}`, body, {
+        const response = await api.put(`/modpacks/${modpackId}/suggestions/${suggestionId}`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -370,11 +371,11 @@ export async function updateProfile(userId: number, body: UpdateUserDto) {
     }
 }
 
-export async function updateModpack(username: string, slug: string, body: UpdateModpackDto) {
+export async function updateModpack(modpackId: string, body: UpdateModpackDto) {
     const token = getUserToken();
     
     try {
-        const response = await api.put(`/${username}/modpacks/${slug}`, body, {
+        const response = await api.put(`/modpacks/${modpackId}`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -388,11 +389,11 @@ export async function updateModpack(username: string, slug: string, body: Update
     }
 }
 
-export async function deleteModification(username: string, slug: string, modificationId: string, suggestionId: string) {
+export async function deleteModification(modpackId: string, modificationId: string, suggestionId: string) {
     const token = getUserToken();
     
     try {
-        const response = await api.delete(`/${username}/modpacks/${slug}/suggestions/${suggestionId}/modifications/${modificationId}`, {
+        const response = await api.delete(`/modpacks/${modpackId}/suggestions/${suggestionId}/modifications/${modificationId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             }

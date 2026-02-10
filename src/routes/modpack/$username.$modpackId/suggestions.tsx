@@ -16,16 +16,16 @@ import { ModLoader } from "@/types/enums";
 import { enumNameFromValue } from "@/lib/utils";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 
-export const Route = createFileRoute('/modpack/$username/$slug/suggestions')({
+export const Route = createFileRoute('/modpack/$username/$modpackId/suggestions')({
     loader: async ({context, params}) => {
         const {user, queryClient} = context;
-        const {username, slug} = params;
+        const {username, modpackId} = params;
 
-        if(!username || !slug) {
+        if(!username || !modpackId) {
             throw redirect({to: "/"});
         }
 
-        const modpack = await queryClient.ensureQueryData(appQueries.modpack(username, slug));
+        const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId));
         
         if(!modpack) {
             throw redirect({to: "/"});
@@ -33,7 +33,7 @@ export const Route = createFileRoute('/modpack/$username/$slug/suggestions')({
 
         const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
 
-        const suggestions = await queryClient.ensureQueryData(appQueries.modpackSuggestions(username, slug));
+        const suggestions = await queryClient.ensureQueryData(appQueries.modpackSuggestions(modpackId));
 
         return {curUser: user, minecraftVersions, suggestions, queryClient}
     },
@@ -43,12 +43,12 @@ export const Route = createFileRoute('/modpack/$username/$slug/suggestions')({
 function CreateSuggestionDialog() {
     const [isOpen, setOpen] = useState(false);
     const queryClient = useQueryClient();
-    const {username, slug} = Route.useParams();
+    const {modpackId} = Route.useParams();
     const router = useRouter();
     const navigate = useNavigate();
     const formRef = useRef(null);
 
-    const { data: modpack } = useSuspenseQuery(appQueries.modpack(username, slug));
+    const { data: modpack } = useSuspenseQuery(appQueries.modpack(modpackId));
     const { data: minecraftVersions } = useSuspenseQuery(appQueries.minecraftVersions());
 
     if (!modpack) {
@@ -63,7 +63,7 @@ function CreateSuggestionDialog() {
         mutationFn: async (formData: FormData) => {
             const memo = formData.get("memo") as string;
             const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
-            const status = await createSuggestion(username, slug, body);
+            const status = await createSuggestion(modpackId, body);
 
             if(!status || status < 200 || status > 200) {
                 throw new Error("There was a problem with creating this suggestion");
@@ -71,7 +71,7 @@ function CreateSuggestionDialog() {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modpackSuggestions(username, slug).queryKey,
+                queryKey: appQueries.modpackSuggestions(modpackId).queryKey,
                 refetchType: "all"
             });
 
@@ -166,8 +166,8 @@ function CreateSuggestionDialog() {
 
 export default function ModpackSuggestions() {
     const {curUser} = Route.useLoaderData();
-    const {username, slug} = Route.useParams();
-    const {data: suggestions} = useSuspenseQuery(appQueries.modpackSuggestions(username, slug));
+    const {modpackId} = Route.useParams();
+    const {data: suggestions} = useSuspenseQuery(appQueries.modpackSuggestions(modpackId));
 
     // TODO: Turn into shadcn table component (Should look kinda like streamxps implementation)
     return <section className="flex flex-col justify-center items-center gap-5">

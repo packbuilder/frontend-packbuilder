@@ -21,7 +21,9 @@ export const Route = createFileRoute("/")({
     context: { queryClient, user: curUser }
   }) => {
     const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
+    const modpack = await queryClient.ensureQueryData(appQueries.modpack("1"))
     const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
+    console.log(modpack)
 
     return {curUser, modpacks, minecraftVersions};
   },
@@ -41,7 +43,7 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
         mutationFn: async (formData: FormData) => {
             const modpackName = formData.get("name") as string;
             const body = createModpackDtoSchema.parse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion})
-            const status = await createModpack(curUser.name, body);
+            const status = await createModpack(body);
 
             if(!status || status < 200 || status > 200) {
                 throw new Error("There was a problem with creating this modpack.");
@@ -144,7 +146,7 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
-            const status = await importModpack(curUser.name, formData);
+            const status = await importModpack(formData);
 
             if(!status || status < 200 || status > 200) {
                 throw new Error("There was a problem with importing your modpack.");
@@ -214,12 +216,14 @@ function Home() {
     const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
 
     return <section className="flex flex-col justify-between items-center w-full mx-auto h-full">
-        <div className="flex flex-row justify-around items-center mb-10">
+        <div className="flex flex-col justify-around items-center mb-10">
             <h1 className="text-3xl font-bold p-2">Modpacks</h1>
-            {curUser && minecraftVersions && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
-            {curUser && <ImportModpackDialog curUser={curUser} />}
+            <div className='flex items-center justify-center gap-2'>
+                {curUser && minecraftVersions && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
+                {curUser && <ImportModpackDialog curUser={curUser} />}
+            </div>
         </div>
-        <div id="modpacks" className="flex flex-row flex-wrap gap-4 min-w-full justify-center items-center">
+        <div id="modpacks" className="flex flex-row wrap gap-4 min-w-full justify-center items-center">
             {modpacks ? modpacks.map((modpack: Modpack, index: number) => {
               return <ModpackCardLarge modpack={modpack} key={index}/>
             }) : <h1>Log in to create modpacks!</h1>}
