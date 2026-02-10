@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import Cookies from "js-cookie"
-import type { BreadCrumb } from "../types/breadcrumb";
+import type { BreadCrumb } from "@/types/enums";
 
 type Store = {
     isHydrated: boolean;

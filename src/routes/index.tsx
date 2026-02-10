@@ -4,12 +4,13 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { appQueries } from '@/hooks/appQueries';
-import { createModpack } from '@/lib/api';
+import { createModpack, importModpack } from '@/lib/api';
 import { enumNameFromValue } from '@/lib/utils';
 import { createModpackDtoSchema } from '@/types/dtos/createModpackDto';
 import { ModLoader } from '@/types/enums';
 import type { Modpack } from '@/types/modpack';
 import type { User } from '@/types/user';
+import { DialogDescription } from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Plus, Save, X } from 'lucide-react';
@@ -83,7 +84,7 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
                     Create Modpack
                 </DialogTitle>
             </DialogHeader>
-            <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
+            <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
                     <h1 className="font-bold text-md">Modpack name</h1>
                     <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
@@ -135,6 +136,78 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
     </Dialog>
 }
 
+function ImportModpackDialog({curUser} : {curUser: User}) {
+    const [isOpen, setOpen] = useState(false);
+    const queryClient = useQueryClient();
+    const router = useRouter();
+    const formRef = useRef(null);
+
+    const mutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const status = await importModpack(curUser.name, formData);
+
+            if(!status || status < 200 || status > 200) {
+                throw new Error("There was a problem with importing your modpack.");
+            }
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.userModpacks(curUser).queryKey,
+                refetchType: "all"
+            });
+
+            await router.invalidate({sync: true});
+        },
+        onError: (error) => {
+            console.error(error.message)
+        }
+    });
+
+    const submitForm = () => {
+        setOpen(false);
+        const form = formRef.current as unknown as HTMLFormElement;
+        form.requestSubmit();
+    }
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        mutation.mutate(formData);
+    }
+
+    return <Dialog open={isOpen} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+            <Button variant={"default"}>
+                Import Modpack <Plus />
+            </Button>   
+        </DialogTrigger>
+        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
+            <DialogHeader className="w-full px-2">
+                <DialogTitle className='text-xl'>
+                    Import existing modpack
+                </DialogTitle>
+                <DialogDescription>
+                    To do so you will have to do is locate the manifest.json file within your curseforge modpack and upload it, packbuilder will handle the rest.
+                </DialogDescription>
+            </DialogHeader>
+            <form method="post" ref={formRef} id="import-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
+                <div className="flex flex-col justify-center items-start gap-2">
+                    <h1 className="font-bold text-md">Upload your manifest.json here</h1>
+                    <Input id="file-upload" type="file" name="file" accept='.json'/>
+                </div>
+            </form>
+            <DialogFooter className="w-full px-2">
+                <div className="w-full flex flex-row justify-start items-center gap-2">
+                    <Button variant={"default"} onClick={submitForm} type="submit">Import Modpack <Save/></Button>
+                    <DialogClose asChild>
+                        <Button variant={"destructive"}>Cancel <X/></Button>
+                    </DialogClose>
+                </div>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+}
+
 function Home() {
     const {curUser} = Route.useLoaderData();
     const {data: modpacks} = useSuspenseQuery(appQueries.userModpacks(curUser));
@@ -144,6 +217,7 @@ function Home() {
         <div className="flex flex-row justify-around items-center mb-10">
             <h1 className="text-3xl font-bold p-2">Modpacks</h1>
             {curUser && minecraftVersions && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
+            {curUser && <ImportModpackDialog curUser={curUser} />}
         </div>
         <div id="modpacks" className="flex flex-row flex-wrap gap-4 min-w-full justify-center items-center">
             {modpacks ? modpacks.map((modpack: Modpack, index: number) => {

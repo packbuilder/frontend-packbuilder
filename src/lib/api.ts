@@ -262,6 +262,24 @@ export async function createModpack(username: string, body: CreateModpackDto) {
     }
 }
 
+export async function importModpack(username: string, formData: FormData) {
+    const token = getUserToken();
+
+    try {
+         const response = await api.post(`/${username}/modpacks/import`, formData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        return response.status;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
 export async function createSuggestion(username: string, slug: string, body: CreateSuggestionDto) {
     const token = getUserToken();
     
