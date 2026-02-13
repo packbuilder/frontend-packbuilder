@@ -100,7 +100,7 @@ export async function getUserModpacks(user: User) {
     const token = getUserToken();
 
     try {
-        const response = await api.get(`/modpacks/${user.id}`, {
+        const response = await api.get(`/user-modpacks/${user.id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             }
@@ -141,8 +141,7 @@ export async function getModpack(modpackId: string) {
                 'Authorization': `Bearer ${token}`,
             }
         });
-
-        const data = modpackSchema.parse(response.data[0]);
+        const data = modpackSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
