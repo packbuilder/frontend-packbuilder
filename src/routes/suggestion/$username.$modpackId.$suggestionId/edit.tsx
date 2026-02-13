@@ -3,7 +3,7 @@ import { createModification, deleteModification, updateSuggestion, verifySuggest
 import type { VersionMod } from "@/types/versionMod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog, Save, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, Edit, ExternalLink, Search, TriangleAlert, X, CloudCog, Save, Plus, Merge } from "lucide-react";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
@@ -20,7 +20,7 @@ import z from "zod";
 import placeholder from "@/Seed-Avatar.jpg"
 import { appQueries } from "@/hooks/appQueries";
 import { Spinner } from "@/components/ui/spinner";
-import { SuggestionState, ModAction, ModPlatform, ModLoader } from "@/types/enums";
+import { SuggestionState, ModAction, ModPlatform, ModLoader, ModificationState } from "@/types/enums";
 import { suggestionSchema, type Suggestion } from "@/types/suggestion";
 import { Separator } from "@/components/ui/separator";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
@@ -97,7 +97,7 @@ function PaginationButtons({ paginationData, curPage } : {
 function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
     const [isOpen, setOpen] = useState(false);
     const queryClient = useQueryClient();
-    const {username, modpackId, suggestionId} = Route.useParams();
+    const {modpackId, suggestionId} = Route.useParams();
     const router = useRouter();
     const formRef = useRef(null);
     const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
@@ -306,8 +306,8 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
             <h1 className={`${modification.modAction === ModAction.Added ? "bg-emerald-500" : "bg-red-500"} p-2`}>
                 {modification.modAction === ModAction.Added ? "Added" : "Removed"}
             </h1>
-            <ToolbarTooltip side="top" content="This modification is conflicting, delete it to resolve the conflict.">
-                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
+            <ToolbarTooltip side="top" content="This modification could not install some dependencies due to conflict. May or may not work.">
+                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.state === ModificationState.MissingDependencies  ? "" : "hidden"}`}>
                     <TriangleAlert className="text-black" />
                 </Button>
             </ToolbarTooltip>
@@ -566,7 +566,6 @@ export default function EditSuggestion() {
         navigate({ to: "/" });
         return;
     }
-    console.log(suggestionSchema.parse(suggestion).state)
 
     const modificationReferenceIds = useMemo(
         () => suggestion.modifications.map(modification => modification.mod.referenceId), 
@@ -600,6 +599,12 @@ export default function EditSuggestion() {
                         <h1>This suggestion is undergoing verification and cannot be merged or edited.</h1>
                     </div>
                     : 
+                    suggestion.state.toString() === SuggestionState.MergePending ?
+                    <div className="flex items-center justify-center">
+                        <Merge />
+                        <h1>This suggestion is merging with its modpack and cannot be edited or merged.</h1>
+                    </div>
+                    :
                     <div className="flex items-center justify-center">
                         <CloudCheck />
                         <h1>This suggestion has been verified and is able to be merged.</h1>

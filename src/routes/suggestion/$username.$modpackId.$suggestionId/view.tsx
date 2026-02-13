@@ -2,7 +2,7 @@ import placeholder from "@/Seed-Avatar.jpg"
 import { createModpackVersion } from "@/lib/api";
 import { type Modification } from "@/types/modification";
 import { Button } from "@/components/ui/button";
-import { Check, Cloud, CloudAlert, CloudCheck, CloudCog, Edit, TriangleAlert } from "lucide-react";
+import { Check, CloudAlert, CloudCheck, CloudCog, Edit, Merge, TriangleAlert } from "lucide-react";
 import BreadCrumbLink from "@/components/breadcrumb-link";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
@@ -10,7 +10,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { appQueries } from "@/hooks/appQueries";
-import { SuggestionState, ModAction } from "@/types/enums";
+import { SuggestionState, ModAction, ModificationState } from "@/types/enums";
 
 export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggestionId/view')({
     loader: async ({context, params}) => {
@@ -41,8 +41,8 @@ function ModificationDisplay({modification, curseforgeMod} : {modification: Modi
             <h1 className={`${modification.modAction === ModAction.Added ? "bg-emerald-500" : "bg-red-500"} p-2`}>
                 {modification.modAction === ModAction.Added ? "Added" : "Removed"}
             </h1>
-            <ToolbarTooltip side="top" content="This modification is conflicting with the latest version of the modpack.">
-                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.isConflicting ? "" : "hidden"}`}>
+            <ToolbarTooltip side="top" content="This modification was unable to install some dependencies, may or may not work.">
+                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.state === ModificationState.MissingDependencies ? "" : "hidden"}`}>
                     <TriangleAlert className="text-black" />
                 </Button>
             </ToolbarTooltip>
@@ -115,6 +115,12 @@ export default function SuggestionView() {
                         <h1>This suggestion is undergoing verification and cannot be merged or edited.</h1>
                     </div>
                     : 
+                    suggestion.state.toString() === SuggestionState.MergePending ?
+                    <div className="flex items-center justify-center">
+                        <Merge />
+                        <h1>This suggestion is merging with its modpack and cannot be edited or merged.</h1>
+                    </div>
+                    :
                     <div className="flex items-center justify-center">
                         <CloudCheck />
                         <h1>This suggestion has been verified and is able to be merged.</h1>

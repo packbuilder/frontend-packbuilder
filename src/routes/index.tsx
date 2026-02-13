@@ -21,9 +21,7 @@ export const Route = createFileRoute("/")({
     context: { queryClient, user: curUser }
   }) => {
     const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
-    const modpack = await queryClient.ensureQueryData(appQueries.modpack("1"))
     const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
-    console.log(modpack)
 
     return {curUser, modpacks, minecraftVersions};
   },
