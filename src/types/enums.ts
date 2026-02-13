@@ -17,7 +17,14 @@ export enum ModAction {
 export enum SuggestionState {
     Unverified = "0",
     Verified = "1",
-    VerificationPending = "2"
+    VerificationPending = "2",
+    MergePending = "3"
+}
+
+export enum ModificationState {
+    NoConflicts = "0",
+    Conflicting = "1",
+    MissingDependencies = "2"
 }
 
 export enum ModLoader {
