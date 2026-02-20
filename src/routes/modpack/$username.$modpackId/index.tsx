@@ -1,7 +1,7 @@
-import { Edit, ExternalLink, Save, Trash2, Users } from "lucide-react";
+import { Download, Edit, ExternalLink, Save, Trash2, Users, X } from "lucide-react";
 import modpackImage from "@/modpack.gif";
-import { updateModpack } from "@/lib/api";
-import { useMemo, useState, type FormEvent } from "react";
+import { getModpackVersionManifest, updateModpack } from "@/lib/api";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,9 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Separator } from "@/components/ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
 import { ModLoader } from "@/types/enums";
+import { Spinner } from "@/components/ui/spinner";
+import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
+import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -112,6 +115,80 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
     )
 }
 
+function DownloadModpackManifest({curModpackId, curVersionIteration} : {curModpackId: string, curVersionIteration: string}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+    const downloadRef = useRef<HTMLAnchorElement | null>(null);
+
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const manifest = await getModpackVersionManifest(curModpackId, curVersionIteration);
+
+            if(!manifest) {
+                throw new Error("Unable to download manifest.json");
+            }
+
+            return manifest;
+        },
+        onSuccess: async (manifest: Blob) => {
+            const url = URL.createObjectURL(manifest);
+            setDownloadUrl(url);
+        },
+        onError: (error: Error) => {
+            console.log(error.message);
+        }
+    });
+
+    useEffect(() => {
+        if (downloadUrl && downloadRef.current) {
+            downloadRef.current.click();
+
+            setTimeout(() => {
+                URL.revokeObjectURL(downloadUrl);
+                setDownloadUrl(null);
+                setIsOpen(false);
+            }, 100);
+        }
+    }, [downloadUrl]);
+
+    return <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+            <Button variant={"default"}>Download <Download /></Button>
+        </DialogTrigger>
+        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
+            {downloadUrl && (
+                <a
+                    ref={downloadRef}
+                    href={downloadUrl}
+                    download="manifest.zip"
+                    className="hidden"
+                />
+            )}
+            <DialogHeader className="mt-4 flex justify-center items-center">
+                <DialogTitle className="text-3xl font-bold text-center">How to import your modpack to curseforge.</DialogTitle>
+                <Separator />
+            </DialogHeader>
+             <div className="flex items-center flex-col justify-center">
+                <div className="flex flex-col items-start justify-center">
+                    <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
+                        <p>1. Launch the CurseForge app and make sure the Minecraft profile is selected.</p>
+                        <p>2. Click “Minecraft” in the top menu and switch to the “Modpacks” section.</p>
+                        <p>3. On the right side, look for “Add Modpack” or “Import Modpack” (wording may vary depending on version) and then select “Import from ZIP”.</p>
+                        <p>4. Navigate to the ZIP file you downloaded (it should be named manifest.zip). Select it and click Open.</p>
+                        <p>5. Curseforge should then create a new profile and download all of your mods, once that's finished you can then launch your modpack!</p>
+                    </div>
+                </div>
+            </div>
+            <DialogFooter className="w-full px-2">
+                <Button variant={"default"} onClick={() => mutation.mutate()}>Start your download <Download /></Button>
+                <DialogClose asChild>
+                    <Button variant={"destructive"}>Cancel <X/></Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+}
+
 // TODO: Clean up ternary operator usage throughout the app
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
@@ -133,7 +210,7 @@ export default function ModpackView() {
         [modpack.versions, versionIteration]
     );
     const {data: referenceIds} = useQuery(appQueries.modReferenceIds(modIds));
-    const {data: modData} = useQuery(appQueries.modpackModData(referenceIds));
+    const {data: modData, isPending: pendingModData} = useQuery(appQueries.modpackModData(referenceIds));
 
     const handleValueChange = async (newValue: string) => {
         setVersionIteration(newValue);
@@ -184,6 +261,7 @@ export default function ModpackView() {
                         Suggestions <Users />
                     </Button>
                 </BreadCrumbLink>
+                <DownloadModpackManifest curModpackId={modpack.id.toString()} curVersionIteration={versionIteration} />
                 <Button variant={"destructive"}>Delete <Trash2 /></Button>
             </div>
         </div>
@@ -191,10 +269,19 @@ export default function ModpackView() {
         <div className="flex flex-col justify-center items-center w-3/4">
             <h1 className="text-4xl font-bold self-start">Mods</h1>
             <div className="flex flex-col justify-start items-start min-w-[300px] min-h-[400px] border w-1/2 border-black dark:border-gray-400 bg-gray-900 flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-full">
-                {modData?.map((modData: CurseForgeMod, index: number) => {
-                    return <CurseForgeModDisplay key={index} curseforgeMod={modData} />
-                })}
-                <h1 className={`${modData && modData.length > 0 ? "hidden" : ""}`}>It's looking empty in here...</h1>
+                {
+                    pendingModData ? (
+                        <div className="size-full flex items-center justify-center w-full">
+                            <Spinner className="size-20" />
+                        </div>
+                    )
+                    :
+                    modData && modData.length > 0 ? (modData.map((modData: CurseForgeMod, index: number) => {
+                        return <CurseForgeModDisplay key={index} curseforgeMod={modData} />
+                    }))
+                    :
+                    <h1>It's looking empty in here...</h1>
+                }
             </div>
         </div>
     </section>

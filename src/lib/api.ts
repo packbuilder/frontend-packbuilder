@@ -9,7 +9,6 @@ import type { CreateModificationDto } from "@/types/dtos/createModificationDto";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import Cookies from "js-cookie";
 import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
-import { versionSchema } from "@/types/version";
 import type { ModLoader } from "@/types/enums";
 import type { CreateSuggestionDto } from "@/types/dtos/createSuggestionDto";
 import z from "zod";
@@ -105,7 +104,7 @@ export async function getUserModpacks(user: User) {
                 'Authorization': `Bearer ${token}`,
             }
         });
-        const data = z.array(modpackSchema).parse(response.data);
+        const data = z.array(modpackSchema).parse(response.data);   
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -142,6 +141,20 @@ export async function getModpack(modpackId: string) {
             }
         });
         const data = modpackSchema.parse(response.data);
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function getModpackVersionManifest(modpackId: string, versionIteration: string) {
+    try {
+        const response = await api.get(`/modpacks/${modpackId}/download/version/${versionIteration}`, {
+            responseType: "blob"
+        });
+        const data = response.data as Blob;  
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError

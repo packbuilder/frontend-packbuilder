@@ -1,4 +1,4 @@
-import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername, getMinecraftVersions } from "@/lib/api";
+import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername, getMinecraftVersions, getModpackVersionManifest } from "@/lib/api";
 import type { ModLoader } from "@/types/enums";
 import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
