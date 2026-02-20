@@ -401,6 +401,24 @@ export async function updateModpack(modpackId: string, body: UpdateModpackDto) {
     }
 }
 
+export async function deleteModpack(modpackId: string) {
+    const token = getUserToken();
+
+    try {
+        const response = await api.delete(`/modpacks/${modpackId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+
+        return response.status;
+    } catch(error) {
+        const err = error as unknown as AxiosError
+        console.error(err);
+        return null;
+    }
+}
+
 export async function deleteModification(modpackId: string, modificationId: string, suggestionId: string) {
     const token = getUserToken();
     

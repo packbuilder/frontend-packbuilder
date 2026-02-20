@@ -1,6 +1,6 @@
-import { Download, Edit, ExternalLink, Save, Trash2, Users, X } from "lucide-react";
+import { Check, Download, Edit, ExternalLink, Save, Trash2, Users, X } from "lucide-react";
 import modpackImage from "@/modpack.gif";
-import { getModpackVersionManifest, updateModpack } from "@/lib/api";
+import { deleteModpack, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
@@ -115,14 +115,14 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
     )
 }
 
-function DownloadModpackManifest({curModpackId, curVersionIteration} : {curModpackId: string, curVersionIteration: string}) {
+function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackId: string, versionIteration: string}) {
     const [isOpen, setIsOpen] = useState(false);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
     const downloadRef = useRef<HTMLAnchorElement | null>(null);
 
     const mutation = useMutation({
         mutationFn: async () => {
-            const manifest = await getModpackVersionManifest(curModpackId, curVersionIteration);
+            const manifest = await getModpackVersionManifest(modpackId, versionIteration);
 
             if(!manifest) {
                 throw new Error("Unable to download manifest.json");
@@ -165,7 +165,7 @@ function DownloadModpackManifest({curModpackId, curVersionIteration} : {curModpa
                 />
             )}
             <DialogHeader className="mt-4 flex justify-center items-center">
-                <DialogTitle className="text-3xl font-bold text-center">How to import your modpack to curseforge.</DialogTitle>
+                <DialogTitle className="text-3xl font-bold  ">How to import your modpack to curseforge.</DialogTitle>
                 <Separator />
             </DialogHeader>
              <div className="flex items-center flex-col justify-center">
@@ -181,6 +181,57 @@ function DownloadModpackManifest({curModpackId, curVersionIteration} : {curModpa
             </div>
             <DialogFooter className="w-full px-2">
                 <Button variant={"default"} onClick={() => mutation.mutate()}>Start your download <Download /></Button>
+                <DialogClose asChild>
+                    <Button variant={"destructive"}>Cancel <X/></Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+}
+
+// TODO: Fix page flash when user deletes right before re-navigation
+function DeleteModpackDialog({modpackId} : {modpackId: string}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate({from: Route.fullPath});
+    const queryClient = useQueryClient();
+
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const status = await deleteModpack(modpackId);
+
+            if(!status || status < 200 || status > 200 ) {
+                throw new Error("Unable to delete modpack.");
+            }
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.modpack(modpackId).queryKey,
+                refetchType: "all"
+            });
+
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.modpackSuggestions(modpackId).queryKey,
+                refetchType: "all"
+            });
+
+            navigate({to: "/"})
+        },
+        onError: (error: Error) => {
+            console.log(error.message);
+        }
+    });
+
+    return <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+            <Button variant={"destructive"}>Delete <Trash2 /></Button>
+        </DialogTrigger>
+        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">
+            <DialogHeader className="mt-4 flex justify-center items-center">
+                <DialogTitle className="text-3xl font-bold">Are you sure you want do delete this modpack?</DialogTitle>
+                <DialogDescription>Doing so is irriversable and will delete all data related to this modpack including user suggestions tied to this modpack.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="w-full px-2">
+                <Button variant={"default"} onClick={() => mutation.mutate()}>Yes I want to delete this. <Check /></Button>
                 <DialogClose asChild>
                     <Button variant={"destructive"}>Cancel <X/></Button>
                 </DialogClose>
@@ -261,8 +312,8 @@ export default function ModpackView() {
                         Suggestions <Users />
                     </Button>
                 </BreadCrumbLink>
-                <DownloadModpackManifest curModpackId={modpack.id.toString()} curVersionIteration={versionIteration} />
-                <Button variant={"destructive"}>Delete <Trash2 /></Button>
+                <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
+                <DeleteModpackDialog modpackId={modpack.id.toString()} />
             </div>
         </div>
 
