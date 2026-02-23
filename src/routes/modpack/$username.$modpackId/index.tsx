@@ -21,6 +21,7 @@ import { ModLoader } from "@/types/enums";
 import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
+import CreateSuggestionDialog from "@/components/create-suggestion-dialog";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -312,6 +313,7 @@ export default function ModpackView() {
                         Suggestions <Users />
                     </Button>
                 </BreadCrumbLink>
+                <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 <DeleteModpackDialog modpackId={modpack.id.toString()} />
             </div>
@@ -331,7 +333,9 @@ export default function ModpackView() {
                         return <CurseForgeModDisplay key={index} curseforgeMod={modData} />
                     }))
                     :
-                    <h1>It's looking empty in here...</h1>
+                    <div className="size-full flex items-center justify-center w-full">
+                        <h1>It's looking empty in here...</h1>
+                    </div>
                 }
             </div>
         </div>

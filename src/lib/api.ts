@@ -303,7 +303,7 @@ export async function createSuggestion(modpackId: string, body: CreateSuggestion
             },
         });
 
-        return response.status;
+        return {status: response.status, suggestionId: response.data as number | null};
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
