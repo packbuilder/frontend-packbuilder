@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { appQueries } from "@/hooks/appQueries";
 import { SuggestionState, ModAction, ModificationState } from "@/types/enums";
+import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 
 export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggestionId/view')({
     loader: async ({context, params}) => {
@@ -130,12 +131,14 @@ export default function SuggestionView() {
                     <p className="text-md">Memo: {suggestion.memo}</p> 
                 </div>
                 <div className="flex justify-center items-center gap-2">
-                    {suggestion.userId === curUser?.id ? 
+                    {suggestion.userId === curUser?.id &&
                     <BreadCrumbLink link={`suggestion/${username}/${modpackId}/${suggestionId}/edit`} text="Edit">
                         <Button variant={"default"}>Edit <Edit /></Button> 
-                    </BreadCrumbLink>
-                    : ""}
-                    {modpack?.userId === curUser?.id || suggestion.state === SuggestionState.Verified ? <Button variant={"default"} onClick={mergeSuggestion}>Merge <Check /></Button> : ""} 
+                    </BreadCrumbLink>}
+
+                    {modpack.userId === curUser?.id && suggestion.state === SuggestionState.Verified && <Button variant={"default"} onClick={mergeSuggestion}>Merge <Check /></Button>} 
+
+                    {suggestion.userId === curUser?.id && <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion}/>}
                     
                     <h1 className="text-lg font-bold">{message}</h1>
                 </div>

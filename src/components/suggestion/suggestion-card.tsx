@@ -1,8 +1,8 @@
 import type { Suggestion } from "@/types/suggestion";
-import { CloudAlert, CloudCheck, SquarePlus, SquareMinus, TriangleAlert, CloudCog } from "lucide-react";
-import BreadCrumbLink from "./breadcrumb-link";
-import ToolbarTooltip from "./toolbar-tooltip";
-import { Button } from "./ui/button";
+import { CloudAlert, CloudCheck, SquarePlus, SquareMinus, CloudCog } from "lucide-react";
+import BreadCrumbLink from "../breadcrumb-link";
+import ToolbarTooltip from "../toolbar-tooltip";
+import { Button } from "../ui/button";
 import placeholderAvatar from "@/Seed-Avatar.jpg"
 import { ModAction, SuggestionState } from "@/types/enums";
 

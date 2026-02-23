@@ -1,8 +1,8 @@
 import modpackImage from "@/modpack.gif"
-import BreadCrumbLink from "./breadcrumb-link";
+import BreadCrumbLink from "../breadcrumb-link";
 import type { Modpack } from "@/types/modpack";
-import ToolbarTooltip from "./toolbar-tooltip";
-import { Button } from "./ui/button";
+import ToolbarTooltip from "../toolbar-tooltip";
+import { Button } from "../ui/button";
 import { File } from "lucide-react";
 
 // TODO: Turn into shadcn item component?

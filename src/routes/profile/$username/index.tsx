@@ -10,8 +10,8 @@ import { useRef, useState, type FormEvent } from "react";
 import { updateProfile } from '@/lib/api';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import { appQueries } from '@/hooks/appQueries';
-import {ModpackCardCompact} from '@/components/modpack-card';
-import SuggestionCard from '@/components/suggestion-card';
+import {ModpackCardCompact} from '@/components/modpack/modpack-card';
+import SuggestionCard from '@/components/suggestion/suggestion-card';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 

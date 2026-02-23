@@ -21,7 +21,7 @@ import { ModLoader } from "@/types/enums";
 import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
-import CreateSuggestionDialog from "@/components/create-suggestion-dialog";
+import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-dialog";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -190,7 +190,6 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
     </Dialog>
 }
 
-// TODO: Fix page flash when user deletes right before re-navigation
 function DeleteModpackDialog({modpackId} : {modpackId: string}) {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate({from: Route.fullPath});
@@ -205,6 +204,8 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
             }
         },
         onSuccess: async () => {
+            navigate({to: "/"})
+            
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpack(modpackId).queryKey,
                 refetchType: "all"
@@ -215,7 +216,6 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
                 refetchType: "all"
             });
 
-            navigate({to: "/"})
         },
         onError: (error: Error) => {
             console.log(error.message);

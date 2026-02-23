@@ -419,6 +419,24 @@ export async function deleteModpack(modpackId: string) {
     }
 }
 
+export async function deleteSuggestion(modpackId: string, suggestionId: string) {
+    const token = getUserToken();
+
+    try {
+        const response = await api.delete(`/modpacks/${modpackId}/suggestions/${suggestionId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+
+        return response.status;
+    } catch(error) {
+        const err = error as unknown as AxiosError
+        console.error(err);
+        return null;
+    }
+}
+
 export async function deleteModification(modpackId: string, modificationId: string, suggestionId: string) {
     const token = getUserToken();
     

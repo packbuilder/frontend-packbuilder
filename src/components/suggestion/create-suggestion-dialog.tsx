@@ -1,16 +1,16 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent } from "react";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { appQueries } from "@/hooks/appQueries";
 import { createSuggestion } from "@/lib/api";
 import { enumNameFromValue } from "@/lib/utils";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import { ModLoader } from "@/types/enums";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from "./ui/select"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from "../ui/select"
 import { Plus, Save, X } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import type { User } from "@/types/user";
 import type { Modpack } from "@/types/modpack";
 

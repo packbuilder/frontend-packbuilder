@@ -5,8 +5,8 @@ import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { createFileRoute, redirect, useNavigate} from '@tanstack/react-router'
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
-import SuggestionCard from "@/components/suggestion-card";
-import CreateSuggestionDialog from "@/components/create-suggestion-dialog";
+import SuggestionCard from "@/components/suggestion/suggestion-card";
+import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-dialog";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/suggestions')({
     loader: async ({context, params}) => {

@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import { enumNameFromValue } from "@/lib/utils";
 import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
+import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -436,7 +437,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
 }
 
 function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[]}) {
-
+    console.log(modpackModData, modificationReferenceIds)
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -448,8 +449,8 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
                     <DialogDescription>Suggest mods to remove from the modpack!</DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center justify-center">
-                    <div className="flex flex-col justify-start items-start max-w-5/6 w-fit border border-white flex flex-col overflow-y-auto overflow-x-clip h-96" >
-                        {modpackModData?.map((mod: CurseForgeMod, index: number) => {
+                    <div className="flex flex-col justify-start items-start w-5/6 max-w-5/6 border border-white flex flex-col overflow-y-auto overflow-x-clip h-96" >
+                        {(modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
                             let isEnabled = true;
                             let disabledMessage = "";
                             modificationReferenceIds.forEach(referenceId => {
@@ -461,6 +462,8 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
                             });
                             return <CurseForgeModDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={mod} key={index} modAction="Remove" isEnabled={isEnabled} disabledMessage={disabledMessage}/>
                         })}
+
+                        {(!modpackModData || modpackModData.length === 0) && <div className="size-full flex items-center justify-center"><h1>No mods to remove.</h1></div>}
                     </div>
                 </div>
             </DialogContent>
@@ -617,9 +620,10 @@ export default function EditSuggestion() {
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2 w-full">
                     <UpdateSuggestionDialog suggestion={suggestion} />
+                    <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <RemoveModsDialog modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} />
-                    <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
+                    <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion} />
                 </div>
             </div>
         </header>
