@@ -1,13 +1,13 @@
 import z from "zod";
 import { modSchema } from "./mod";
-import { ModAction, ModificationState } from "./enums";
+import { ModAction, ConflictState } from "./enums";
 
 export const modificationSchema = z.object({
     id: z.number(),
     
     modId: z.number(),
     suggestionId: z.number(),
-    state: z.coerce.string().pipe(z.enum(ModificationState)),
+    conflictState: z.coerce.string().pipe(z.enum(ConflictState)),
     modAction:  z.coerce.string().pipe(z.enum(ModAction)),
     mod: modSchema,
 });

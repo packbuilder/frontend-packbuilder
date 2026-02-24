@@ -21,7 +21,7 @@ export enum SuggestionState {
     MergePending = "3"
 }
 
-export enum ModificationState {
+export enum ConflictState {
     NoConflicts = "0",
     Conflicting = "1",
     MissingDependencies = "2"

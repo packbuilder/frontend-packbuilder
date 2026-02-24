@@ -1,4 +1,4 @@
-import { Check, Download, Edit, ExternalLink, Save, Trash2, Users, X } from "lucide-react";
+import { Check, Download, Edit, ExternalLink, Save, Trash2, TriangleAlert, Users, X } from "lucide-react";
 import modpackImage from "@/modpack.gif";
 import { deleteModpack, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -17,7 +17,7 @@ import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
-import { ModLoader } from "@/types/enums";
+import { ConflictState, ModLoader } from "@/types/enums";
 import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
@@ -27,7 +27,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
     const {user, queryClient} = context;
     const {modpackId} = params;
- 
+
     const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId))
  
     if(!modpack) {
@@ -43,7 +43,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   component: ModpackView,
 })
 
-function CurseForgeModDisplay({curseforgeMod} : {curseforgeMod: CurseForgeMod}) {
+function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
     return <div className="flex flex-col items-center justify-start w-full">
         <div className="flex items-center justify-start w-full p-5 gap-2">
             <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
@@ -52,6 +52,11 @@ function CurseForgeModDisplay({curseforgeMod} : {curseforgeMod: CurseForgeMod}) 
                 <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
                     <Button variant={"default"}><ExternalLink /></Button>
                 </Link>
+            </ToolbarTooltip>
+            <ToolbarTooltip side="top" content="This modification was unable to install some dependencies, may or may not work.">
+                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${versionMod.conflictState === ConflictState.MissingDependencies ? "" : "hidden"}`}>
+                    <TriangleAlert className="text-black" />
+                </Button>
             </ToolbarTooltip>
         </div>
         <Separator className="" />
@@ -257,12 +262,14 @@ export default function ModpackView() {
 
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
+
     const modIds = useMemo(
         () => modpack.versions.find(version => version.iterations.toString() === versionIteration)!.versionMods.map((versionMod: VersionMod) => versionMod.modId),
         [modpack.versions, versionIteration]
     );
+
     const {data: referenceIds} = useQuery(appQueries.modReferenceIds(modIds));
-    const {data: modData, isPending: pendingModData} = useQuery(appQueries.modpackModData(referenceIds));
+    const {data: versionModData, isPending: pendingModData} = useQuery(appQueries.modpackModData(referenceIds));
 
     const handleValueChange = async (newValue: string) => {
         setVersionIteration(newValue);
@@ -329,9 +336,17 @@ export default function ModpackView() {
                         </div>
                     )
                     :
-                    modData && modData.length > 0 ? (modData.map((modData: CurseForgeMod, index: number) => {
-                        return <CurseForgeModDisplay key={index} curseforgeMod={modData} />
-                    }))
+                    displayedVersion && versionModData ? displayedVersion.versionMods.map((versionMod, index) => {
+                        
+                        const modData = versionModData.find(modData => versionMod.mod.referenceId === modData.referenceId);
+                        
+                        if(!modData) {
+                            return <div>Error fetching mod data for mod with id {versionMod.mod.referenceId}.</div>
+                        }
+
+                        return <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} key={index} />
+
+                    })  
                     :
                     <div className="size-full flex items-center justify-center w-full">
                         <h1>It's looking empty in here...</h1>

@@ -104,6 +104,7 @@ export async function getUserModpacks(user: User) {
                 'Authorization': `Bearer ${token}`,
             }
         });
+        
         const data = z.array(modpackSchema).parse(response.data);   
         return data;
     } catch (error) {

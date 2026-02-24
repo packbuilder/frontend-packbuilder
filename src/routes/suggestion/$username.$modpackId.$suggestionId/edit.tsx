@@ -20,7 +20,7 @@ import z from "zod";
 import placeholder from "@/Seed-Avatar.jpg"
 import { appQueries } from "@/hooks/appQueries";
 import { Spinner } from "@/components/ui/spinner";
-import { SuggestionState, ModAction, ModPlatform, ModLoader, ModificationState } from "@/types/enums";
+import { SuggestionState, ModAction, ModPlatform, ModLoader, ConflictState } from "@/types/enums";
 import { suggestionSchema, type Suggestion } from "@/types/suggestion";
 import { Separator } from "@/components/ui/separator";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
@@ -308,7 +308,7 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
                 {modification.modAction === ModAction.Added ? "Added" : "Removed"}
             </h1>
             <ToolbarTooltip side="top" content="This modification could not install some dependencies due to conflict. May or may not work.">
-                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.state === ModificationState.MissingDependencies  ? "" : "hidden"}`}>
+                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.conflictState === ConflictState.MissingDependencies  ? "" : "hidden"}`}>
                     <TriangleAlert className="text-black" />
                 </Button>
             </ToolbarTooltip>
@@ -437,7 +437,6 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
 }
 
 function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[]}) {
-    console.log(modpackModData, modificationReferenceIds)
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -457,7 +456,6 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds} : {modpackM
                                 if(referenceId === mod.referenceId) {
                                     isEnabled = false;
                                     disabledMessage = "This mod is already in your list of changes."
-                                    console.log(`Disabling ${mod.name} ${isEnabled}`)
                                 }
                             });
                             return <CurseForgeModDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={mod} key={index} modAction="Remove" isEnabled={isEnabled} disabledMessage={disabledMessage}/>

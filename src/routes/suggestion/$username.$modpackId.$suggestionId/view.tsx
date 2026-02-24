@@ -10,7 +10,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { appQueries } from "@/hooks/appQueries";
-import { SuggestionState, ModAction, ModificationState } from "@/types/enums";
+import { SuggestionState, ModAction, ConflictState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 
 export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggestionId/view')({
@@ -43,7 +43,7 @@ function ModificationDisplay({modification, curseforgeMod} : {modification: Modi
                 {modification.modAction === ModAction.Added ? "Added" : "Removed"}
             </h1>
             <ToolbarTooltip side="top" content="This modification was unable to install some dependencies, may or may not work.">
-                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.state === ModificationState.MissingDependencies ? "" : "hidden"}`}>
+                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${modification.conflictState === ConflictState.MissingDependencies ? "" : "hidden"}`}>
                     <TriangleAlert className="text-black" />
                 </Button>
             </ToolbarTooltip>
