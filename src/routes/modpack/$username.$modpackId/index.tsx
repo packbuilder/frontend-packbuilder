@@ -36,7 +36,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
  
     const modIds = modpack.versions[0]?.versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
-    const modData = await queryClient.ensureQueryData(appQueries.modpackModData(referenceIds));
+    const modData = await queryClient.ensureQueryData(appQueries.curseForgeModData(referenceIds));
 
     return {curUser: user, modpack, queryClient, modData}
   },
@@ -109,11 +109,12 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
                     </Button>
                 </PopoverTrigger>
             </ToolbarTooltip>
-            <PopoverContent className="p-2 bg-popover rounded-md">
-                <div className="w-fit">
-                    <form onSubmit={handleSubmit} className="flex justify-center items-center">
+            <PopoverContent className="p-4 bg-popover rounded-md z-100">
+                <div className="w-fit flex flex-col gap-2">
+                    <h1 className="text-lg font-bold">Rename modpack</h1>
+                    <form onSubmit={handleSubmit} className="flex justify-center items-center gap-2">
                         <Input type="text" name="newName" id="newName" defaultValue={curName}/>
-                        <Button type="submit" variant={"default"}><Save/></Button>
+                        <Button type="submit" variant={"default"}>Save <Save/></Button>
                     </form>
                 </div>
             </PopoverContent>
@@ -246,13 +247,11 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
     </Dialog>
 }
 
-// TODO: Clean up ternary operator usage throughout the app
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
     const {username, modpackId} = Route.useParams();
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
 
     if(!modpack) {
@@ -269,18 +268,16 @@ export default function ModpackView() {
     );
 
     const {data: referenceIds} = useQuery(appQueries.modReferenceIds(modIds));
-    const {data: versionModData, isPending: pendingModData} = useQuery(appQueries.modpackModData(referenceIds));
+    const {data: versionModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(referenceIds));
 
-    const handleValueChange = async (newValue: string) => {
+    const handleValueChange = (newValue: string) => {
+        const newVersion = modpack.versions.find(version => version.iterations.toString() === newValue);
+        if(!newVersion) {
+            console.error("Problem with changing versions");
+            return;
+        }
         setVersionIteration(newValue);
-        setDisplayedVersion(modpack.versions.find(version => version.iterations.toString() === versionIteration)!);
-
-        await queryClient.invalidateQueries({
-            queryKey: appQueries.modReferenceIds(modIds).queryKey
-        });
-        await queryClient.invalidateQueries({
-            queryKey: appQueries.modpackModData(referenceIds).queryKey
-        });
+        setDisplayedVersion(newVersion);
     }
 
     return <section className="flex flex-col items-center justify-center">
@@ -290,7 +287,7 @@ export default function ModpackView() {
                 <h1 className="text-5xl font-bold">{modpack.name}</h1>
                 {curUser ? <EditModpackNameDropdown curName={modpack.name}/> : ""}
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 z-1">
                 <h1 className="font-bold text-2xl">Version:</h1>
                 <Select value={versionIteration} onValueChange={handleValueChange}>
                     <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>

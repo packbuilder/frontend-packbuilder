@@ -75,13 +75,13 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
                 Create Suggestion <Plus />
             </Button>   
         </DialogTrigger>
-        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
+        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center max-w-3/4">
             <DialogHeader className="w-full px-2">
-                <DialogTitle>
-                    Create Suggestion
+                <DialogTitle className="text-xl">
+                    Create Suggestion for this modpack!
                 </DialogTitle>
-                <DialogDescription>
-                    Create a suggestion for this modpack!
+                <DialogDescription className="text-md">
+                    Suggestions act as the main hub for all your proposed changes to a modpack! You can only have one suggestion per modpack at a time. 
                 </DialogDescription>
             </DialogHeader>
             <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>

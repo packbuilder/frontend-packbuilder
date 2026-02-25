@@ -1,4 +1,4 @@
-import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername, getMinecraftVersions, getModpackVersionManifest } from "@/lib/api";
+import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername, getMinecraftVersions } from "@/lib/api";
 import type { ModLoader } from "@/types/enums";
 import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
@@ -32,13 +32,13 @@ export const appQueries = {
     }),
 
     modReferenceIds: (modIds: number[] | null | undefined) => queryOptions({
-        queryKey: modIds ? ["referenceIds", modIds] : ["referenceIds", []],
+        queryKey: ["referenceIds", modIds?.join(",") ?? "noModIds"],
         queryFn: () => getModReferenceIds(modIds!),
         enabled: !!modIds
     }),
 
-    modpackModData: (referenceIds: string[] | null | undefined) => queryOptions({
-        queryKey: referenceIds ? ["modpackModData", referenceIds] : ["modpackModData", []],
+    curseForgeModData: (referenceIds: string[] | null | undefined) => queryOptions({
+        queryKey: ["modpackModData", referenceIds?.join(",") ?? "noReferenceIds"],
         queryFn: () => getCurseForgeModData(referenceIds!),
         enabled: !!referenceIds
     }),
@@ -49,7 +49,7 @@ export const appQueries = {
     }),  
 
     modificationModData: (suggestionId: string, modificationReferenceIds: string[] | null | undefined) => queryOptions({
-        queryKey: modificationReferenceIds ? ["modificationModData", suggestionId, modificationReferenceIds] : ["modificationModData", suggestionId, []],
+        queryKey: ["modificationModData", suggestionId, modificationReferenceIds?.join(",") ?? "NoModificationModData"],
         queryFn: () => getCurseForgeModData(modificationReferenceIds!),
         enabled: !!modificationReferenceIds
     }),

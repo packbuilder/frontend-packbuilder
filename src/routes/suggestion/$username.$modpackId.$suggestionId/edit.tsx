@@ -54,7 +54,7 @@ export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggesti
 
         const modpackReferenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modpackModIds));
 
-        await queryClient.ensureQueryData(appQueries.modpackModData(modpackReferenceIds));
+        await queryClient.ensureQueryData(appQueries.curseForgeModData(modpackReferenceIds));
         await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
         await queryClient.ensureQueryData(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader));
 
@@ -578,7 +578,7 @@ export default function EditSuggestion() {
     );
 
     const {data: modpackReferenceIds} = useQuery(appQueries.modReferenceIds(modpackModIds));
-    const {data: modpackModData} = useQuery(appQueries.modpackModData(modpackReferenceIds));
+    const {data: modpackModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
     const {data: modificationModData, isPending: pendingModificationData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
     return <section className="flex flex-col items-center justify-center pb-4">

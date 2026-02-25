@@ -46,7 +46,16 @@ export default function ModpackSuggestions() {
 
     // TODO: Turn into shadcn table component (Should look kinda like streamxps implementation)
     return <section className="flex flex-col justify-center items-center gap-5">
-        <h1 className="text-5xl font-bold">Suggestions</h1>
+        <div className="flex flex-col items-center justify-center gap-4">
+            <h1 className="text-5xl font-bold">Suggestions</h1>
+            {curUser ? 
+            <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
+            :
+            <ToolbarTooltip content="You must login to create a suggestion">
+                <Button variant={"outline"}>Create Suggestion <Plus /></Button>
+            </ToolbarTooltip>
+            }
+        </div>
         <div className="flex flex-col items-center justify-center gap-2 w-3/4">
             {!suggestions || suggestions.length === 0 ?  
                 <h1>
@@ -57,12 +66,5 @@ export default function ModpackSuggestions() {
             })}
 
         </div>
-        {curUser ? 
-        <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
-        :
-        <ToolbarTooltip content="You must login to create a suggestion">
-            <Button variant={"outline"}>Create Suggestion <Plus /></Button>
-        </ToolbarTooltip>
-        }
     </section>
 }

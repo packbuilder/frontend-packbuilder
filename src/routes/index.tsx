@@ -1,3 +1,5 @@
+import ErrorMessage from '@/components/feedback/error-message';
+import SuccessMessage from '@/components/feedback/success-message';
 import {ModpackCardLarge} from '@/components/modpack/modpack-card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -61,7 +63,6 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
     });
 
     const submitForm = () => {
-        setOpen(false);
         const form = formRef.current as unknown as HTMLFormElement;
         form.requestSubmit();
     }
@@ -78,51 +79,57 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
                 Create Modpack <Plus />
             </Button>   
         </DialogTrigger>
-        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
+        <DialogContent aria-describedby='' showCloseButton={false} className="flex flex-col justify-center items-center w-fit max-w-3/4">
             <DialogHeader className="w-full px-2">
                 <DialogTitle className='text-xl'>
-                    Create Modpack
+                    Create a Modpack from scratch!
                 </DialogTitle>
+                <DialogDescription className='text-md text-gray-400'>
+                    Creating a modpack from here will create an empty modpack.
+                </DialogDescription>
             </DialogHeader>
             <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
-                    <h1 className="font-bold text-md">Modpack name</h1>
+                    <h1 className="font-bold text-lg">Modpack name</h1>
                     <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
                 </div>
-                <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
-                    <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                        <SelectValue placeholder="Select game version..."/>
-                    </SelectTrigger> 
-                    <SelectContent className="bg-white text-black" side="bottom">
-                        <SelectGroup>     
-                            <SelectLabel>Select version</SelectLabel>
-                            {
-                                minecraftVersions?.map((version, index) => {
-                                    return <SelectItem className="cursor-pointer" key={index} value={version}>
-                                        {version}
-                                    </SelectItem>
-                                })
-                            }
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-                <Select value={modLoader.toString()} onValueChange={setModLoader}>
-                    <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                        <SelectValue placeholder="Select game version..."/>
-                    </SelectTrigger> 
-                    <SelectContent className="bg-white text-black" side="bottom">
-                        <SelectGroup>     
-                            <SelectLabel>Select mod loader</SelectLabel>
-                            {
-                                Object.values(ModLoader).map((modLoader, index) => {
-                                    return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
-                                        {enumNameFromValue(ModLoader, modLoader)}
-                                    </SelectItem>
-                                })
-                            }
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
+                <h1 className='font-bold text-lg'>Game version & Mod loader</h1>
+                <div className='flex items-center justify-center gap-2'>
+                    <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
+                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                            <SelectValue placeholder="Select game version..."/>
+                        </SelectTrigger> 
+                        <SelectContent className="bg-white text-black" side="bottom">
+                            <SelectGroup>     
+                                <SelectLabel>Select version</SelectLabel>
+                                {
+                                    minecraftVersions?.map((version, index) => {
+                                        return <SelectItem className="cursor-pointer" key={index} value={version}>
+                                            {version}
+                                        </SelectItem>
+                                    })
+                                }
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <Select value={modLoader.toString()} onValueChange={setModLoader}>
+                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                            <SelectValue placeholder="Select game version..."/>
+                        </SelectTrigger> 
+                        <SelectContent className="bg-white text-black" side="bottom">
+                            <SelectGroup>     
+                                <SelectLabel>Select mod loader</SelectLabel>
+                                {
+                                    Object.values(ModLoader).map((modLoader, index) => {
+                                        return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
+                                            {enumNameFromValue(ModLoader, modLoader)}
+                                        </SelectItem>
+                                    })
+                                }
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
             </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
@@ -138,6 +145,8 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
 
 function ImportModpackDialog({curUser} : {curUser: User}) {
     const [isOpen, setOpen] = useState(false);
+    const [showError, setShowError] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
     const formRef = useRef(null);
@@ -151,6 +160,9 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
             }
         },
         onSuccess: async () => {
+            setShowError(false);
+            setShowSuccess(true);
+
             await queryClient.invalidateQueries({
                 queryKey: appQueries.userModpacks(curUser).queryKey,
                 refetchType: "all"
@@ -159,12 +171,13 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
             await router.invalidate({sync: true});
         },
         onError: (error) => {
+            setShowError(true);
+            setShowSuccess(false);
             console.error(error.message)
         }
     });
 
     const submitForm = () => {
-        setOpen(false);
         const form = formRef.current as unknown as HTMLFormElement;
         form.requestSubmit();
     }
@@ -184,24 +197,28 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
             <DialogHeader className="w-full px-2">
                 <DialogTitle className='text-xl'>
-                    Import existing modpack
+                    Import an existing curseforge modpack
                 </DialogTitle>
-                <DialogDescription>
-                    To do so you will have to do is locate the manifest.json file within your curseforge modpack and upload it, packbuilder will handle the rest.
+                <DialogDescription className='text-gray-400'>
+                    To import a modpack from curseforge, you will need to upload your modpacks manifest.json file. Packbuilder will handle the rest.
                 </DialogDescription>
             </DialogHeader>
             <form method="post" ref={formRef} id="import-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
                     <h1 className="font-bold text-md">Upload your manifest.json here</h1>
-                    <Input id="file-upload" type="file" name="file" accept='.json'/>
+                    <Input className='' id="file-upload" type="file" name="file" accept='.json'/>
                 </div>
             </form>
             <DialogFooter className="w-full px-2">
-                <div className="w-full flex flex-row justify-start items-center gap-2">
-                    <Button variant={"default"} onClick={submitForm} type="submit">Import Modpack <Save/></Button>
-                    <DialogClose asChild>
-                        <Button variant={"destructive"}>Cancel <X/></Button>
-                    </DialogClose>
+                <div className='w-full flex flex-col items-center gap-2'>
+                    <div className="w-full flex flex-row justify-start items-center gap-2">
+                        <Button variant={"default"} onClick={submitForm} type="submit">Import Modpack <Save/></Button>
+                        <DialogClose asChild>
+                            <Button variant={"destructive"}>Cancel <X/></Button>
+                        </DialogClose>
+                    </div>
+                    {showError && <ErrorMessage text={"There was a problem with importing your modpack. Please ensure you are uploading a valid curseforge manifest.json file."}/>}
+                    {showSuccess && <SuccessMessage text={"Your modpack was successfully imported!"}/>}
                 </div>
             </DialogFooter>
         </DialogContent>
