@@ -43,6 +43,8 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
             return response.suggestionId
         },
         onSuccess: async (suggestionId: number) => {
+            navigate({to: `/suggestion/${curUser.name}/${modpack.id}/${suggestionId}/edit`})
+            
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
                 refetchType: "all"
@@ -50,7 +52,6 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
 
             await router.invalidate({sync: true});
 
-            navigate({to: `/suggestion/${curUser.name}/${modpack.id}/${suggestionId}/edit`})
         },
         onError: (error) => {
             console.error(error.message)

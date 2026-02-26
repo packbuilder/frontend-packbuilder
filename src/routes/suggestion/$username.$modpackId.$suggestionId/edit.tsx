@@ -299,7 +299,7 @@ function ModificationDisplay({curseforgeMod, modification, modificationReference
     }
 
     return <div className="flex flex-row items-center justify-start gap-2 p-5 border-b-2 border-gray-300 w-full flex-wrap">
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2 max-w-1/2">
             <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
             <h1 className="text-2xl">{curseforgeMod.name}</h1>
         </div>
@@ -627,20 +627,21 @@ export default function EditSuggestion() {
         </header>
         <div className="flex flex-col justify-center items-center w-3/4">
             <h1 className="text-4xl font-bold self-start">Modifications</h1>
+            {/* TODO: Turn into a wrapper component for data display to be consistent? */}
             <div className="flex flex-col justify-start items-start min-w-[300px] min-h-[400px] border w-1/2 border-black dark:border-gray-400 bg-gray-900 flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-full">        
-                    {pendingModificationData ? (
-                        <div className="size-full flex items-center justify-center w-full">
-                            <Spinner className="size-20" />
-                        </div>
-                    ) :
-                    suggestion.modifications?.map((modification, index) => {
-                        const modData = modificationModData?.find(modData => modification.mod.referenceId === modData.referenceId);
+                {pendingModificationData ? (
+                    <div className="size-full flex items-center justify-center w-full">
+                        <Spinner className="size-20" />
+                    </div>
+                ) :
+                suggestion.modifications?.map((modification, index) => {
+                    const modData = modificationModData?.find(modData => modification.mod.referenceId === modData.referenceId);
 
-                        if(!modData) {
-                            return <div>Error fetching mod data for modification</div>
-                        }
+                    if(!modData) {
+                        return <div>Error fetching mod data for modification</div>
+                    }
 
-                        return <ModificationDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={modData} modification={modification} key={index} />;
+                    return <ModificationDisplay modificationReferenceIds={modificationReferenceIds} curseforgeMod={modData} modification={modification} key={index} />;
                 })}
                 <div className={`flex items-center justify-center size-full ${!modificationModData || modificationModData.length == 0 ? "" : "hidden"}`}>
                     <h1 className="text-xl">It's looking empty in here...</h1>

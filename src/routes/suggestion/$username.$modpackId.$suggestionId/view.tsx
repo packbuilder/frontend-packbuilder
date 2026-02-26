@@ -7,11 +7,13 @@ import BreadCrumbLink from "@/components/breadcrumb-link";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ToolbarTooltip from "@/components/toolbar-tooltip";
 import { appQueries } from "@/hooks/appQueries";
 import { SuggestionState, ModAction, ConflictState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
+import ErrorMessage from "@/components/feedback/error-message";
+import SuccessMessage from "@/components/feedback/success-message";
 
 export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggestionId/view')({
     loader: async ({context, params}) => {
@@ -55,7 +57,10 @@ export default function SuggestionView() {
     const { curUser } = Route.useLoaderData();
     const {username, modpackId, suggestionId} = Route.useParams();
     const queryClient = useQueryClient();
-    const [message, setMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+    const [showErrorMessage, setShowErrorMessage] = useState(false);
     const router = useRouter();
     const navigate = useNavigate();
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
@@ -72,20 +77,32 @@ export default function SuggestionView() {
     );
     const {data: modificationModData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
+    const enableErrorMessage = (message: string) => {
+        setErrorMessage(message);
+        setShowSuccessMessage(false);
+        setShowErrorMessage(true);
+    }
+
+    const enableSuccessMessage = (message: string) => {
+        setSuccessMessage(message);
+        setShowErrorMessage(false);
+        setShowSuccessMessage(true);
+    }
+
     const mergeSuggestion = async () => {
 
         if(suggestion.state !== SuggestionState.Verified) {
-            setMessage("Could not merge suggestion. It is either outdated or has conflicts that need to be resolved by the suggestion creator.")
+            enableErrorMessage("Could not merge suggestion. It is either outdated or has conflicts that need to be resolved by the suggestion creator.");
             return;
         } else if(suggestion.modifications.length <= 0) {
-            setMessage("You cannot merge suggestions with no modifications.");
+            enableErrorMessage("You cannot merge suggestions with no modifications.");
             return;
         }
 
         const status = await createModpackVersion(modpackId, suggestionId);
 
         if(!status || status < 200 || status > 200) {
-            setMessage("There was a problem with merging this suggestion. Try again later.")
+            enableErrorMessage("There was a problem with merging this suggestion. Try again later.")
             return;
         }
 
@@ -94,8 +111,15 @@ export default function SuggestionView() {
         await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionId]})
         await router.invalidate({sync: true});  
 
-        setMessage("This suggestion was successfully merged!")
+        enableSuccessMessage("This suggestion is now in the proccess of being merged!")
     }
+
+    useEffect(() => {
+        if(suggestion.modifications.length === 0) {
+            enableErrorMessage("This suggestion cannot be merged because it contains no modifications.");
+        }
+    })
+
 
     return <section className="flex flex-col items-center justify-center gap-4">
         <header className="flex flex-col items-center justify-center gap-4">
@@ -124,7 +148,7 @@ export default function SuggestionView() {
                     :
                     <div className="flex items-center justify-center">
                         <CloudCheck />
-                        <h1>This suggestion has been verified and is able to be merged.</h1>
+                        <h1>This suggestion has been verified</h1>
                     </div>
                 }
                 <div className="flex justify-center items-center gap-2">
@@ -136,12 +160,12 @@ export default function SuggestionView() {
                         <Button variant={"default"}>Edit <Edit /></Button> 
                     </BreadCrumbLink>}
 
-                    {modpack.userId === curUser?.id && suggestion.state === SuggestionState.Verified && <Button variant={"default"} onClick={mergeSuggestion}>Merge <Check /></Button>} 
+                    {modpack.userId === curUser?.id && suggestion.state === SuggestionState.Verified && suggestion.modifications.length > 0 && <Button variant={"default"} onClick={mergeSuggestion}>Merge <Check /></Button>} 
 
                     {suggestion.userId === curUser?.id && <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion}/>}
-                    
-                    <h1 className="text-lg font-bold">{message}</h1>
                 </div>
+                {showErrorMessage && <ErrorMessage text={errorMessage}/>}
+                {showSuccessMessage && <SuccessMessage text={successMessage} />}
             </div>
         </header>
 

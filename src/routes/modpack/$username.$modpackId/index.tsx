@@ -162,7 +162,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
         <DialogTrigger asChild>
             <Button variant={"default"}>Download <Download /></Button>
         </DialogTrigger>
-        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
+        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center max-w-3/4">
             {downloadUrl && (
                 <a
                     ref={downloadRef}
@@ -171,11 +171,11 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
                     className="hidden"
                 />
             )}
-            <DialogHeader className="mt-4 flex justify-center items-center">
-                <DialogTitle className="text-3xl font-bold  ">How to import your modpack to curseforge.</DialogTitle>
+            <DialogHeader className="w-full px-2">
+                <DialogTitle className="text-xl">How to import your modpack to curseforge.</DialogTitle>
                 <Separator />
             </DialogHeader>
-             <div className="flex items-center flex-col justify-center">
+             <div className="flex items-center flex-col justify-center text-md">
                 <div className="flex flex-col items-start justify-center">
                     <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
                         <p>1. Launch the CurseForge app and make sure the Minecraft profile is selected.</p>
@@ -187,10 +187,12 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
                 </div>
             </div>
             <DialogFooter className="w-full px-2">
-                <Button variant={"default"} onClick={() => mutation.mutate()}>Start your download <Download /></Button>
-                <DialogClose asChild>
-                    <Button variant={"destructive"}>Cancel <X/></Button>
-                </DialogClose>
+                <div className="w-full flex items-center gap-2">
+                    <Button variant={"default"} onClick={() => mutation.mutate()}>Start your download <Download /></Button>
+                    <DialogClose asChild>
+                        <Button variant={"destructive"}>Cancel <X/></Button>
+                    </DialogClose>
+                </div>
             </DialogFooter>
         </DialogContent>
     </Dialog>
