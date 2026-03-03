@@ -45,7 +45,7 @@ export default function NavUser({
               </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-[var(--surface-1)]"
             side={"bottom"}
             align="end"
             sideOffset={4}

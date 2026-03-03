@@ -20,7 +20,7 @@ function RootLayout() {
     <>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-          <main className="container mx-auto min-h-dvh w-full size-full bg-gradient-to-r from-sky-500 to-emerald-500">
+          <main className="container mx-auto min-h-dvh w-full size-full bg-background">
             <Header user={user} />
             <Outlet />
           </main>
@@ -34,7 +34,7 @@ function ErrorComponent({ error }: { error: Error }) {
   const {user} = Route.useRouteContext();
   return (
     <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-      <main className="container mx-auto min-h-dvh w-full size-full bg-gradient-to-r from-sky-500 to-emerald-500">
+      <main className="container mx-auto min-h-dvh w-full size-full bg-background">
         <Header user={user} />
         <div className="flex flex-col items-center justify-center">
           <h1 className="text-4xl text-center text-bold">

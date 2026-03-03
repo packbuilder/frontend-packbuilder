@@ -14,6 +14,7 @@ import type { CreateSuggestionDto } from "@/types/dtos/createSuggestionDto";
 import z from "zod";
 import { curseForgeModListResponseSchema } from "@/types/curseforge/curseforgeModArrayResponse";
 import type { CreateModpackDto } from "@/types/dtos/createModpackDto";
+import { bookmarkSchema } from "@/types/bookmark";
 
 const api = useApi();
 
@@ -142,6 +143,24 @@ export async function getModpack(modpackId: string) {
             }
         });
         const data = modpackSchema.parse(response.data);
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function getUserBookmarks() {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.get(`/bookmarks`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+        const data = z.array(bookmarkSchema).parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError

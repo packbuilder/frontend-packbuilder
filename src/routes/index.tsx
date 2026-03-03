@@ -1,13 +1,17 @@
+import BreadCrumbLink from '@/components/breadcrumb-link';
 import ErrorMessage from '@/components/feedback/error-message';
 import SuccessMessage from '@/components/feedback/success-message';
+import GlassCard from '@/components/glass-card';
 import {ModpackCardLarge} from '@/components/modpack/modpack-card';
 import { Button } from '@/components/ui/button';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { appQueries } from '@/hooks/appQueries';
 import { createModpack, importModpack } from '@/lib/api';
 import { enumNameFromValue } from '@/lib/utils';
+import type { Bookmark } from '@/types/bookmark';
 import { createModpackDtoSchema } from '@/types/dtos/createModpackDto';
 import { ModLoader } from '@/types/enums';
 import type { Modpack } from '@/types/modpack';
@@ -23,9 +27,10 @@ export const Route = createFileRoute("/")({
     context: { queryClient, user: curUser }
   }) => {
     const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
+    const bookmarks = await queryClient.ensureQueryData(appQueries.userBookmarks(curUser));
     const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
 
-    return {curUser, modpacks, minecraftVersions};
+    return {curUser, modpacks, minecraftVersions, bookmarks};
   },
   component: Home,
 });
@@ -79,21 +84,21 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
                 Create Modpack <Plus />
             </Button>   
         </DialogTrigger>
-        <DialogContent aria-describedby='' showCloseButton={false} className="flex flex-col justify-center items-center w-fit max-w-3/4">
+        <DialogContent aria-describedby='' showCloseButton={false} className="flex flex-col justify-center items-center w-fit min-md:max-w-3/4 max-md:w-9/10">
             <DialogHeader className="w-full px-2">
-                <DialogTitle className='text-xl'>
+                <DialogTitle className='text-xl text-left'>
                     Create a Modpack from scratch!
                 </DialogTitle>
-                <DialogDescription className='text-md text-gray-400'>
-                    Creating a modpack from here will create an empty modpack.
+                <DialogDescription className='text-md text-gray-400 text-left'>
+                    This will create an empty modpack.
                 </DialogDescription>
             </DialogHeader>
-            <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
+            <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-center gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
                     <h1 className="font-bold text-lg">Modpack name</h1>
                     <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
                 </div>
-                <h1 className='font-bold text-lg'>Game version & Mod loader</h1>
+                <h1 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h1>
                 <div className='flex items-center justify-center gap-2'>
                     <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
                         <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
@@ -194,12 +199,12 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
                 Import Modpack <Plus />
             </Button>   
         </DialogTrigger>
-        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
+        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit min-md:max-w-3/4 max-md:w-9/10">
             <DialogHeader className="w-full px-2">
-                <DialogTitle className='text-xl'>
+                <DialogTitle className='text-xl text-left'>
                     Import an existing curseforge modpack
                 </DialogTitle>
-                <DialogDescription className='text-gray-400'>
+                <DialogDescription className='text-gray-400 text-left'>
                     To import a modpack from curseforge, you will need to upload your modpacks manifest.json file. Packbuilder will handle the rest.
                 </DialogDescription>
             </DialogHeader>
@@ -229,19 +234,77 @@ function Home() {
     const {curUser} = Route.useLoaderData();
     const {data: modpacks} = useSuspenseQuery(appQueries.userModpacks(curUser));
     const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
+    const {data: bookmarks} = useSuspenseQuery(appQueries.userBookmarks(curUser));
 
-    return <section className="flex flex-col justify-between items-center w-full mx-auto h-full">
-        <div className="flex flex-col justify-around items-center mb-10">
-            <h1 className="text-3xl font-bold p-2">Modpacks</h1>
-            <div className='flex items-center justify-center gap-2'>
-                {curUser && minecraftVersions && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
-                {curUser && <ImportModpackDialog curUser={curUser} />}
+    return <section className="flex flex-col justify-between items-center w-full mx-auto h-full pb-10">
+        <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
+            <div className="flex flex-col justify-around items-center mb-4">
+                <h1 className="text-3xl font-bold p-2">Your Modpacks</h1>
+                <div className='flex items-center justify-center gap-2'>
+                    {curUser && minecraftVersions && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
+                    {curUser && <ImportModpackDialog curUser={curUser} />}
+                </div>
             </div>
+            {modpacks && 
+                <div className='flex flex-col items-center justify-center'>
+                    <Carousel className="flex w-3/5 justify-center items-center">
+                        <CarouselContent className='py-6'>
+                            {
+                                modpacks.map((modpack: Modpack, index: number) => {
+                                    return <CarouselItem className='flex items-center justify-center'>
+                                        <ModpackCardLarge modpack={modpack} key={index}/>
+                                    </CarouselItem>
+                                })
+                            }
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                    </Carousel>
+                    {/* TODO: Figure out if you want this here */}
+                    {/* <BreadCrumbLink link={`profile/${curUser?.name}`} text="Profile" className="">
+                        <Button variant={"default"} className="">
+                            View all
+                        </Button>
+                    </BreadCrumbLink> */}
+                </div>
+            }
+
+            {
+                !modpacks && 
+                <GlassCard className='size-45 flex items-center justify-center'>
+                    <h1 className='text-lg text-center'>
+                        You have no modpacks
+                    </h1>
+                </GlassCard>  
+            }
         </div>
-        <div id="modpacks" className="flex flex-row wrap gap-4 min-w-full justify-center items-center">
-            {modpacks ? modpacks.map((modpack: Modpack, index: number) => {
-              return <ModpackCardLarge modpack={modpack} key={index}/>
-            }) : <h1>Log in to create modpacks!</h1>}
+        <div className="flex flex-col justify-between items-center w-full mx-auto h-full"> 
+            <div className="flex flex-col justify-around items-center mb-3">
+                <h1 className="text-3xl font-bold p-2">Bookmarked modpacks</h1>
+            </div>
+            {bookmarks && 
+                <Carousel className="flex w-3/5 justify-center items-center">
+                    <CarouselContent className='py-6'>
+                        {
+                            bookmarks.map((bookmark: Bookmark, index: number) => {
+                                return <CarouselItem className='flex items-center justify-center'>
+                                    <ModpackCardLarge modpack={bookmark.modpack} key={index}/>
+                                </CarouselItem>
+                            })
+                        }
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                </Carousel>
+            }
+
+            {!bookmarks && 
+                <GlassCard className='size-45 flex items-center justify-center'>
+                    <h1 className='text-lg text-center'>
+                        No bookmarks :(
+                    </h1>
+                </GlassCard>  
+            }
         </div>
     </section>
 }

@@ -45,7 +45,7 @@ export default function Header({user} : {user: User | null}) {
     
     if(!isHydrated) {
         return (
-            <div className="flex flex-row items-center justify-between gap-4 py-5 px-2 h-fit w-full bg-[rgba(255,255,255,0.2)] shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-[12.1px] border border-[rgba(255,255,255,0.3)] mb-5">
+            <div className="flex flex-row items-center justify-between gap-4 py-5 px-2 h-fit w-full bg-[var(--surface-1)] mb-5">
                 <Skeleton className="h-4 w-[250px] opacity-50" />
                 <Skeleton className="size-[50px] rounded-[50%] opacity-50" />
             </div>
@@ -53,7 +53,7 @@ export default function Header({user} : {user: User | null}) {
     }
     
     return (
-    <div className="flex flex-row items-center justify-between py-2 px-4 h-fit w-full bg-[rgba(255,255,255,0.2)] shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-[12.1px] border border-[rgba(255,255,255,0.3)] mb-5">
+    <div className="flex flex-row items-center justify-between py-2 px-4 h-fit w-full bg-[var(--surface-1)] mb-5">
         <BreadCrumbs />
         {user ? 
         <NavUser user={user} />
