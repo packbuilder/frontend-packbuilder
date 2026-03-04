@@ -5,14 +5,13 @@ import ToolbarTooltip from "../toolbar-tooltip";
 import { Button } from "../ui/button";
 import { File } from "lucide-react";
 import { Truncate } from "@re-dev/react-truncate"
+import { GlassCard } from "../glass-card";
 
-// TODO: Turn into shadcn item component?
 export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
     return <BreadCrumbLink 
     link={`/modpack/${modpack.user!.name}/${modpack.id}`}
-    text="Modpack"
-    className="duration-100 cursor-pointer relative before:content-[''] before:absolute before:top-0 before:left-[-150%] before:w-[60%] before:h-full before:bg-white before:opacity-40 before:skew-x-[45deg] before:transition-all before:duration-500 before:ease-linear hover:before:left-[180%] hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border flex flex-col gap-2 items-center rounded overflow-hidden max-w-45 bg-[var(--surface-2)] rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-[12.1px] border-[.1px] border-white/30">
-        <div className="flex flex-col items-center justify-center gap-2">
+    text="Modpack">
+        <GlassCard className="size-fit flex flex-col items-center justify-center gap-2">
             <img className="rounded w-40 h-45" src={modpackImage} alt="" />
             <div className="flex flex-col text-center items-center justify-center w-full">
                 <h1 className="font-bold text-lg text-center w-full">
@@ -26,16 +25,15 @@ export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
                     </Truncate>
                 </p>
             </div>
-        </div>
+        </GlassCard>
     </BreadCrumbLink>
 }
 
 export function ModpackCardCompact({modpack} : {modpack: Modpack}) {
     return <BreadCrumbLink 
     link={`/modpack/${modpack.user!.name}/${modpack.id}`}
-    text="Modpack"
-    className="duration-100 cursor-pointer relative hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full max-w-120 rounded overflow-hidden rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-[12.1px] border-[.1px] border-white/30">
-        <div className="flex items-center justify-between w-full">
+    text="Modpack">
+        <GlassCard className="flex items-center justify-between duration-100 p-2 border gap-2 w-full w-120">
             <div className="flex items-center justify-center gap-2">
                 <img className="border-white border-2 rounded-[50%] size-[50px]" src={modpackImage} alt="" />
                 <div className="flex flex-col items-center justify-center">
@@ -48,6 +46,6 @@ export function ModpackCardCompact({modpack} : {modpack: Modpack}) {
                     <File /> {modpack.versions[0].versionMods.length}
                 </Button>
             </ToolbarTooltip>
-        </div>
+        </GlassCard>
     </BreadCrumbLink>
 }

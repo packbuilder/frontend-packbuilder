@@ -1,8 +1,9 @@
 import BreadCrumbLink from '@/components/breadcrumb-link';
 import ErrorMessage from '@/components/feedback/error-message';
 import SuccessMessage from '@/components/feedback/success-message';
-import GlassCard from '@/components/glass-card';
+import { GlassCard } from '@/components/glass-card';
 import {ModpackCardLarge} from '@/components/modpack/modpack-card';
+import ToolbarTooltip from '@/components/toolbar-tooltip';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,6 +22,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-q
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Plus, Save, X } from 'lucide-react';
 import { useState, useRef, type FormEvent } from 'react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute("/")({
   loader: async ({
@@ -243,6 +245,8 @@ function Home() {
                 <div className='flex items-center justify-center gap-2'>
                     {curUser && minecraftVersions && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
                     {curUser && <ImportModpackDialog curUser={curUser} />}
+
+                    {!curUser && <Button onClick={() => toast("You must be logged in to create a modpack.")} variant={"outline"}>Log in to create modpacks</Button>}
                 </div>
             </div>
             {modpacks && 
@@ -271,7 +275,7 @@ function Home() {
 
             {
                 !modpacks && 
-                <GlassCard className='size-45 flex items-center justify-center'>
+                <GlassCard className='flex items-center justify-center'>
                     <h1 className='text-lg text-center'>
                         You have no modpacks
                     </h1>

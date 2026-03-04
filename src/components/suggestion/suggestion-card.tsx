@@ -5,24 +5,16 @@ import ToolbarTooltip from "../toolbar-tooltip";
 import { Button } from "../ui/button";
 import placeholderAvatar from "@/Seed-Avatar.jpg"
 import { ModAction, SuggestionState } from "@/types/enums";
+import { GlassCard } from "../glass-card";
 
 export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) {
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
     
     return <BreadCrumbLink 
-        className="duration-100 cursor-pointer relative hover:cursor-pointer focus:shadow focus:scale-110 hover:shadow hover:scale-110 p-2 border dark:border-white fslex flex-col gap-2 items-center w-full max-w-120 rounded overflow-hidden"
         link={`/suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} 
-        text={`View`}
-        style={{
-            background:"rgba(255, 255, 255, 0.2)",
-            borderRadius: "16px",
-            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-            backdropFilter: "blur(12.1px)",
-            WebkitBackdropFilter: "blur(5px)",
-            border:" 1px solid rgba(255, 255, 255, 0.3)"
-        }}>
-        <div className="flex items-center justify-between w-full">
+        text={`View`}>
+        <GlassCard className="flex items-center justify-between gap-2 w-full max-w-120">
             <div className="flex items-center justify-center gap-2">
                 <img className="border-white border-2 rounded-[50%] size-[50px]" src={placeholderAvatar} alt="" />
                 <div className="flex flex-col items-center justify-center">
@@ -58,6 +50,6 @@ export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) 
                     </Button>
                 </ToolbarTooltip>
             </div>
-        </div>
+        </GlassCard>
     </BreadCrumbLink>
 }
