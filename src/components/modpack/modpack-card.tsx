@@ -11,7 +11,7 @@ export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
     return <BreadCrumbLink 
     link={`/modpack/${modpack.user!.name}/${modpack.id}`}
     text="Modpack">
-        <GlassCard className="size-fit flex flex-col items-center justify-center gap-2">
+        <GlassCard className="size-fit flex flex-col items-center justify-center gap-2 p-2">
             <img className="rounded w-40 h-45" src={modpackImage} alt="" />
             <div className="flex flex-col text-center items-center justify-center w-full">
                 <h1 className="font-bold text-lg text-center w-full">

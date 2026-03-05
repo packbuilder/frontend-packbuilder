@@ -250,8 +250,8 @@ function Home() {
                 </div>
             </div>
             {modpacks && 
-                <div className='flex flex-col items-center justify-center'>
-                    <Carousel className="flex w-3/5 justify-center items-center">
+                <div className='flex flex-col items-center justify-center max-w-3/5'>
+                    <Carousel className="flex justify-center items-center">
                         <CarouselContent className='py-6'>
                             {
                                 modpacks.map((modpack: Modpack, index: number) => {

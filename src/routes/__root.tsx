@@ -20,7 +20,7 @@ function RootLayout() {
     <>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-          <main className="container mx-auto min-h-dvh w-full size-full bg-background">
+          <main className="min-h-dvh size-full bg-background">
             <Header user={user} />
             <Outlet />
           </main>
@@ -34,7 +34,7 @@ function ErrorComponent({ error }: { error: Error }) {
   const {user} = Route.useRouteContext();
   return (
     <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-      <main className="container mx-auto min-h-dvh w-full size-full bg-background">
+      <main className="min-h-dvh size-full bg-background">
         <Header user={user} />
         <div className="flex flex-col items-center justify-center">
           <h1 className="text-4xl text-center text-bold">
@@ -48,13 +48,19 @@ function ErrorComponent({ error }: { error: Error }) {
 }
 
 function NotFoundComponent() {
+  const {user} = Route.useRouteContext();
   return (
-    <div className="flex flex-col items-center justify-center">
-      <h1 className="text-4xl text-center text-bold">
-        This page does not exist :(
-      </h1>
-      <h2 className="text-2xl text-center text-bold">Maybe try searching a little harder?</h2>
-    </div>
+    <ThemeProvider defaultTheme="dark" storageKey="website-theme">
+      <main className="min-h-dvh size-full bg-background">
+        <Header user={user} />
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-4xl text-center text-bold">
+            This page does not exist :(
+          </h1>
+          <h2 className="text-2xl text-center text-bold">Maybe try searching a little harder?</h2>
+        </div>
+      </main>
+    </ThemeProvider>
   )
 }
 
