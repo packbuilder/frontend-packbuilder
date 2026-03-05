@@ -13,7 +13,7 @@ code {
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
       --color-twitch-purple: #9146ff;
   --color-twitch-black: #000000;
-  --color-twitch-white: #f0f0ff;
+  --color-twitch-white: #f0f0ff; 
 }
 
 html,
@@ -38,6 +38,11 @@ body {
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --surface-1: var(--surface-1);
+  --surface-2: var(--surface-2);
+  --text-primary: var(--text-primary)
+  --text-secondary: var(--text-secondary)
+  --text-tertiary: var(--text-tertiary)
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -67,6 +72,11 @@ body {
 :root {
   --radius: 0.65rem;
   --background: oklch(1 0 0);
+  --surface-1: #27292e;
+  --surface-2: rgba(255, 255, 255, 0.2);
+  --text-primary: #f8fafc;
+  --text-secondary: #87919e; 
+  --text-tertiary: #555d68;  
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
@@ -103,6 +113,9 @@ body {
   --background: #16181c;
   --surface-1: #27292e;
   --surface-2: rgba(255, 255, 255, 0.2);
+  --text-primary: #f8fafc;
+  --text-secondary: #87919e; 
+  --text-tertiary: #555d68;   
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
   --card-foreground: oklch(0.985 0 0);

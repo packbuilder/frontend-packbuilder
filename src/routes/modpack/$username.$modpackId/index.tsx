@@ -1,4 +1,4 @@
-import { Check, Download, Edit, ExternalLink, Save, Trash2, TriangleAlert, Users, X } from "lucide-react";
+import { Check, Download, Edit, ExternalLink, Gamepad, Gamepad2Icon, Save, Trash2, TriangleAlert, Users, X } from "lucide-react";
 import modpackImage from "@/modpack.gif";
 import { deleteModpack, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -22,6 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
 import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-dialog";
+import { Controller } from "react-hook-form";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -283,11 +284,21 @@ export default function ModpackView() {
     }
 
     return <section className="flex flex-col items-center justify-center">
-        <div className="flex flex-col justify-center items-center mb-4 gap-2">
-            <img src={modpackImage} alt="Modpack logo" className="bg-black aspect-square w-28 h-28 md:w-40 md:h-40" />
-            <div className="flex items-end justify-center gap-2">
-                <h1 className="text-5xl font-bold">{modpack.name}</h1>
-                {curUser ? <EditModpackNameDropdown curName={modpack.name}/> : ""}
+        <header className="flex flex-col justify-center items-center mb-4 gap-2">
+            <div className="flex items-center justify-center gap-2">
+                <img src={modpackImage} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
+                <div className="flex flex-col items-start justify-center gap-2">
+                    <h1 className="text-5xl font-bold">{modpack.name}</h1>
+                    <div className="flex justify-center items-center text-lg gap-1">
+                        <Gamepad2Icon className="text-text-primary" /> 
+                        <h1 className="text-text-secondary">
+                            {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())} 
+                        </h1>
+                        <h1 className="text-text-tertiary">
+                            {displayedVersion.gameVersion}
+                        </h1>
+                    </div>
+                </div>
             </div>
             <div className="flex items-center justify-center gap-2 z-1">
                 <h1 className="font-bold text-2xl">Version:</h1>
@@ -309,9 +320,6 @@ export default function ModpackView() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex items-center justify-center">
-                <h1 className="text-lg">Using minecraft version {displayedVersion.gameVersion} with {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())} mod loader.</h1>
-            </div>
             <div className="flex flex-row items-center justify-center gap-2">
                 <CopyButton text={"http:localhost:3000" + pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />
                 <BreadCrumbLink link={`modpack/${username}/${modpackId}/suggestions`} text="Suggestions">
@@ -323,7 +331,7 @@ export default function ModpackView() {
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 <DeleteModpackDialog modpackId={modpack.id.toString()} />
             </div>
-        </div>
+        </header>
 
         <div className="flex flex-col justify-center items-center w-3/4">
             <h1 className="text-4xl font-bold self-start">Mods</h1>
