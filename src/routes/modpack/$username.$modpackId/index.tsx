@@ -1,4 +1,4 @@
-import { Check, Download, Edit, ExternalLink, Gamepad, Gamepad2Icon, Save, Trash2, TriangleAlert, Users, X } from "lucide-react";
+import { BadgeCheck, Check, Download, Edit, ExternalLink, Gamepad, Gamepad2Icon, LogOut, Save, Settings, Trash2, TriangleAlert, Users, X } from "lucide-react";
 import modpackImage from "@/modpack.gif";
 import { deleteModpack, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -22,7 +22,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
 import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-dialog";
-import { Controller } from "react-hook-form";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
+import type { Modpack } from "@/types/modpack";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -64,11 +66,13 @@ function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMod: Curs
     </div>
 }
 
-function EditModpackNameDropdown({curName} : {curName: string}) {
+function RenameModpackDialog({curName} : {curName: string}) {
     const {curUser} = Route.useLoaderData();
     const queryClient = useQueryClient();
     const router = useRouter();
     const {modpackId} = Route.useParams();
+    const [isOpen, setIsOpen] = useState(false);
+    const inputRef = useRef<null | HTMLInputElement>(null);
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
@@ -102,24 +106,26 @@ function EditModpackNameDropdown({curName} : {curName: string}) {
     }
     
     return (
-        <Popover>
-            <ToolbarTooltip content="Change name" side="top">
-                <PopoverTrigger asChild>
-                    <Button variant={"default"}>
-                        <Edit />
-                    </Button>
-                </PopoverTrigger>
-            </ToolbarTooltip>
-            <PopoverContent className="p-4 bg-popover rounded-md z-100">
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger>
+                <p className="text-left flex items-center justify-center gap-2 font-normal"><Edit/> Rename modpack</p>
+            </DialogTrigger>
+            <DialogContent className="p-4 bg-popover rounded-md z-100" onOpenAutoFocus={(e) => {
+                e.preventDefault()
+                inputRef.current?.focus()
+            }}>
+                <DialogHeader className="w-full px-2">
+                    <DialogTitle className="text-xl">Rename modpack</DialogTitle>
+                    <Separator />
+                </DialogHeader>
                 <div className="w-fit flex flex-col gap-2">
-                    <h1 className="text-lg font-bold">Rename modpack</h1>
                     <form onSubmit={handleSubmit} className="flex justify-center items-center gap-2">
-                        <Input type="text" name="newName" id="newName" defaultValue={curName}/>
+                        <Input ref={inputRef} type="text" name="newName" id="newName" defaultValue={curName}/>
                         <Button type="submit" variant={"default"}>Save <Save/></Button>
                     </form>
                 </div>
-            </PopoverContent>
-        </Popover>
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -233,7 +239,7 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
 
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <Button variant={"destructive"}>Delete <Trash2 /></Button>
+            <p className="text-left flex items-center justify-center gap-2 font-normal"><Trash2 /> Delete modpack</p>
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">
             <DialogHeader className="mt-4 flex justify-center items-center">
@@ -248,6 +254,47 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
             </DialogFooter>
         </DialogContent>
     </Dialog>
+}
+
+function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
+    return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+              <Button>
+                <Settings />
+              </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-[var(--surface-1)]"
+            side={"bottom"}
+            align="end"
+            sideOffset={4}
+            onCloseAutoFocus={(e) => e.preventDefault()}
+          >
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm cursor-default">
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage className="size-full rounded-lg" src={modpackImage} alt={modpack.name} />
+                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                </Avatar>
+                <div className="text-left text-sm flex items-center">
+                  <span className="truncate font-medium">{modpack.name} settings</span>
+                </div>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
+                <RenameModpackDialog curName={modpack.name}/>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
+                <DeleteModpackDialog modpackId={modpack.id.toString()} />
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+    )
 }
 
 export default function ModpackView() {
@@ -284,22 +331,32 @@ export default function ModpackView() {
     }
 
     return <section className="flex flex-col items-center justify-center">
-        <header className="flex flex-col justify-center items-center mb-4 gap-2">
-            <div className="flex items-center justify-center gap-2">
+        <header className="flex flex-col justify-between items-center gap-2 min-md:flex-row min-md:gap-6">
+            <div className="flex flex-col items-center justify-center gap-2 min-md:flex-row min-md:justify-between">
                 <img src={modpackImage} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
-                <div className="flex flex-col items-start justify-center gap-2">
+                <div className="flex flex-col min-md:items-start items-center justify-center gap-2">
                     <h1 className="text-5xl font-bold">{modpack.name}</h1>
-                    <div className="flex justify-center items-center text-lg gap-1">
-                        <Gamepad2Icon className="text-text-primary" /> 
-                        <h1 className="text-text-secondary">
+                    <div className="flex justify-center items-center text-lg gap-1 h-5 font-bold">
+                        <Gamepad className="text-[var(--text-secondary)]" />
+                        <h1 className="text-[var(--text-secondary)]">
                             {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())} 
                         </h1>
-                        <h1 className="text-text-tertiary">
+                        <h1 className="text-[var(--text-secondary)]">
                             {displayedVersion.gameVersion}
                         </h1>
                     </div>
                 </div>
             </div>
+            {/* TODO: Add button for link copy, Add button for bookmark */}
+            <div className="flex items-center justify-center gap-2">
+                <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
+                <ModpackSettingsDropDown modpack={modpack} />
+            </div>
+        </header>
+
+        <Separator className="my-4"/>
+
+        <div className="flex items-center justify-center">
             <div className="flex items-center justify-center gap-2 z-1">
                 <h1 className="font-bold text-2xl">Version:</h1>
                 <Select value={versionIteration} onValueChange={handleValueChange}>
@@ -320,7 +377,7 @@ export default function ModpackView() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex flex-row items-center justify-center gap-2">
+            <div className="flex flex-row items-center justify-center gap-2 flex-wrap">
                 <CopyButton text={"http:localhost:3000" + pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />
                 <BreadCrumbLink link={`modpack/${username}/${modpackId}/suggestions`} text="Suggestions">
                     <Button variant={"default"}>
@@ -328,10 +385,8 @@ export default function ModpackView() {
                     </Button>
                 </BreadCrumbLink>
                 <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
-                <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
-                <DeleteModpackDialog modpackId={modpack.id.toString()} />
             </div>
-        </header>
+        </div>
 
         <div className="flex flex-col justify-center items-center w-3/4">
             <h1 className="text-4xl font-bold self-start">Mods</h1>

@@ -72,11 +72,6 @@ body {
 :root {
   --radius: 0.65rem;
   --background: oklch(1 0 0);
-  --surface-1: #27292e;
-  --surface-2: rgba(255, 255, 255, 0.2);
-  --text-primary: #f8fafc;
-  --text-secondary: #87919e; 
-  --text-tertiary: #555d68;  
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
