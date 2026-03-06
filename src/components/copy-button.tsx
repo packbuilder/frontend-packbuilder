@@ -1,40 +1,62 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Clipboard } from "lucide-react";
+import { ClipboardCopy, Check } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { PopoverArrow } from "@radix-ui/react-popover";
 
 export interface CopyButtonProps {
   text: string;
-  tooltipLabel?: string;
-  tooltipSide?: "bottom" | "top" | "left" | "right"
+  className?: string;
+  side?: "top" | "bottom" | "left" | "right";
 }
 
 export const CopyButton: React.FC<CopyButtonProps> = ({
   text,
+  className,
+  side = "bottom",
 }) => {
-  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => {setCopied(false)}, 2000);
+      setOpen(true);
+
+      setTimeout(() => {
+        setOpen(false);
+      }, 2000);
     } catch (err) {
       console.error("Failed to copy text:", err);
     }
   };
 
   return (
-    <Button
-      variant="default"
-      size="icon" 
-      onClick={handleCopy}
-      className="cursor-pointer w-fit"
-    >
-      {copied ? (
-        <span className="flex justsify-center items-center gap-2 p-2">Copied <Check className="h-4 w-4" /></span>
-      ) : (
-        <span className="flex justsify-center items-center gap-2 p-2">Link to modpack <Clipboard className="h-4 w-4" /></span>
-      )}
-    </Button>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleCopy}
+          className={`cursor-pointer ${className ?? ""}`}
+        >
+          {!open ? <ClipboardCopy /> : <Check />}
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        side={side}
+        align="center"
+        sideOffset={8}
+        className="w-auto px-3 py-1.5 text-sm pointer-events-none bg-white text-black shadow-md border"
+      >
+        Modpack link copied!
+        <PopoverArrow className="fill-white" />
+      </PopoverContent>
+    </Popover>
   );
 };
+

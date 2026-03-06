@@ -26,6 +26,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
+import path from "path";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -350,7 +351,7 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
     });
 
     return (
-        <Button onClick={handleClick} variant={"outline"}>{isBookmarked ? <Bookmark className="fill-current" /> : <Bookmark />}</Button>
+        <Button onClick={handleClick} variant={isBookmarked ? "default" : "outline"}>{isBookmarked ? <Bookmark className="fill-current" /> : <Bookmark />}</Button>
     )
 }
 
@@ -408,6 +409,7 @@ export default function ModpackView() {
             <div className="flex items-center justify-center gap-2">
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
+                <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>
                 <ModpackSettingsDropDown modpack={modpack} />
             </div>
         </header>
@@ -436,7 +438,6 @@ export default function ModpackView() {
                 </Select>
             </div>
             <div className="flex flex-row items-center justify-center gap-2 flex-wrap">
-                <CopyButton text={"http:localhost:3000" + pathname} tooltipSide="bottom" tooltipLabel="Link to modpack" />
                 <BreadCrumbLink link={`modpack/${username}/${modpackId}/suggestions`} text="Suggestions">
                     <Button variant={"default"}>
                         Suggestions <Users />
