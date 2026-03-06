@@ -1,6 +1,6 @@
-import { BadgeCheck, Check, Download, Edit, ExternalLink, Gamepad, Gamepad2Icon, LogOut, Save, Settings, Trash2, TriangleAlert, Users, X } from "lucide-react";
+import { BadgeCheck, Bookmark, BookmarkCheck, BookmarkIcon, Check, Download, Edit, ExternalLink, Gamepad, Gamepad2Icon, LogOut, Save, Settings, Trash2, TriangleAlert, Users, X } from "lucide-react";
 import modpackImage from "@/modpack.gif";
-import { deleteModpack, getModpackVersionManifest, updateModpack } from "@/lib/api";
+import { createBookmark, deleteBookmark, deleteModpack, getBookmark, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
@@ -25,6 +25,7 @@ import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-di
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import type { Modpack } from "@/types/modpack";
+import type { User } from "@/types/user";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -167,7 +168,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
 
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <Button variant={"default"}>Download <Download /></Button>
+            <Button variant={"default"}><p className="hidden min-md:flex">Download</p> <Download /></Button>
         </DialogTrigger>
         <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center max-w-3/4">
             {downloadUrl && (
@@ -242,14 +243,15 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
             <p className="text-left flex items-center justify-center gap-2 font-normal"><Trash2 /> Delete modpack</p>
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">
-            <DialogHeader className="mt-4 flex justify-center items-center">
-                <DialogTitle className="text-3xl font-bold">Are you sure you want do delete this modpack?</DialogTitle>
-                <DialogDescription>Doing so is irriversable and will delete all data related to this modpack including user suggestions tied to this modpack.</DialogDescription>
+            <DialogHeader className="flex justify-center items-center text-left">
+                <DialogTitle className="text-xl font-bold">Are you sure you want do delete this modpack?</DialogTitle>
+                <Separator />
+                <DialogDescription>Doing so is irriversable and will delete all data related to this modpack including any suggestions made for this modpack.</DialogDescription>
             </DialogHeader>
-            <DialogFooter className="w-full px-2">
-                <Button variant={"default"} onClick={() => mutation.mutate()}>Yes I want to delete this. <Check /></Button>
+            <DialogFooter className="w-full items-start flex-row">
+                <Button variant={"default"} onClick={() => mutation.mutate()}>Delete modpack <Check /></Button>
                 <DialogClose asChild>
-                    <Button variant={"destructive"}>Cancel <X/></Button>
+                    <Button variant={"destructive"} className="w-fit">Cancel <X/></Button>
                 </DialogClose>
             </DialogFooter>
         </DialogContent>
@@ -260,7 +262,7 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
     return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-              <Button>
+              <Button variant={"outline"}>
                 <Settings />
               </Button>
           </DropdownMenuTrigger>
@@ -294,6 +296,61 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+    )
+}
+
+function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: User}) {
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [isClicked, setIsClicked] = useState(false);
+    const queryClient = useQueryClient();
+
+    const {data: bookmark} = useSuspenseQuery({
+        queryKey: ["bookmark", `${modpack.id} ${curUser.id}`],
+        queryFn: () => getBookmark(modpack.id.toString())
+    });
+
+    useEffect(() => {
+        if(bookmark) {
+            setIsBookmarked(true);
+        }
+    }, [bookmark])
+
+
+    const handleClick = () => {
+        if(!isClicked) {
+            mutation.mutate();
+            setIsClicked(true);
+        }
+    }
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const status = isBookmarked ? await deleteBookmark(modpack.id.toString()) : await createBookmark(modpack.id.toString())
+            setIsClicked(false);
+            
+            if(!status || status < 200 || status > 300) {
+                throw new Error(isBookmarked ? "Unable to un-bookmark this modpack." : "Unable to bookmark this modpack.");
+            }
+            
+            setIsBookmarked(!isBookmarked);
+        },
+        onSuccess: async () => {            
+            await queryClient.invalidateQueries({
+                queryKey: ["bookmark", `${modpack.id} ${curUser.id}`],
+                refetchType: "all"
+            });
+
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.userBookmarks(curUser).queryKey,
+                refetchType: "all"
+            });
+        },
+        onError: (error: Error) => {
+            console.log(error.message);
+        }
+    });
+
+    return (
+        <Button onClick={handleClick} variant={"outline"}>{isBookmarked ? <Bookmark className="fill-current" /> : <Bookmark />}</Button>
     )
 }
 
@@ -350,6 +407,7 @@ export default function ModpackView() {
             {/* TODO: Add button for link copy, Add button for bookmark */}
             <div className="flex items-center justify-center gap-2">
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
+                { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
                 <ModpackSettingsDropDown modpack={modpack} />
             </div>
         </header>

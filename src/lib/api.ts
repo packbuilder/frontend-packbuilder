@@ -169,6 +169,24 @@ export async function getUserBookmarks() {
     }
 }
 
+export async function getBookmark(modpackId: string) {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.get(`/bookmarks/${modpackId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+        const data = response.data && bookmarkSchema.parse(response.data);
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
 export async function getModpackVersionManifest(modpackId: string, versionIteration: string) {
     try {
         const response = await api.get(`/modpacks/${modpackId}/download/version/${versionIteration}`, {
@@ -291,6 +309,24 @@ export async function createModpack(body: CreateModpackDto) {
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
+        return null;
+    }
+}
+
+export async function createBookmark(modpackId: string) {
+    const token = getUserToken();
+
+    try {
+        const response = await api.post(`/bookmarks/${modpackId}`, {}, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        return response.status
+    } catch(error) {
+        const err = error as unknown as AxiosError;
+        console.error(err);
         return null;
     }
 }
@@ -426,6 +462,24 @@ export async function deleteModpack(modpackId: string) {
 
     try {
         const response = await api.delete(`/modpacks/${modpackId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+
+        return response.status;
+    } catch(error) {
+        const err = error as unknown as AxiosError
+        console.error(err);
+        return null;
+    }
+}
+
+export async function deleteBookmark(modpackId: string) {
+    const token = getUserToken();
+
+    try {
+        const response = await api.delete(`/bookmarks/${modpackId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             }
