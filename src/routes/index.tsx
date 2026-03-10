@@ -251,7 +251,7 @@ function Home() {
             </div>
             {modpacks && 
                 <div className='flex flex-col items-center justify-center max-w-3/5'>
-                    <Carousel className="flex justify-center items-center">
+                    <Carousel className="flex justify-center items-center max-w-9/10">
                         <CarouselContent className='py-6'>
                             {
                                 modpacks.map((modpack: Modpack, index: number) => {
@@ -264,18 +264,12 @@ function Home() {
                         <CarouselPrevious />
                         <CarouselNext />
                     </Carousel>
-                    {/* TODO: Figure out if you want this here */}
-                    {/* <BreadCrumbLink link={`profile/${curUser?.name}`} text="Profile" className="">
-                        <Button variant={"default"} className="">
-                            View all
-                        </Button>
-                    </BreadCrumbLink> */}
                 </div>
             }
 
             {
                 !modpacks && 
-                <GlassCard className='flex items-center justify-center'>
+                <GlassCard className='size-45 flex items-center justify-center'>
                     <h1 className='text-lg text-center'>
                         You have no modpacks
                     </h1>

@@ -27,6 +27,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
 import path from "path";
+import { CurseForgeModDisplay } from "@/components/modpack/mod-display";
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   loader: async ({context, params}) => {
@@ -48,25 +49,25 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
   component: ModpackView,
 })
 
-function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
-    return <div className="flex flex-col items-center justify-start w-full">
-        <div className="flex items-center justify-start w-full p-5 gap-2">
-            <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
-            <h1 className="text-2xl">{curseforgeMod.name}</h1>
-            <ToolbarTooltip content="Curseforge link" side="top">
-                <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
-                    <Button variant={"default"}><ExternalLink /></Button>
-                </Link>
-            </ToolbarTooltip>
-            <ToolbarTooltip side="top" content="This modification was unable to install some dependencies, may or may not work.">
-                <Button className={`bg-yellow-400 hover:bg-yellow-400 ${versionMod.conflictState === ConflictState.MissingDependencies ? "" : "hidden"}`}>
-                    <TriangleAlert className="text-black" />
-                </Button>
-            </ToolbarTooltip>
-        </div>
-        <Separator className="" />
-    </div>
-}
+// function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
+//     return <div className="flex flex-col items-center justify-start w-full">
+//         <div className="flex items-center justify-start w-full p-5 gap-2">
+//             <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
+//             <h1 className="text-2xl">{curseforgeMod.name}</h1>
+//             <ToolbarTooltip content="Curseforge link" side="top">
+//                 <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
+//                     <Button variant={"default"}><ExternalLink /></Button>
+//                 </Link>
+//             </ToolbarTooltip>
+//             <ToolbarTooltip side="top" content="This modification was unable to install some dependencies, may or may not work.">
+//                 <Button className={`bg-yellow-400 hover:bg-yellow-400 ${versionMod.conflictState === ConflictState.MissingDependencies ? "" : "hidden"}`}>
+//                     <TriangleAlert className="text-black" />
+//                 </Button>
+//             </ToolbarTooltip>
+//         </div>
+//         <Separator className="" />
+//     </div>
+// }
 
 function RenameModpackDialog({curName} : {curName: string}) {
     const {curUser} = Route.useLoaderData();
@@ -171,7 +172,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
         <DialogTrigger asChild>
             <Button variant={"default"}><p className="hidden min-md:flex">Download</p> <Download /></Button>
         </DialogTrigger>
-        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center max-w-3/4">
+        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center">
             {downloadUrl && (
                 <a
                     ref={downloadRef}
@@ -181,12 +182,11 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
                 />
             )}
             <DialogHeader className="w-full px-2">
-                <DialogTitle className="text-xl">How to import your modpack to curseforge.</DialogTitle>
-                <Separator />
+                <DialogTitle className="text-xl text-left">How to import your modpack to curseforge.</DialogTitle>
             </DialogHeader>
              <div className="flex items-center flex-col justify-center text-md">
                 <div className="flex flex-col items-start justify-center">
-                    <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
+                    <div className="rounded-md px-4 py-2 gap-4 text-left flex border flex-col justify-start items-start w-full flex flex-col h-96 w-96 overflow-y-auto w-[80%]">
                         <p>1. Launch the CurseForge app and make sure the Minecraft profile is selected.</p>
                         <p>2. Click “Minecraft” in the top menu and switch to the “Modpacks” section.</p>
                         <p>3. On the right side, look for “Add Modpack” or “Import Modpack” (wording may vary depending on version) and then select “Import from ZIP”.</p>
@@ -388,7 +388,7 @@ export default function ModpackView() {
         setDisplayedVersion(newVersion);
     }
 
-    return <section className="flex flex-col items-center justify-center">
+    return <section className="flex flex-col items-center justify-center p-2">
         <header className="flex flex-col justify-between items-center gap-2 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-2 min-md:flex-row min-md:justify-between">
                 <img src={modpackImage} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
@@ -416,28 +416,30 @@ export default function ModpackView() {
 
         <Separator className="my-4"/>
 
-        <div className="flex items-center justify-center">
-            <div className="flex items-center justify-center gap-2 z-1">
-                <h1 className="font-bold text-2xl">Version:</h1>
-                <Select value={versionIteration} onValueChange={handleValueChange}>
-                    <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                        <SelectValue placeholder="Select modpack version..."/>
-                    </SelectTrigger> 
-                    <SelectContent className="bg-white text-black">
-                        <SelectGroup>     
-                            <SelectLabel>Select version</SelectLabel>
-                            {
-                                modpack.versions.map((version, index) => {
-                                    return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
-                                        {version.iterations}
-                                    </SelectItem>
-                                })
-                            }
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
+        <div className="flex max-md:flex-col items-center justify-center">
+            <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
+                <div className="flex items-center justify-center gap-2">
+                    <h1 className="font-bold text-xl">Modpack Version:</h1>
+                    <Select value={versionIteration} onValueChange={handleValueChange}>
+                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                            <SelectValue placeholder="Select modpack version..."/>
+                        </SelectTrigger> 
+                        <SelectContent className="bg-white text-black">
+                            <SelectGroup>     
+                                <SelectLabel>Select version</SelectLabel>
+                                {
+                                    modpack.versions.map((version, index) => {
+                                        return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
+                                            {version.iterations}
+                                        </SelectItem>
+                                    })
+                                }
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <div className="flex flex-row items-center justify-center gap-2 flex-wrap">
+            <div className="flex max-md:flex-col items-center justify-center gap-2">
                 <BreadCrumbLink link={`modpack/${username}/${modpackId}/suggestions`} text="Suggestions">
                     <Button variant={"default"}>
                         Suggestions <Users />
@@ -447,9 +449,9 @@ export default function ModpackView() {
             </div>
         </div>
 
-        <div className="flex flex-col justify-center items-center w-3/4">
+        <section className="flex flex-col justify-center items-center w-9/10 min-md:w-3/5">
             <h1 className="text-4xl font-bold self-start">Mods</h1>
-            <div className="flex flex-col justify-start items-start min-w-[300px] min-h-[400px] border w-1/2 border-black dark:border-gray-400 bg-gray-900 flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-full">
+            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
                 {
                     pendingModData ? (
                         <div className="size-full flex items-center justify-center w-full">
@@ -466,6 +468,7 @@ export default function ModpackView() {
                         }
 
                         return <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} key={index} />
+                        
 
                     })  
                     :
@@ -474,6 +477,6 @@ export default function ModpackView() {
                     </div>
                 }
             </div>
-        </div>
+        </section>
     </section>
 }

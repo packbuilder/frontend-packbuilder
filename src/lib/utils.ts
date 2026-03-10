@@ -34,3 +34,30 @@ export function enumNameFromValue<T extends Record<string, string>>(
   return (Object.keys(enumObj) as (keyof T)[])
     .find(k => enumObj[k] === value);
 }
+
+export function timeSinceCurDate(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+
+  const seconds = Math.floor((date.getTime() - now.getTime()) / 1000);
+
+  const intervals = [
+    { label: "year", seconds: 31536000 },
+    { label: "month", seconds: 2592000 },
+    { label: "day", seconds: 86400 },
+    { label: "hour", seconds: 3600 },
+    { label: "minute", seconds: 60 },
+    { label: "second", seconds: 1 }
+  ];
+
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+  for (const interval of intervals) {
+    const value = Math.floor(seconds / interval.seconds);
+    if (Math.abs(value) >= 1) {
+      return rtf.format(value, interval.label as Intl.RelativeTimeFormatUnit);
+    }
+  }
+
+  return "just now";
+}

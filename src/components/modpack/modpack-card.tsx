@@ -4,26 +4,17 @@ import type { Modpack } from "@/types/modpack";
 import ToolbarTooltip from "../toolbar-tooltip";
 import { Button } from "../ui/button";
 import { File } from "lucide-react";
-import { Truncate } from "@re-dev/react-truncate"
 import { GlassCard } from "../glass-card";
 
 export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
     return <BreadCrumbLink 
     link={`/modpack/${modpack.user!.name}/${modpack.id}`}
     text="Modpack">
-        <GlassCard className="size-fit flex flex-col items-center justify-center gap-2 p-2">
+        <GlassCard className="size-fit max-w-45 flex flex-col items-center justify-center gap-2 p-2">
             <img className="rounded w-40 h-45" src={modpackImage} alt="" />
-            <div className="flex flex-col text-center items-center justify-center w-full">
-                <h1 className="font-bold text-lg text-center w-full">
-                    <Truncate lines={1} ellipsis={"..."}>
-                        {modpack.name}
-                    </Truncate>
-                </h1>
-                <p className="text-center text-md w-full">
-                    <Truncate lines={1} ellipsis={"..."}>
-                        By {modpack.user!.name}
-                    </Truncate>
-                </p>
+            <div className="flex flex-col text-center items-center justify-center w-3/4">
+                <h1 className="font-bold text-lg text-center w-full truncate">{modpack.name}</h1>
+                <p className="text-center text-md w-full truncate">By {modpack.user!.name}</p>
             </div>
         </GlassCard>
     </BreadCrumbLink>
