@@ -25,8 +25,19 @@ body {
   }
 }
 
-@theme inline {
+h1 {
+  @apply text-3xl min-md:text-4xl min-lg:text-5xl font-bold;
+}
 
+h2 {
+  @apply text-base min-md:text-lg min-lg:text-xl font-semibold ;
+}
+
+p {
+  @apply text-sm min-md:text-base min-lg:text-lg;
+}
+
+@theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -108,9 +119,9 @@ body {
   --background: #16181c;
   --surface-1: #27292e;
   --surface-2: rgba(255, 255, 255, 0.2);
-  --text-primary: #f8fafc;
-  --text-secondary: #87919e; 
-  --text-tertiary: #555d68;   
+  --text-primary: #E6E6E6;
+  --text-secondary: #b0bac5; 
+  --text-tertiary: #6B6B6B;   
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
   --card-foreground: oklch(0.985 0 0);

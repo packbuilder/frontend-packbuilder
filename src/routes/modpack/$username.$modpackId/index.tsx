@@ -6,12 +6,8 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
 import type { VersionMod } from "@/types/versionMod";
-import ToolbarTooltip from "@/components/toolbar-tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
-import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import BreadCrumbLink from "@/components/breadcrumb-link";
 import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
-import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,10 +22,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
-import path from "path";
 import { CurseForgeModDisplay } from "@/components/modpack/mod-display";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field";
+import { fallback, zodValidator } from "@tanstack/zod-adapter";
+import z from "zod";
+import SuggestionCard from "@/components/suggestion/suggestion-card";
+
+const dataDisplaySchema = z.object({
+    display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
+});
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
+    validateSearch: zodValidator(dataDisplaySchema),
+    loaderDeps: ({search: {display}}) => ({
+        display
+    }),
   loader: async ({context, params}) => {
     const {user, queryClient} = context;
     const {modpackId} = params;
@@ -39,35 +47,17 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
     if(!modpack) {
         throw redirect({to: "/"});
     }
- 
+    
+    const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
+    const suggestions = await queryClient.ensureQueryData(appQueries.modpackSuggestions(modpackId));
     const modIds = modpack.versions[0]?.versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
     const modData = await queryClient.ensureQueryData(appQueries.curseForgeModData(referenceIds));
 
-    return {curUser: user, modpack, queryClient, modData}
+    return {curUser: user, modpack, queryClient, modData, minecraftVersions, suggestions}
   },
   component: ModpackView,
 })
-
-// function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
-//     return <div className="flex flex-col items-center justify-start w-full">
-//         <div className="flex items-center justify-start w-full p-5 gap-2">
-//             <img src={curseforgeMod.logoUrl} className="size-20" alt="" />
-//             <h1 className="text-2xl">{curseforgeMod.name}</h1>
-//             <ToolbarTooltip content="Curseforge link" side="top">
-//                 <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
-//                     <Button variant={"default"}><ExternalLink /></Button>
-//                 </Link>
-//             </ToolbarTooltip>
-//             <ToolbarTooltip side="top" content="This modification was unable to install some dependencies, may or may not work.">
-//                 <Button className={`bg-yellow-400 hover:bg-yellow-400 ${versionMod.conflictState === ConflictState.MissingDependencies ? "" : "hidden"}`}>
-//                     <TriangleAlert className="text-black" />
-//                 </Button>
-//             </ToolbarTooltip>
-//         </div>
-//         <Separator className="" />
-//     </div>
-// }
 
 function RenameModpackDialog({curName} : {curName: string}) {
     const {curUser} = Route.useLoaderData();
@@ -355,18 +345,58 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
     )
 }
 
+function SelectDisplayRadioGroup() {
+    const navigate = useNavigate({from: Route.fullPath});
+    const {display} = Route.useSearch({
+        select: (search) => ({
+            display: search.display
+        })
+    });
+
+    const handleValueChange = (newValue: string) => {
+        navigate({search: () => ({display: newValue}), resetScroll: false});
+    }
+
+    return (
+    <RadioGroup defaultValue={display} onValueChange={handleValueChange} className="max-w-sm">
+      <FieldLabel htmlFor="mods">
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldTitle>Mods</FieldTitle>
+          </FieldContent>
+          <RadioGroupItem value="mods" id="mods" />
+        </Field>
+      </FieldLabel>
+      <FieldLabel htmlFor="suggestions">
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldTitle>Suggestions</FieldTitle>
+          </FieldContent>
+          <RadioGroupItem value="suggestions" id="suggestions" />
+        </Field>
+      </FieldLabel>
+    </RadioGroup>
+  )
+}
+// TODO: Rework suggestion display to look like mod display, fix all pages fonts/text to be uniform (use h1, h2, p elements properly)
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
-    const {username, modpackId} = Route.useParams();
+    const {modpackId} = Route.useParams();
     const navigate = useNavigate();
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
+    const {display} = Route.useSearch({
+        select: (search) => ({
+            display: search.display
+        })
+    });
 
     if(!modpack) {
         navigate({to: "/"});
         return;
     }
 
+    const {data: suggestions, isPending: pendingSuggestionData} = useSuspenseQuery(appQueries.modpackSuggestions(modpack.id.toString()));
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
 
@@ -396,12 +426,12 @@ export default function ModpackView() {
                     <h1 className="text-5xl font-bold">{modpack.name}</h1>
                     <div className="flex justify-center items-center text-lg gap-1 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />
-                        <h1 className="text-[var(--text-secondary)]">
+                        <h2 className="text-[var(--text-secondary)]">
                             {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())} 
-                        </h1>
-                        <h1 className="text-[var(--text-secondary)]">
+                        </h2>
+                        <h2 className="text-[var(--text-secondary)]">
                             {displayedVersion.gameVersion}
-                        </h1>
+                        </h2>
                     </div>
                 </div>
             </div>
@@ -419,7 +449,7 @@ export default function ModpackView() {
         <div className="flex max-md:flex-col items-center justify-center">
             <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
                 <div className="flex items-center justify-center gap-2">
-                    <h1 className="font-bold text-xl">Modpack Version:</h1>
+                    <h3 className="font-bold text-xl">Modpack Version:</h3>
                     <Select value={versionIteration} onValueChange={handleValueChange}>
                         <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
                             <SelectValue placeholder="Select modpack version..."/>
@@ -440,43 +470,62 @@ export default function ModpackView() {
                 </div>
             </div>
             <div className="flex max-md:flex-col items-center justify-center gap-2">
-                <BreadCrumbLink link={`modpack/${username}/${modpackId}/suggestions`} text="Suggestions">
-                    <Button variant={"default"}>
-                        Suggestions <Users />
-                    </Button>
-                </BreadCrumbLink>
+                <SelectDisplayRadioGroup />
                 <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
             </div>
         </div>
+        
+        {display === "mods" ? 
+            <section className="flex flex-col justify-center items-center w-9/10 min-md:w-3/5">
+                <h1 className="text-4xl font-bold self-start">Mods</h1>
+                <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                    {
+                        pendingModData ? (
+                            <div className="size-full flex items-center justify-center w-full">
+                                <Spinner className="size-20" />
+                            </div>
+                        )
+                        :
+                        displayedVersion && versionModData ? displayedVersion.versionMods.map((versionMod, index) => {
+                            
+                            const modData = versionModData.find(modData => versionMod.mod.referenceId === modData.referenceId);
+                            
+                            if(!modData) {
+                                return <div>Error fetching mod data for mod with id {versionMod.mod.referenceId}.</div>
+                            }
 
-        <section className="flex flex-col justify-center items-center w-9/10 min-md:w-3/5">
-            <h1 className="text-4xl font-bold self-start">Mods</h1>
-            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
-                {
-                    pendingModData ? (
+                            return <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} key={index} />
+                            
+
+                        })  
+                        :
                         <div className="size-full flex items-center justify-center w-full">
-                            <Spinner className="size-20" />
+                            <h1>It's looking empty in here...</h1>
                         </div>
-                    )
-                    :
-                    displayedVersion && versionModData ? displayedVersion.versionMods.map((versionMod, index) => {
-                        
-                        const modData = versionModData.find(modData => versionMod.mod.referenceId === modData.referenceId);
-                        
-                        if(!modData) {
-                            return <div>Error fetching mod data for mod with id {versionMod.mod.referenceId}.</div>
-                        }
-
-                        return <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} key={index} />
-                        
-
-                    })  
-                    :
-                    <div className="size-full flex items-center justify-center w-full">
-                        <h1>It's looking empty in here...</h1>
-                    </div>
-                }
-            </div>
-        </section>
+                    }
+                </div>
+            </section>
+            :
+             <section className="flex flex-col justify-center items-center w-9/10 min-md:w-3/5">
+                <h1 className="text-4xl font-bold self-start">Suggestions</h1>
+                <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                    {
+                        pendingSuggestionData ? (
+                            <div className="size-full flex items-center justify-center w-full">
+                                <Spinner className="size-20" />
+                            </div>
+                        )
+                        :
+                        suggestions ? suggestions.map((suggestion, index) => {
+                            return <SuggestionCard suggestion={suggestion} key={index} />
+                        })  
+                        :
+                        <div className="size-full flex items-center justify-center w-full">
+                            <h1>It's looking empty in here...</h1>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
     </section>
 }
