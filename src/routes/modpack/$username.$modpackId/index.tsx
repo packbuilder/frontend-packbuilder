@@ -28,6 +28,7 @@ import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import SuggestionCard from "@/components/suggestion/suggestion-card";
+import SuggestionDisplay from "@/components/suggestion/suggestion-card";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -517,7 +518,7 @@ export default function ModpackView() {
                         )
                         :
                         suggestions ? suggestions.map((suggestion, index) => {
-                            return <SuggestionCard suggestion={suggestion} key={index} />
+                            return <SuggestionDisplay suggestion={suggestion} key={index} />
                         })  
                         :
                         <div className="size-full flex items-center justify-center w-full">

@@ -1,55 +1,67 @@
 import type { Suggestion } from "@/types/suggestion";
-import { CloudAlert, CloudCheck, SquarePlus, SquareMinus, CloudCog } from "lucide-react";
-import BreadCrumbLink from "../breadcrumb-link";
-import ToolbarTooltip from "../toolbar-tooltip";
-import { Button } from "../ui/button";
+import { CloudAlert, CloudCheck, CloudCog, CirclePlus, CircleMinus, PackageOpen, Tag } from "lucide-react";
 import placeholderAvatar from "@/Seed-Avatar.jpg"
-import { ModAction, SuggestionState } from "@/types/enums";
-import { GlassCard } from "../glass-card";
+import { ModAction, ModLoader, SuggestionState } from "@/types/enums";
+import { Separator } from "../ui/separator";
+import { enumNameFromValue } from "@/lib/utils";
 
-export default function SuggestionCard({suggestion} : {suggestion: Suggestion}) {
+export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
     
-    return <BreadCrumbLink 
-        link={`/suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} 
-        text={`View`}>
-        <GlassCard className="flex items-center justify-between gap-2 w-full max-w-120">
-            <div className="flex items-center justify-center gap-2">
-                <img className="border-white border-2 rounded-[50%] size-[50px]" src={placeholderAvatar} alt="" />
-                <div className="flex flex-col items-center justify-center">
-                    <h1 className="font-bold text-xl text-left w-full">{suggestion.username}</h1>
-                    <p className="text-left w-full">{suggestion.memo}</p>
+    return <div className="w-full bg-[var(--surface-1)]">
+        <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
+            <div className="flex items-center justify-center min-md:row-span-3">
+                <img src={placeholderAvatar} className="size-15 rounded-sm shrink-0 min-md:size-25" />
+            </div>
+            <header className="flex flex-col gap-2 w-full justify-center min-md:col-start-2 min-md:row-span-2">
+                <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
+                    <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)]">
+                        {suggestion.username}'s suggestion
+                    </h2>
+                    <Separator orientation="vertical" />
+                    <div className="flex items-center flex-wrap justify-center gap-2 text-md text-[var(--text-secondary)]">
+                        <span className="flex items-center justify-center w-fit gap-1 text-center">
+                            <CirclePlus className="size-4 text-green-500" /> {addedMods.length}
+                        </span>
+                        <span className="flex items-center justify-center w-fit gap-1 text-center">
+                            <CircleMinus className="size-4 text-red-500" /> {removedMods.length}
+                        </span>
+                    </div>
+                </div>  
+                <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{suggestion.memo}</p>
+            </header>
+            <div className="flex items-center justify-between w-full max-h-fit text-sm min-md:col-start-2 min-md:row-start-3">
+                <div className="flex items-center justify-center gap-2">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
+                        {
+                            suggestion.state.toString() === SuggestionState.Unverified ?
+                            <div className="flex items-center justify-center gap-1">
+                                <CloudAlert className="text-red-500 size-4"/> <h3 className="text-xs text-nowrap">Outdated</h3>
+                            </div>
+                            : suggestion.state.toString() === SuggestionState.VerificationPending ?
+                            <div className="flex items-center justify-center gap-1">
+                                <CloudCog className="text-white size-4"/> <h3 className="text-xs text-nowrap">Verification pending</h3>
+                            </div>
+                            :
+                            <div className="flex items-center justify-center gap-1">
+                                <CloudCheck className="text-green-500 size-4"/> <h3 className="text-xs text-nowrap">Verified</h3>
+                            </div>
+                        }
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
+                        <div className="flex items-center justify-center gap-1">
+                            <PackageOpen className="text-orange-100 size-4"/> <h3 className="text-xs text-nowrap">{enumNameFromValue(ModLoader, suggestion.modLoader.toString())}</h3>
+                        </div>
+                    </span>
+                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
+                        <div className="flex items-center justify-center gap-1">
+                            <Tag className="text-green-100 size-4"/> <h3 className="text-xs text-nowrap">Minecraft {suggestion.gameVersion}</h3>
+                        </div>
+                    </span>
                 </div>
             </div>
-            <div className="flex flex-row items-center justify-center gap-2">
-                {
-                    suggestion.state.toString() === SuggestionState.Unverified ?
-                    <ToolbarTooltip side="top" content="This suggestion is unverified and cannot be merged.">
-                        <CloudAlert className="text-red-500"/>
-                    </ToolbarTooltip>
-                    : suggestion.state.toString() === SuggestionState.VerificationPending ?
-                    <ToolbarTooltip side="top" content="This suggestion is pending verification and will soon be able to be merged.">
-                        <CloudCog />
-                    </ToolbarTooltip>
-                    :
-                    <ToolbarTooltip side="top" content="This suggestion has been verified and can be merged.">
-                        <CloudCheck />
-                    </ToolbarTooltip>
-                }
-
-                <ToolbarTooltip side="top" content="Added mods">
-                    <Button variant={"default"} className="bg-green-500 hover:bg-green-500 text-lg font-bold">
-                        <SquarePlus /> {addedMods.length}
-                    </Button>
-                </ToolbarTooltip>
-
-                <ToolbarTooltip side="top" content="Removed mods">
-                    <Button variant={"default"} className="bg-red-500 hover:bg-red-500 text-lg font-bold">
-                        <SquareMinus /> {removedMods.length}
-                    </Button>
-                </ToolbarTooltip>
-            </div>
-        </GlassCard>
-    </BreadCrumbLink>
+        </div>
+        <Separator />
+    </div>
 }

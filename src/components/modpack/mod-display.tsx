@@ -3,7 +3,7 @@ import type { VersionMod } from "@/types/versionMod";
 import ToolbarTooltip from "../toolbar-tooltip";
 import { Link } from "@tanstack/react-router";
 import { Button } from "../ui/button";
-import { Download, ExternalLink, Heart, RefreshCcw, TriangleAlert } from "lucide-react";
+import { CircleCheck, Download, ExternalLink, Heart, RefreshCcw, TriangleAlert } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { ConflictState } from "@/types/enums";
 import { timeSinceCurDate } from "@/lib/utils";
@@ -13,14 +13,15 @@ export function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMo
         notation: "compact"
     }).format(curseforgeMod.downloadCount);
 
-    return <div className="w-full bg-[var(--surface-1)]">
-        <div className="grid w-full h-fit min-h-40 grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2">
-            <div className="flex items-center justify-center">
-                <img src={curseforgeMod.logoUrl} className="size-15 rounded-sm shrink-0" />
+    
+    return <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer" className="w-full group bg-[var(--surface-1)] hover:bg-white/5 transition duration-200">
+        <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
+            <div className="flex items-center justify-center min-md:row-span-3">
+                <img src={curseforgeMod.logoUrl} className="size-15 rounded-sm shrink-0 min-md:size-25" />
             </div>
             <header className="flex flex-col gap-2 w-full justify-center">
                 <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
-                    <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)]">
+                    <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit group-hover:underline text-[var(--text-primary)]">
                         {curseforgeMod.name}
                     </h2>
                     <Separator orientation="vertical" />
@@ -40,21 +41,30 @@ export function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMo
                             <RefreshCcw className="size-4" /> {timeSinceCurDate(curseforgeMod.dateModified)}
                         </span>
                     </div>
-                    <div className="flex items-center justify-center gap-2">
-                        <ToolbarTooltip content="Curseforge link" side="top">
-                            <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
-                                <Button variant={"default"}><ExternalLink /></Button>
-                            </Link>
-                        </ToolbarTooltip>
-                        <ToolbarTooltip side="top" content="This modification was unable to install some dependencies, may or may not work.">
-                            <Button className={`bg-yellow-400 hover:bg-yellow-400 ${versionMod.conflictState === ConflictState.MissingDependencies ? "" : "hidden"}`}>
-                                <TriangleAlert className="text-black" />
-                            </Button>
-                        </ToolbarTooltip>
+                    <div className="flex items-center justify-center gap-2 min-md:col-start-3 min-md:row-start-1">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
+                            {
+                                versionMod.conflictState === ConflictState.MissingDependencies ? 
+                                <div className="flex items-center justify-center items-center gap-1">
+                                    <h3 className="text-xs text-nowrap">Missing dependencies</h3> 
+                                    <TriangleAlert className="text-yellow-500 size-4" />
+                                </div>
+                                : versionMod.conflictState === ConflictState.Conflicting ? 
+                                <div className="flex items-center justify-center items-center gap-1">
+                                    <h3 className="text-xs text-nowrap">Conflicting</h3> 
+                                    <TriangleAlert className="text-red-500 size-4" />
+                                </div>
+                                :
+                                <div className="flex items-center justify-center items-center gap-1">
+                                    <h3 className="text-xs text-nowrap">No conflicts</h3> 
+                                    <CircleCheck className="text-green-500 size-4" />
+                                </div>
+                            }
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
         <Separator />
-    </div>
+    </Link>
 }
