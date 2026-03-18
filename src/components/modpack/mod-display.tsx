@@ -14,8 +14,8 @@ export function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMo
     }).format(curseforgeMod.downloadCount);
 
     
-    return <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer" className="w-full group bg-[var(--surface-1)] hover:bg-white/5 transition duration-200">
-        <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
+    return <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer" className="w-full group bg-[var(--surface-1)] transition duration-200">
+        <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 group-hover:bg-white/5 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
             <div className="flex items-center justify-center min-md:row-span-3">
                 <img src={curseforgeMod.logoUrl} className="size-15 rounded-sm shrink-0 min-md:size-25" />
             </div>
