@@ -29,8 +29,7 @@ import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import SuggestionCard from "@/components/suggestion/suggestion-card";
 import SuggestionDisplay from "@/components/suggestion/suggestion-card";
-import { Command, CommandList } from "@/components/ui/command";
-import { CommandEmpty, CommandGroup, CommandInput, CommandItem } from "cmdk";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -163,7 +162,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
 
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <Button variant={"default"}><p className="hidden min-md:flex">Download</p> <Download /></Button>
+            <Button variant={"default"}><h3 className="hidden min-md:flex">Download</h3> <Download /></Button>
         </DialogTrigger>
         <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center">
             {downloadUrl && (
@@ -361,24 +360,29 @@ function SelectDisplayRadioGroup() {
     }
 
     return (
-    <RadioGroup defaultValue={display} onValueChange={handleValueChange} className="max-w-sm">
-      <FieldLabel htmlFor="mods">
-        <Field orientation="horizontal">
-          <FieldContent>
-            <FieldTitle>Mods</FieldTitle>
-          </FieldContent>
-          <RadioGroupItem value="mods" id="mods" />
-        </Field>
-      </FieldLabel>
-      <FieldLabel htmlFor="suggestions">
-        <Field orientation="horizontal">
-          <FieldContent>
-            <FieldTitle>Suggestions</FieldTitle>
-          </FieldContent>
-          <RadioGroupItem value="suggestions" id="suggestions" />
-        </Field>
-      </FieldLabel>
-    </RadioGroup>
+        <RadioGroup
+        defaultValue={display}
+        onValueChange={handleValueChange}
+        className="inline-flex rounded-full bg-muted p-1"
+        >
+            <label className="cursor-pointer">
+                <RadioGroupItem value="mods" className="peer sr-only" />
+                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
+                ${display === "mods" ? "bg-primary text-white" : ""}
+                text-muted-foreground`}>
+                Mods
+                </div>
+            </label>
+
+            <label className="cursor-pointer">
+                <RadioGroupItem value="suggestions" className="peer sr-only" />
+                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
+                ${display === "suggestions" ? "bg-primary text-white" : ""}
+                text-muted-foreground`}>
+                Suggestions
+                </div>
+            </label>
+        </RadioGroup>
   )
 }
 // TODO: Rework suggestion display to look like mod display, fix all pages fonts/text to be uniform (use h1, h2, p elements properly)
@@ -421,6 +425,8 @@ export default function ModpackView() {
         setDisplayedVersion(newVersion);
     }
 
+    // TODO: Style for desktop (align/contain content more towards center for whitespace on edges)
+
     return <section className="flex flex-col items-center justify-center p-2">
         <header className="flex flex-col justify-between items-center gap-2 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-2 min-md:flex-row min-md:justify-between">
@@ -443,95 +449,97 @@ export default function ModpackView() {
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
                 <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>
+                <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
                 <ModpackSettingsDropDown modpack={modpack} />
             </div>
         </header>
 
         <Separator className="my-4"/>
 
-        <div className="flex max-md:flex-col items-center justify-center">
-            <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
-                <div className="flex items-center justify-center gap-2">
-                    <h3 className="font-bold text-xl">Modpack Version:</h3>
-                    <Select value={versionIteration} onValueChange={handleValueChange}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                            <SelectValue placeholder="Select modpack version..."/>
-                        </SelectTrigger> 
-                        <SelectContent className="bg-white text-black">
-                            <SelectGroup>     
-                                <SelectLabel>Select version</SelectLabel>
-                                {
-                                    modpack.versions.map((version, index) => {
-                                        return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
-                                            {version.iterations}
-                                        </SelectItem>
-                                    })
-                                }
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+        <section className="flex items-center justify-center gap-4 flex-col w-9/10">
+            <SelectDisplayRadioGroup />
+
+            <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
+                <div className="flex items-center justify-center w-full gap-1">
+                    <CommandInput  placeholder={display === "mods" ? `Search ${displayedVersion.versionMods.length} mods...` : `Search ${suggestions?.length} suggestions...`} />
+                    <div className="flex max-md:flex-col items-center justify-center">
+                        <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
+                            <div className="flex items-center justify-center gap-2">
+                                <Select value={versionIteration} onValueChange={handleValueChange}>
+                                    <SelectTrigger>
+                                        <span className="text-sm">Version:</span>
+                                        <SelectValue placeholder="Select modpack version..."/>
+                                        <Separator orientation="vertical"  className="h-full" />
+                                    </SelectTrigger> 
+                                    <SelectContent>
+                                        <SelectGroup>     
+                                            <SelectLabel>Select modpack version</SelectLabel>
+                                            {
+                                                modpack.versions.map((version, index) => {
+                                                    return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
+                                                        {version.iterations}
+                                                    </SelectItem>
+                                                })
+                                            }
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div className="flex max-md:flex-col items-center justify-center gap-2">
-                <SelectDisplayRadioGroup />
-                <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
-            </div>
-        </div>
-        
-        <Command className="flex flex-col justify-center items-center w-9/10 min-md:w-3/5 p-1">
-            <CommandInput  placeholder={display === "mods" ? "Search for mods in this modpack..." : "Search for suggestions under this modpack..."} />
-            <CommandList className="max-h-fit w-full">
-                <CommandEmpty className={`flex flex-col justify-start items-start min-w-[300px] min-h-[400px] border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
-                    <h1>It's looking empty in here...</h1>
-                </CommandEmpty>
-                {display === "mods" ? 
-                    <CommandGroup>
-                        <h1 className="font-bold self-start mb-2">Mods</h1>
-                        <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                <CommandList className="max-h-fit w-full">
+                    <CommandEmpty className={`flex flex-col justify-center items-center min-w-[300px] min-h-[300px] border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                        <h2>It's looking empty in here...</h2>
+                    </CommandEmpty>
+                    {display === "mods" ? 
+                        <CommandGroup>
+                            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                                    {
+                                        pendingModData ? (
+                                            <div className="size-full flex items-center justify-center w-full">
+                                                <Spinner className="size-20" />
+                                            </div>
+                                        )
+                                        :
+                                        displayedVersion && versionModData ? displayedVersion.versionMods.map((versionMod, index) => {
+                                            
+                                            const modData = versionModData.find(modData => versionMod.mod.referenceId === modData.referenceId);
+                                            
+                                            if(!modData) {
+                                                return <div>Error fetching mod data for mod with id {versionMod.mod.referenceId}.</div>
+                                            }
+
+                                            return <CommandItem value={modData.name} key={index} className="size-full p-0">
+                                                <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} />
+                                            </CommandItem>
+                                        })  : ""
+                                    }
+                            </div>
+                        </CommandGroup>
+                        :
+                        <CommandGroup>
+                            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col overflow-y-auto overflow-x-clip w-full`}>
                                 {
-                                    pendingModData ? (
+                                    pendingSuggestionData ? (
                                         <div className="size-full flex items-center justify-center w-full">
                                             <Spinner className="size-20" />
                                         </div>
                                     )
                                     :
-                                    displayedVersion && versionModData ? displayedVersion.versionMods.map((versionMod, index) => {
-                                        
-                                        const modData = versionModData.find(modData => versionMod.mod.referenceId === modData.referenceId);
-                                        
-                                        if(!modData) {
-                                            return <div>Error fetching mod data for mod with id {versionMod.mod.referenceId}.</div>
-                                        }
-
-                                        return <CommandItem value={modData.name} key={index} className="size-full">
-                                            <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} />
+                                    suggestions ? suggestions.map((suggestion, index) => {
+                                        return <CommandItem value={suggestion.username} key={index} className="size-full p-0">
+                                            <SuggestionDisplay suggestion={suggestion} />
                                         </CommandItem>
-                                    })  : ""
+                                    })  
+                                    : ""
                                 }
-                        </div>
-                    </CommandGroup>
-                    :
-                    <CommandGroup>
-                        <h1 className="font-bold self-start mb-2">Suggestions</h1>
-                        <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col overflow-y-auto overflow-x-clip w-full`}>
-                            {
-                                pendingSuggestionData ? (
-                                    <div className="size-full flex items-center justify-center w-full">
-                                        <Spinner className="size-20" />
-                                    </div>
-                                )
-                                :
-                                suggestions ? suggestions.map((suggestion, index) => {
-                                    return <CommandItem value={suggestion.username} key={index} className="size-full">
-                                        <SuggestionDisplay suggestion={suggestion} />
-                                    </CommandItem>
-                                })  
-                                : ""
-                            }
-                        </div>
-                    </CommandGroup>
-                }
-            </CommandList>
-        </Command>
+                            </div>
+                        </CommandGroup>
+                    }
+                </CommandList>
+            </Command>
+        </section>
+
     </section>
 }

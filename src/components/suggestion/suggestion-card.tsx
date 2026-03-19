@@ -10,7 +10,7 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
     
-    return <BreadCrumbLink link={`suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} text="View" className="w-full group bg-[var(--surface-1)] transition duration-200">
+    return <BreadCrumbLink link={`suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} text="View" className="size-full group bg-[var(--surface-1)] transition duration-200">
         <div className="w-full bg-[var(--surface-1)] group-hover:bg-white/5">
             <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
                 <div className="flex items-center justify-center min-md:row-span-3">
@@ -33,8 +33,8 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
                     </div>  
                     <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{suggestion.memo}</p>
                 </header>
-                <div className="flex items-center justify-between w-full max-h-fit text-sm min-md:col-start-2 min-md:row-start-3">
-                    <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-between w-full max-h-fit text-sm col-span-2 min-md:col-start-2 min-md:row-start-3">
+                    <div className="flex items-center flex-wrap w-full justify-start gap-2">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?

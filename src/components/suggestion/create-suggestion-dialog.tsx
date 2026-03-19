@@ -8,7 +8,7 @@ import { enumNameFromValue } from "@/lib/utils";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import { ModLoader } from "@/types/enums";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from "../ui/select"
-import { Plus, Save, X } from "lucide-react";
+import { Group, Plus, Save, Users, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { User } from "@/types/user";
@@ -72,31 +72,35 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
 
     return <Dialog open={isOpen} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-            <Button variant={"default"}>
-                Create Suggestion <Plus />
+            <Button variant={"outline"}>
+                <Users />
             </Button>   
         </DialogTrigger>
-        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center max-w-3/4">
-            <DialogHeader className="w-full px-2">
-                <DialogTitle className="text-xl">
-                    Create Suggestion for this modpack!
+        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center w-9/10">
+            <DialogHeader className="w-full px-2 text-left">
+                <DialogTitle>
+                    <h2>
+                        Create Suggestion for this modpack!
+                    </h2>
                 </DialogTitle>
-                <DialogDescription className="text-md">
-                    Suggestions act as the main hub for all your proposed changes to a modpack! You can only have one suggestion per modpack at a time. 
+                <DialogDescription>
+                    <h3>
+                        Suggestions act as the main hub for all your proposed changes to a modpack! You can only have one suggestion per modpack at a time. 
+                    </h3>
                 </DialogDescription>
             </DialogHeader>
             <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
-                    <h1 className="font-bold text-lg">Memo</h1>
+                    <h2 className="font-bold text-lg">Memo</h2>
                     <Input id="memo" type="text" name="memo" placeholder="Your message..."/>
                 </div>
-                <h1 className="font-bold text-lg">Game Version & Mod Loader</h1>
+                <h2 className="font-bold text-lg">Game Version & Mod Loader</h2>
                 <div className={`flex items-center justify-center gap-2`}>
                     <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                        <SelectTrigger>
                             <SelectValue placeholder="Select game version..."/>
                         </SelectTrigger> 
-                        <SelectContent className="bg-white text-black" side="bottom">
+                        <SelectContent side="bottom">
                             <SelectGroup>     
                                 <SelectLabel>Select version</SelectLabel>
                                 {
@@ -110,10 +114,10 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
                         </SelectContent>
                     </Select>
                     <Select value={modLoader.toString()} onValueChange={setModLoader}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                        <SelectTrigger>
                             <SelectValue placeholder="Select game version..."/>
                         </SelectTrigger> 
-                        <SelectContent className="bg-white text-black" side="bottom">
+                        <SelectContent side="bottom">
                             <SelectGroup>     
                                 <SelectLabel>Select mod loader</SelectLabel>
                                 {

@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Button } from "./button"
 
 function Command({
   className,
@@ -65,21 +66,16 @@ function CommandInput({
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
-    <div
-      data-slot="command-input-wrapper"
-      className="flex h-9 items-center gap-2 border-b px-3"
-    >
-      <SearchIcon className="size-4 shrink-0 opacity-50" />
-      <CommandPrimitive.Input
-        style={{backgroundColor: "whitesmoke", color: "black"}}
-        data-slot="command-input"
-        className={cn(
-          "flex h-10 w-full rounded-md py-3 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        {...props}
-      />
-    </div>
+    <CommandPrimitive.Input
+      data-slot="command-input"
+      className={cn(
+        "flex h-10 w-full rounded-md p-3 text-sm outline-hidden dark:bg-[var(--surface-1)] placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        className
+      )}
+      {...props}
+    />
   )
 }
 

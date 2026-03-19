@@ -38,10 +38,10 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant={!open ? "outline" : "default"}
           size="icon"
           onClick={handleCopy}
-          className={`cursor-pointer ${className ?? ""}`}
+          className={`cursor-pointer transition duration-200 ${className ?? ""}`}
         >
           {!open ? <ClipboardCopy /> : <Check />}
         </Button>
