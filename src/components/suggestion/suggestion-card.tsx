@@ -5,6 +5,7 @@ import { ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import { Separator } from "../ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
 import BreadCrumbLink from "../breadcrumb-link";
+import InfoPill from "../info-pill";
 
 export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
@@ -35,7 +36,7 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
                 </header>
                 <div className="flex items-center justify-between w-full max-h-fit text-sm col-span-2 min-md:col-start-2 min-md:row-start-3">
                     <div className="flex items-center flex-wrap w-full justify-start gap-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
+                        <InfoPill>
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?
                                 <div className="flex items-center justify-center gap-1">
@@ -50,17 +51,17 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
                                     <CloudCheck className="text-green-500 size-4"/> <h3 className="text-xs text-nowrap">Verified</h3>
                                 </div>
                             }
-                        </span>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
+                        </InfoPill>
+                        <InfoPill>
                             <div className="flex items-center justify-center gap-1">
                                 <PackageOpen className="text-orange-100 size-4"/> <h3 className="text-xs text-nowrap">{enumNameFromValue(ModLoader, suggestion.modLoader.toString())}</h3>
                             </div>
-                        </span>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]">
+                        </InfoPill>
+                        <InfoPill>
                             <div className="flex items-center justify-center gap-1">
                                 <Tag className="text-green-100 size-4"/> <h3 className="text-xs text-nowrap">Minecraft {suggestion.gameVersion}</h3>
                             </div>
-                        </span>
+                        </InfoPill>
                     </div>
                 </div>
             </div>

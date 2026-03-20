@@ -20,7 +20,7 @@ function RootLayout() {
     <>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-          <main className="min-h-dvh size-full bg-background">
+          <main className="min-h-dvh size-full bg-background flex flex-col items-center justify-start">
             <Header user={user} />
             <Outlet />
           </main>

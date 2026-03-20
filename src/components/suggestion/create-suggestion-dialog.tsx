@@ -8,7 +8,7 @@ import { enumNameFromValue } from "@/lib/utils";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import { ModLoader } from "@/types/enums";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from "../ui/select"
-import { Group, Plus, Save, Users, X } from "lucide-react";
+import { Group, Plus, Save, UserRoundPlus, Users, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { User } from "@/types/user";
@@ -73,7 +73,7 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
     return <Dialog open={isOpen} onOpenChange={setOpen}>
         <DialogTrigger asChild>
             <Button variant={"outline"}>
-                <Users />
+                <UserRoundPlus />
             </Button>   
         </DialogTrigger>
         <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center w-9/10">

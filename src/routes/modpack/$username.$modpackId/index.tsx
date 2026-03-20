@@ -22,7 +22,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
-import { CurseForgeModDisplay } from "@/components/modpack/mod-display";
+import { VersionModDisplay } from "@/components/modpack/mod-display";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
@@ -425,14 +425,12 @@ export default function ModpackView() {
         setDisplayedVersion(newVersion);
     }
 
-    // TODO: Style for desktop (align/contain content more towards center for whitespace on edges)
-
-    return <section className="flex flex-col items-center justify-center p-2">
-        <header className="flex flex-col justify-between items-center gap-2 min-md:flex-row min-md:gap-6">
-            <div className="flex flex-col items-center justify-center gap-2 min-md:flex-row min-md:justify-between">
+    return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
+        <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
+            <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img src={modpackImage} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
-                <div className="flex flex-col min-md:items-start items-center justify-center gap-2">
-                    <h1 className="text-5xl font-bold">{modpack.name}</h1>
+                <div className="flex flex-col min-md:items-start items-center justify-center gap-3">
+                    <h1 className="font-bold line-clamp-1">{modpack.name}</h1>
                     <div className="flex justify-center items-center text-lg gap-1 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />
                         <h2 className="text-[var(--text-secondary)]">
@@ -444,7 +442,7 @@ export default function ModpackView() {
                     </div>
                 </div>
             </div>
-            {/* TODO: Add button for link copy, Add button for bookmark */}
+
             <div className="flex items-center justify-center gap-2">
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
@@ -511,7 +509,7 @@ export default function ModpackView() {
                                             }
 
                                             return <CommandItem value={modData.name} key={index} className="size-full p-0">
-                                                <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} />
+                                                <VersionModDisplay curseforgeMod={modData} versionMod={versionMod} />
                                             </CommandItem>
                                         })  : ""
                                     }

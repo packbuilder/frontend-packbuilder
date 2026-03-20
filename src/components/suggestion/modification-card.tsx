@@ -1,18 +1,12 @@
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
-import type { VersionMod } from "@/types/versionMod";
+import type { Modification } from "@/types/modification";
 import { Link } from "@tanstack/react-router";
-import { CircleCheck, Download, RefreshCcw, TriangleAlert } from "lucide-react";
+import { CircleCheck, CircleMinus, CirclePlus, TriangleAlert } from "lucide-react";
 import { Separator } from "../ui/separator";
-import { ConflictState } from "@/types/enums";
-import { timeSinceCurDate } from "@/lib/utils";
+import { ConflictState, ModAction } from "@/types/enums";
 import InfoPill from "../info-pill";
 
-export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
-    const formattedDownloadCount = new Intl.NumberFormat('en-US', {
-        notation: "compact"
-    }).format(curseforgeMod.downloadCount);
-
-    
+export function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: CurseForgeMod, modification: Modification}) {
     return <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer" className="w-full group bg-[var(--surface-1)] transition duration-200">
         <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 group-hover:bg-white/5 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
             <div className="flex items-center justify-center min-md:row-span-3">
@@ -32,23 +26,15 @@ export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: 
             </header>
             <div className="flex items-center justify-between w-full h-fit col-span-2">
                 <div className="flex items-center justify-center flex-wrap gap-2">
-                    <div className="flex items-center flex-wrap justify-center gap-2 text-md text-[var(--text-secondary)]">
-                        <span className="flex items-center justify-center w-fit gap-1 text-center">
-                            <Download className="size-4" /> {formattedDownloadCount}
-                        </span>
-                        <span className="flex items-center justify-center w-fit gap-1 text-center">
-                            <RefreshCcw className="size-4" /> {timeSinceCurDate(curseforgeMod.dateModified)}
-                        </span>
-                    </div>
                     <div className="flex items-center justify-center gap-2 min-md:col-start-3 min-md:row-start-1">
                         <InfoPill>
                             {
-                                versionMod.conflictState === ConflictState.MissingDependencies ? 
+                                modification.conflictState === ConflictState.MissingDependencies ? 
                                 <div className="flex items-center justify-center items-center gap-1">
                                     <h3 className="text-xs text-nowrap">Missing dependencies</h3> 
                                     <TriangleAlert className="text-yellow-500 size-4" />
                                 </div>
-                                : versionMod.conflictState === ConflictState.Conflicting ? 
+                                : modification.conflictState === ConflictState.Conflicting ? 
                                 <div className="flex items-center justify-center items-center gap-1">
                                     <h3 className="text-xs text-nowrap">Conflicting</h3> 
                                     <TriangleAlert className="text-red-500 size-4" />
@@ -59,6 +45,22 @@ export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: 
                                     <CircleCheck className="text-green-500 size-4" />
                                 </div>
                             }
+                        </InfoPill>
+                        <InfoPill>
+                            <div>
+                                {
+                                    modification.modAction === ModAction.Added ? 
+                                    <div className="flex items-center justify-center items-center gap-1">
+                                        <h3 className="text-xs text-nowrap">Added</h3> 
+                                        <CirclePlus className="text-green-500 size-4" />
+                                    </div>
+                                    : 
+                                    <div className="flex items-center justify-center items-center gap-1">
+                                        <h3 className="text-xs text-nowrap">Removed</h3> 
+                                        <CircleMinus className="text-red-500 size-4" />
+                                    </div>
+                                }
+                            </div>
                         </InfoPill>
                     </div>
                 </div>
