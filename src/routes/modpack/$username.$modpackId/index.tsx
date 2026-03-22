@@ -486,12 +486,12 @@ export default function ModpackView() {
                         </div>
                     </div>
                 </div>
-                <CommandList className="max-h-fit w-full">
+                <CommandList>
                     <CommandEmpty className={`flex flex-col justify-center items-center min-w-[300px] min-h-[300px] border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
                         <h2>It's looking empty in here...</h2>
                     </CommandEmpty>
                     {display === "mods" ? 
-                        <CommandGroup>
+                        <CommandGroup className="w-full">
                             <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
                                     {
                                         pendingModData ? (
@@ -517,7 +517,7 @@ export default function ModpackView() {
                         </CommandGroup>
                         :
                         <CommandGroup>
-                            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col overflow-y-auto overflow-x-clip w-full`}>
+                            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
                                 {
                                     pendingSuggestionData ? (
                                         <div className="size-full flex items-center justify-center w-full">
@@ -526,7 +526,7 @@ export default function ModpackView() {
                                     )
                                     :
                                     suggestions ? suggestions.map((suggestion, index) => {
-                                        return <CommandItem value={suggestion.username} key={index} className="size-full p-0">
+                                        return <CommandItem value={suggestion.username} key={index} className="size-full max-w-full p-0">
                                             <SuggestionDisplay suggestion={suggestion} />
                                         </CommandItem>
                                     })  

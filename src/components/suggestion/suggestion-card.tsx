@@ -11,9 +11,8 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
     
-    return <BreadCrumbLink link={`suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} text="View" className="size-full group bg-[var(--surface-1)] transition duration-200">
-        <div className="w-full bg-[var(--surface-1)] group-hover:bg-white/5">
-            <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
+    return <BreadCrumbLink link={`suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} text="View" className="w-full group bg-[var(--surface-1)] transition duration-200">
+            <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)] group-hover:bg-white/5">
                 <div className="flex items-center justify-center min-md:row-span-3">
                     <img src={placeholderAvatar} className="size-15 rounded-sm shrink-0 min-md:size-25" />
                 </div>
@@ -66,6 +65,5 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
                 </div>
             </div>
             <Separator />
-        </div>
     </BreadCrumbLink>
 }
