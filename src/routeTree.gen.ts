@@ -15,7 +15,6 @@ import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$user
 import { Route as ModpackUsernameModpackIdIndexRouteImport } from './routes/modpack/$username.$modpackId/index'
 import { Route as ModpackUsernameModpackIdSuggestionsRouteImport } from './routes/modpack/$username.$modpackId/suggestions'
 import { Route as SuggestionUsernameModpackIdSuggestionIdViewRouteImport } from './routes/suggestion/$username.$modpackId.$suggestionId/view'
-import { Route as SuggestionUsernameModpackIdSuggestionIdEditRouteImport } from './routes/suggestion/$username.$modpackId.$suggestionId/edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,12 +49,6 @@ const SuggestionUsernameModpackIdSuggestionIdViewRoute =
     path: '/suggestion/$username/$modpackId/$suggestionId/view',
     getParentRoute: () => rootRouteImport,
   } as any)
-const SuggestionUsernameModpackIdSuggestionIdEditRoute =
-  SuggestionUsernameModpackIdSuggestionIdEditRouteImport.update({
-    id: '/suggestion/$username/$modpackId/$suggestionId/edit',
-    path: '/suggestion/$username/$modpackId/$suggestionId/edit',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -63,7 +56,6 @@ export interface FileRoutesByFullPath {
   '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId/suggestions': typeof ModpackUsernameModpackIdSuggestionsRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
-  '/suggestion/$username/$modpackId/$suggestionId/edit': typeof SuggestionUsernameModpackIdSuggestionIdEditRoute
   '/suggestion/$username/$modpackId/$suggestionId/view': typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
 }
 export interface FileRoutesByTo {
@@ -72,7 +64,6 @@ export interface FileRoutesByTo {
   '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId/suggestions': typeof ModpackUsernameModpackIdSuggestionsRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
-  '/suggestion/$username/$modpackId/$suggestionId/edit': typeof SuggestionUsernameModpackIdSuggestionIdEditRoute
   '/suggestion/$username/$modpackId/$suggestionId/view': typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
 }
 export interface FileRoutesById {
@@ -82,7 +73,6 @@ export interface FileRoutesById {
   '/profile/$username/': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId/suggestions': typeof ModpackUsernameModpackIdSuggestionsRoute
   '/modpack/$username/$modpackId/': typeof ModpackUsernameModpackIdIndexRoute
-  '/suggestion/$username/$modpackId/$suggestionId/edit': typeof SuggestionUsernameModpackIdSuggestionIdEditRoute
   '/suggestion/$username/$modpackId/$suggestionId/view': typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
 }
 export interface FileRouteTypes {
@@ -93,7 +83,6 @@ export interface FileRouteTypes {
     | '/profile/$username'
     | '/modpack/$username/$modpackId/suggestions'
     | '/modpack/$username/$modpackId'
-    | '/suggestion/$username/$modpackId/$suggestionId/edit'
     | '/suggestion/$username/$modpackId/$suggestionId/view'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -102,7 +91,6 @@ export interface FileRouteTypes {
     | '/profile/$username'
     | '/modpack/$username/$modpackId/suggestions'
     | '/modpack/$username/$modpackId'
-    | '/suggestion/$username/$modpackId/$suggestionId/edit'
     | '/suggestion/$username/$modpackId/$suggestionId/view'
   id:
     | '__root__'
@@ -111,7 +99,6 @@ export interface FileRouteTypes {
     | '/profile/$username/'
     | '/modpack/$username/$modpackId/suggestions'
     | '/modpack/$username/$modpackId/'
-    | '/suggestion/$username/$modpackId/$suggestionId/edit'
     | '/suggestion/$username/$modpackId/$suggestionId/view'
   fileRoutesById: FileRoutesById
 }
@@ -121,7 +108,6 @@ export interface RootRouteChildren {
   ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
   ModpackUsernameModpackIdSuggestionsRoute: typeof ModpackUsernameModpackIdSuggestionsRoute
   ModpackUsernameModpackIdIndexRoute: typeof ModpackUsernameModpackIdIndexRoute
-  SuggestionUsernameModpackIdSuggestionIdEditRoute: typeof SuggestionUsernameModpackIdSuggestionIdEditRoute
   SuggestionUsernameModpackIdSuggestionIdViewRoute: typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
 }
 
@@ -169,13 +155,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuggestionUsernameModpackIdSuggestionIdViewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/suggestion/$username/$modpackId/$suggestionId/edit': {
-      id: '/suggestion/$username/$modpackId/$suggestionId/edit'
-      path: '/suggestion/$username/$modpackId/$suggestionId/edit'
-      fullPath: '/suggestion/$username/$modpackId/$suggestionId/edit'
-      preLoaderRoute: typeof SuggestionUsernameModpackIdSuggestionIdEditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -186,8 +165,6 @@ const rootRouteChildren: RootRouteChildren = {
   ModpackUsernameModpackIdSuggestionsRoute:
     ModpackUsernameModpackIdSuggestionsRoute,
   ModpackUsernameModpackIdIndexRoute: ModpackUsernameModpackIdIndexRoute,
-  SuggestionUsernameModpackIdSuggestionIdEditRoute:
-    SuggestionUsernameModpackIdSuggestionIdEditRoute,
   SuggestionUsernameModpackIdSuggestionIdViewRoute:
     SuggestionUsernameModpackIdSuggestionIdViewRoute,
 }

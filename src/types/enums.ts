@@ -14,6 +14,12 @@ export enum ModAction {
     Updated = "2"
 }
 
+export enum ModificationFilter {
+    All = "0",
+    Added = "1",
+    Removed = "2"
+}
+
 export enum SuggestionState {
     Unverified = "0",
     Verified = "1",

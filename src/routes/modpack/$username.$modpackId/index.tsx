@@ -453,7 +453,7 @@ export default function ModpackView() {
         </header>
 
         <Separator className="my-4"/>
-
+        {/* TODO: Move merging functionality from suggestion view page to this page */}
         <section className="flex items-center justify-center gap-4 flex-col w-9/10">
             <SelectDisplayRadioGroup />
 
