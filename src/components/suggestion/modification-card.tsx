@@ -1,7 +1,7 @@
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import type { Modification } from "@/types/modification";
 import { Link, Route } from "@tanstack/react-router";
-import { CircleCheck, CircleMinus, CirclePlus, TriangleAlert } from "lucide-react";
+import { CircleCheck, CircleMinus, CirclePlus, ExternalLink, TriangleAlert, X } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { ConflictState, ModAction, ModPlatform } from "@/types/enums";
 import InfoPill from "../info-pill";
@@ -9,21 +9,55 @@ import type { Modpack } from "@/types/modpack";
 import type { Suggestion } from "@/types/suggestion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createModificationDtoSchema } from "@/types/dtos/createModificationDto";
-import { createModification } from "@/lib/api";
+import { createModification, deleteModification } from "@/lib/api";
 import { appQueries } from "@/hooks/appQueries";
 import type { FormEvent } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 
-export function ModificationDisplay({curseforgeMod, modification} : {curseforgeMod: CurseForgeMod, modification: Modification}) {
-    return <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer" className="w-full group bg-[var(--surface-1)] transition duration-200">
-        <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 group-hover:bg-white/5 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
+export function ModificationDisplay({curseforgeMod, modification, modpack, modificationReferenceIds} : {curseforgeMod: CurseForgeMod, modification: Modification, modpack: Modpack, modificationReferenceIds: string[]}) {
+
+    const modpackIdStr = modpack.id.toString();
+    const suggestionIdStr = modification.suggestionId.toString();
+    const queryClient = useQueryClient();
+
+    const mutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const modificationId = formData.get("modificationId") as string;
+            const status = await deleteModification(modpackIdStr, modificationId, suggestionIdStr);
+
+            if(!status || status < 200 || status > 200) {
+                throw new Error("Problem with deleting modification from this suggestion");
+            }
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.suggestion(modpackIdStr, suggestionIdStr).queryKey,
+            });
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.modificationModData(suggestionIdStr, modificationReferenceIds).queryKey,
+                refetchType: "all"
+            });
+        },
+        onError: (error) => {
+            console.error(error.message);
+        }
+    });
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        mutation.mutate(formData);
+    }
+
+    return <div className="w-full bg-[var(--surface-1)] transition duration-200">
+        <div className="grid w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr]">
             <div className="flex items-center justify-center min-md:row-span-3">
                 <img src={curseforgeMod.logoUrl} className="size-15 rounded-sm shrink-0 min-md:size-25" />
             </div>
             <header className="flex flex-col gap-2 w-full justify-center">
                 <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
-                    <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit group-hover:underline text-[var(--text-primary)]">
+                    <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)]">
                         {curseforgeMod.name}
                     </h2>
                     <Separator orientation="vertical" />
@@ -33,9 +67,9 @@ export function ModificationDisplay({curseforgeMod, modification} : {curseforgeM
                 </div>  
                 <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{curseforgeMod.summary}</p>
             </header>
-            <div className="flex items-center justify-between w-full h-fit col-span-2">
+            <div className="flex items-center justify-between w-full h-fit col-span-2 min-md:row-start-2 min-md:col-start-2">
                 <div className="flex items-center justify-center flex-wrap gap-2">
-                    <div className="flex items-center justify-center gap-2 min-md:col-start-3 min-md:row-start-1">
+                    <div className="flex items-center justify-center gap-2">
                         <InfoPill>
                             {
                                 modification.conflictState === ConflictState.MissingDependencies ? 
@@ -74,9 +108,20 @@ export function ModificationDisplay({curseforgeMod, modification} : {curseforgeM
                     </div>
                 </div>
             </div>
+            <div className="flex items-center justify-start w-full h-fit gap-2 min-md:col-start-3 min-md:justify-center min-md:h-full min-md:row-span-3 min-md:row-start-1">
+                <form method="delete" id="deleteModification" onSubmit={handleSubmit}>
+                    <Input type="hidden" name="modificationId" value={modification.id} />
+                    <Button type="submit" variant={"destructive"}><X className="text-[var(--text-primary)]"/></Button>
+                </form>
+                <Button variant={"default"}>
+                    <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="text-[var(--text-primary)]" />
+                    </Link>
+                </Button>
+            </div>
         </div>
         <Separator />
-    </Link>
+    </div>
 }
 
 export function CreateModificationDisplay(

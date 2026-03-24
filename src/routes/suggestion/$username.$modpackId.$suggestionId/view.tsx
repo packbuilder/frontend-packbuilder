@@ -1,16 +1,13 @@
 import placeholder from "@/Seed-Avatar.jpg"
-import { createModpackVersion, updateSuggestion, verifySuggestion } from "@/lib/api";
+import { updateSuggestion, verifySuggestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Check, CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
-import BreadCrumbLink from "@/components/breadcrumb-link";
+import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
 import { ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
-import ErrorMessage from "@/components/feedback/error-message";
-import SuccessMessage from "@/components/feedback/success-message";
 import InfoPill from "@/components/info-pill";
 import { Separator } from "@/components/ui/separator";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -29,6 +26,7 @@ import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import type { Suggestion } from "@/types/suggestion";
 import type { VersionMod } from "@/types/versionMod";
 import type { Modpack } from "@/types/modpack";
+import ClearableCommandInput from "@/components/clearable-command-input";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -43,24 +41,15 @@ export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggesti
         page,
         sortMethod
     }),
-    loader: async ({context: {user, queryClient}, params: {modpackId, suggestionId}, deps: {searchQuery, page, sortMethod}}) => {
+    loader: async ({context: {user, queryClient}, params: {modpackId, suggestionId}}) => {
         const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(modpackId, suggestionId));
         const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId));
-        
-        if(!suggestion || !modpack || user?.id !== suggestion.userId) {
-            throw redirect({to:"/"});
+
+        if(!suggestion || !modpack) {
+            throw redirect({to: "/"});
         }
 
-        const modpackModIds = modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId);
-        const modificationReferenceIds = suggestion.modifications.map(modification => modification.mod.referenceId);
-
-        const modpackReferenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modpackModIds));
-
-        await queryClient.ensureQueryData(appQueries.curseForgeModData(modpackReferenceIds));
-        await queryClient.ensureQueryData(appQueries.modificationModData(suggestionId, modificationReferenceIds));
-        await queryClient.ensureQueryData(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader));
-
-        return {curUser: user}
+        return { curUser: user, suggestion, modpack };
     },
     component: SuggestionView,
 });
@@ -445,35 +434,41 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
 }
 
 export default function SuggestionView() {
-    const { curUser } = Route.useLoaderData();
-    const {modpackId, suggestionId} = Route.useParams();
     // const [errorMessage, setErrorMessage] = useState("");
     // const [successMessage, setSuccessMessage] = useState("");
     // const [showSuccessMessage, setShowSuccessMessage] = useState(false);
     // const [showErrorMessage, setShowErrorMessage] = useState(false);
+    const {modpackId, suggestionId} = Route.useParams();
     const [modificationFilter, setModificationFilter] = useState<ModificationFilter>(ModificationFilter.All);
+    const {modpack: initialModpackData, suggestion: initialSuggestionData, curUser} = Route.useLoaderData();
     const navigate = useNavigate();
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
-    const {data: suggestion} = useSuspenseQuery(appQueries.suggestion(modpackId, suggestionId));
-    
-    if(!suggestion || !modpack) {
-        navigate({to: "/"});
-        return;
-    }
 
+    const { data: modpack, isPending: modpackPending } = useQuery({
+        queryFn: appQueries.modpack(modpackId).queryFn,
+        queryKey: appQueries.modpack(modpackId).queryKey,
+        initialData: initialModpackData,       
+        refetchOnMount: true,        
+    });
+    const { data: suggestion, isPending: suggestionPending } = useQuery({
+        queryFn: appQueries.suggestion(suggestionId, modpackId).queryFn,
+        queryKey: appQueries.suggestion(suggestionId, modpackId).queryKey,
+        initialData: initialSuggestionData,       
+        refetchOnMount: true,        
+    });
+    
     const modpackModIds = useMemo(
-        () => modpack.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId), 
-        [modpack.versions[0].versionMods]
+        () => modpack?.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId), 
+        [modpack?.versions[0].versionMods]
     );
 
     const {data: modpackReferenceIds} = useQuery(appQueries.modReferenceIds(modpackModIds));
     const {data: modpackModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
 
     const modificationReferenceIds = useMemo(
-        () => suggestion.modifications.map(modification => modification.mod.referenceId),
-        [suggestion.modifications]
+        () => suggestion?.modifications.map(modification => modification.mod.referenceId),
+        [suggestion?.modifications]
     );
-    const {data: modificationModData, isPending: pendingModificationData} = useSuspenseQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+    const {data: modificationModData, isPending: pendingModificationData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
     // TODO: Move merge functionality to modpack view page (All commented out code is related to merging)
 
@@ -514,32 +509,41 @@ export default function SuggestionView() {
     //     enableSuccessMessage("This suggestion is now in the proccess of being merged!")
     // }
 
-    const handleValueChange = (newValue: ModificationFilter) => {
+    const handleSelectValueChange = (newValue: ModificationFilter) => {
         setModificationFilter(newValue);
     }
 
     const filteredModifications = useMemo(() => {
-        if (!suggestion.modifications) return [];
+        if (!suggestion?.modifications) return [];
 
         switch (modificationFilter) {
             case ModificationFilter.Added:
-                return suggestion.modifications.filter(
+                return suggestion?.modifications.filter(
                     mod => mod.modAction === ModAction.Added
                 );
             case ModificationFilter.Removed:
-                return suggestion.modifications.filter(
+                return suggestion?.modifications.filter(
                     mod => mod.modAction === ModAction.Removed
                 );
             default:
-                return suggestion.modifications;
+                return suggestion?.modifications;
         }
-    }, [suggestion.modifications, modificationFilter]);
+    }, [suggestion?.modifications, modificationFilter]);
 
     // useEffect(() => {
     //     if(suggestion.modifications.length === 0) {
     //         enableErrorMessage("This suggestion cannot be merged because it contains no modifications.");
     //     }
     // })
+
+    if(modpackPending || suggestionPending) {
+        return <Spinner />
+    }
+
+    if(!suggestion || !modpack || !modificationReferenceIds) {
+        navigate({to: "/"});
+        return;
+    }
 
     return <section className="flex flex-col items-center justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
         <header className="flex flex-col justify-between items-center gap-6  min-md:flex-row min-md:gap-6">
@@ -594,12 +598,12 @@ export default function SuggestionView() {
         <section className="flex items-center justify-center gap-4 flex-col w-9/10">
             <h1 className="min-md:self-start">Modifications</h1>
             <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
-                <div className="flex items-center justify-center w-full gap-1">
-                    <CommandInput  placeholder="Search modifications..." />
+                <div className="flex items-center justify-start w-full gap-1">
+                    <ClearableCommandInput placeholder="Search modifications..." />
                     <div className="flex max-md:flex-col items-center justify-center">
                         <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
                             <div className="flex items-center justify-center gap-2">
-                                <Select value={modificationFilter} onValueChange={handleValueChange}>
+                                <Select value={modificationFilter} onValueChange={handleSelectValueChange}>
                                     <SelectTrigger>
                                         <span className="text-sm">Filter:</span>
                                         <SelectValue placeholder="Filter modifications..."/>
@@ -631,7 +635,7 @@ export default function SuggestionView() {
                                         </div>
                                     )
                                     :
-                                    modificationModData && filteredModifications.map((modification, index) => {
+                                    modificationModData && filteredModifications.map((modification) => {
                                         
                                         const modData = modificationModData.find(modData => modification.mod.referenceId === modData.referenceId);
                                         
@@ -639,8 +643,8 @@ export default function SuggestionView() {
                                             return <div>Error fetching mod data for mod with id {modification.mod.referenceId}.</div>
                                         }
 
-                                        return <CommandItem value={modData.name} key={index} className="size-full p-0">
-                                            <ModificationDisplay curseforgeMod={modData} modification={modification} />
+                                        return <CommandItem value={modData.name} key={modification.id} className="size-full p-0">
+                                            <ModificationDisplay curseforgeMod={modData} modification={modification} modpack={modpack} modificationReferenceIds={modificationReferenceIds} />
                                         </CommandItem>
 
                                     })
