@@ -39,7 +39,7 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?
                                 <div className="flex items-center justify-center gap-1">
-                                    <CloudAlert className="text-red-500 size-4"/> <h3 className="text-xs text-nowrap">Outdated</h3>
+                                    <CloudAlert className="text-red-500 size-4"/> <h3 className="text-xs text-nowrap">Unverified</h3>
                                 </div>
                                 : suggestion.state.toString() === SuggestionState.VerificationPending ?
                                 <div className="flex items-center justify-center gap-1">

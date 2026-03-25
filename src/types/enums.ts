@@ -20,6 +20,12 @@ export enum ModificationFilter {
     Removed = "2"
 }
 
+export enum SuggestionFilter {
+    All = "0",
+    Verified = "1",
+    Unverified = "2"
+}
+
 export enum SuggestionState {
     Unverified = "0",
     Verified = "1",

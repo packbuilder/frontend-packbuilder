@@ -13,7 +13,7 @@ import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
-import { ConflictState, ModLoader } from "@/types/enums";
+import { ConflictState, ModLoader, SuggestionFilter, SuggestionState } from "@/types/enums";
 import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
@@ -385,12 +385,13 @@ function SelectDisplayRadioGroup() {
         </RadioGroup>
   )
 }
-// TODO: Rework suggestion display to look like mod display, fix all pages fonts/text to be uniform (use h1, h2, p elements properly)
+
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
     const {modpackId} = Route.useParams();
     const navigate = useNavigate();
+    // TODO: Get rid of suspense query
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
     const {display} = Route.useSearch({
         select: (search) => ({
@@ -406,11 +407,29 @@ export default function ModpackView() {
     const {data: suggestions, isPending: pendingSuggestionData} = useSuspenseQuery(appQueries.modpackSuggestions(modpack.id.toString()));
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
+    const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All)
 
     const modIds = useMemo(
         () => modpack.versions.find(version => version.iterations.toString() === versionIteration)!.versionMods.map((versionMod: VersionMod) => versionMod.modId),
         [modpack.versions, versionIteration]
     );
+
+    const filteredSuggestions = useMemo(() => {
+        if (!suggestions) return [];
+
+        switch (suggestionFilter) {
+            case SuggestionFilter.Verified:
+                return suggestions?.filter(
+                    suggestion => suggestion.state === SuggestionState.Unverified
+                );
+            case SuggestionFilter.Unverified:
+                return suggestions?.filter(
+                    suggestion => suggestion.state === SuggestionState.Verified
+                );
+            default:
+                return suggestions;
+        }
+    }, [suggestions, suggestionFilter]);
 
     const {data: referenceIds} = useQuery(appQueries.modReferenceIds(modIds));
     const {data: versionModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(referenceIds));
@@ -424,6 +443,54 @@ export default function ModpackView() {
         setVersionIteration(newValue);
         setDisplayedVersion(newVersion);
     }
+
+    const handleFilterChange = (newValue: SuggestionFilter) => {
+        setSuggestionFilter(newValue);
+    }
+
+    // TODO: Implement this merging functionality code to this page. Most likely inside of a dialog component
+
+    // const enableErrorMessage = (message: string) => {
+    //     setErrorMessage(message);
+    //     setShowSuccessMessage(false);
+    //     setShowErrorMessage(true);
+    // }
+
+    // const enableSuccessMessage = (message: string) => {
+    //     setSuccessMessage(message);
+    //     setShowErrorMessage(false);
+    //     setShowSuccessMessage(true);
+    // }
+
+    // const mergeSuggestion = async () => {
+
+    //     if(suggestion.state !== SuggestionState.Verified) {
+    //         enableErrorMessage("Could not merge suggestion. It is either outdated or has conflicts that need to be resolved by the suggestion creator.");
+    //         return;
+    //     } else if(suggestion.modifications.length <= 0) {
+    //         enableErrorMessage("You cannot merge suggestions with no modifications.");
+    //         return;
+    //     }
+
+    //     const status = await createModpackVersion(modpackId, suggestionId);
+
+    //     if(!status || status < 200 || status > 200) {
+    //         enableErrorMessage("There was a problem with merging this suggestion. Try again later.")
+    //         return;
+    //     }
+
+    //     await queryClient.invalidateQueries({queryKey: ["modpack", modpackId], exact: true});
+    //     await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionId], exact: true});
+    //     await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionId]})
+    //     await router.invalidate({sync: true});  
+
+    //     enableSuccessMessage("This suggestion is now in the proccess of being merged!")
+    // }
+    // useEffect(() => {
+    //     if(suggestion.modifications.length === 0) {
+    //         enableErrorMessage("This suggestion cannot be merged because it contains no modifications.");
+    //     }
+    // })
 
     return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
@@ -447,13 +514,14 @@ export default function ModpackView() {
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
                 <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>
-                <CreateSuggestionDialog modpack={modpack} curUser={curUser} />
-                <ModpackSettingsDropDown modpack={modpack} />
+                {curUser && <CreateSuggestionDialog modpack={modpack} curUser={curUser} /> }
+                { curUser?.id === modpack.userId && <ModpackSettingsDropDown modpack={modpack} /> }
             </div>
         </header>
 
         <Separator className="my-4"/>
-        {/* TODO: Move merging functionality from suggestion view page to this page */}
+        {/* TODO: Move merging functionality from suggestion view page to this pagec */}
+        
         <section className="flex items-center justify-center gap-4 flex-col w-9/10">
             <SelectDisplayRadioGroup />
 
@@ -463,25 +531,44 @@ export default function ModpackView() {
                     <div className="flex max-md:flex-col items-center justify-center">
                         <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
                             <div className="flex items-center justify-center gap-2">
-                                <Select value={versionIteration} onValueChange={handleValueChange}>
+                                {
+                                    display === "mods" ?
+                                    <Select value={versionIteration} onValueChange={handleValueChange}>
+                                        <SelectTrigger>
+                                            <span className="text-sm">Version:</span>
+                                            <SelectValue placeholder="Select modpack version..."/>
+                                            <Separator orientation="vertical"  className="h-full" />
+                                        </SelectTrigger> 
+                                        <SelectContent>
+                                            <SelectGroup>     
+                                                <SelectLabel>Select modpack version</SelectLabel>
+                                                {
+                                                    modpack.versions.map((version, index) => {
+                                                        return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
+                                                            {version.iterations}
+                                                        </SelectItem>
+                                                    })
+                                                }
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    :
+                                     <Select value={suggestionFilter} onValueChange={handleFilterChange}>
                                     <SelectTrigger>
-                                        <span className="text-sm">Version:</span>
-                                        <SelectValue placeholder="Select modpack version..."/>
+                                        <span className="text-sm">Filter:</span>
+                                        <SelectValue placeholder="Filter modifications..."/>
                                         <Separator orientation="vertical"  className="h-full" />
                                     </SelectTrigger> 
                                     <SelectContent>
                                         <SelectGroup>     
-                                            <SelectLabel>Select modpack version</SelectLabel>
-                                            {
-                                                modpack.versions.map((version, index) => {
-                                                    return <SelectItem className="cursor-pointer" key={index} value={version.iterations.toString()}>
-                                                        {version.iterations}
-                                                    </SelectItem>
-                                                })
-                                            }
+                                            <SelectLabel>Select filter</SelectLabel>
+                                            <SelectItem className="cursor-pointer" value={"0"}>All</SelectItem>
+                                            <SelectItem className="cursor-pointer" value={"1"}>Outdated</SelectItem>
+                                            <SelectItem className="cursor-pointer" value={"2"}>Verified</SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
+                                }
                             </div>
                         </div>
                     </div>
@@ -525,7 +612,7 @@ export default function ModpackView() {
                                         </div>
                                     )
                                     :
-                                    suggestions ? suggestions.map((suggestion, index) => {
+                                    filteredSuggestions && suggestions ? filteredSuggestions.map((suggestion, index) => {
                                         return <CommandItem value={suggestion.username} key={index} className="size-full max-w-full p-0">
                                             <SuggestionDisplay suggestion={suggestion} />
                                         </CommandItem>

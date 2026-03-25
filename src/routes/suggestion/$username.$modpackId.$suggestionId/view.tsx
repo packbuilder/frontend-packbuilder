@@ -313,7 +313,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
         </Dialog>
     )
 }
-
+// TODO: Add shadcn fuzzy search via command component so users can search mods they want to remove easily
 function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion, modpack} : {modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
     return (
         <Dialog>
@@ -325,31 +325,29 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion,
                     <DialogTitle className="text-3xl font-bold">Remove mods</DialogTitle>
                     <DialogDescription>Suggest mods to remove from the modpack!</DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col items-center justify-center">
-                    <div className="flex flex-col justify-start items-start w-5/6 max-w-5/6 border border-white flex flex-col overflow-y-auto overflow-x-clip h-96" >
-                        {(modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
-                            let isEnabled = true;
-                            let disabledMessage = "";
-                            modificationReferenceIds.forEach(referenceId => {
-                                if(referenceId === mod.referenceId) {
-                                    isEnabled = false;
-                                    disabledMessage = "This mod is already in your list of changes."
-                                }
-                            });
-                            return <CreateModificationDisplay 
-                                modificationReferenceIds={modificationReferenceIds} 
-                                suggestion={suggestion} 
-                                modpack={modpack} 
-                                curseforgeMod={mod} 
-                                key={index} 
-                                modAction={ModAction.Removed} 
-                                isEnabled={isEnabled} 
-                                disabledMessage={disabledMessage}
-                            />
-                        })}
+                <div  className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col max-h-96 h-fit w-96 overflow-y-auto overflow-x-clip w-[80%]" >
+                    {(modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
+                        let isEnabled = true;
+                        let disabledMessage = "";
+                        modificationReferenceIds.forEach(referenceId => {
+                            if(referenceId === mod.referenceId) {
+                                isEnabled = false;
+                                disabledMessage = "This mod is already in your list of changes."
+                            }
+                        });
+                        return <CreateModificationDisplay 
+                            modificationReferenceIds={modificationReferenceIds} 
+                            suggestion={suggestion} 
+                            modpack={modpack} 
+                            curseforgeMod={mod} 
+                            key={index} 
+                            modAction={ModAction.Removed} 
+                            isEnabled={isEnabled} 
+                            disabledMessage={disabledMessage}
+                        />
+                    })}
 
-                        {(!modpackModData || modpackModData.length === 0) && <div className="size-full flex items-center justify-center"><h2>No mods to remove.</h2></div>}
-                    </div>
+                    {(!modpackModData || modpackModData.length === 0) && <div className="size-full flex items-center justify-center"><h2>No mods to remove.</h2></div>}
                 </div>
             </DialogContent>
         </Dialog>
@@ -442,7 +440,6 @@ export default function SuggestionView() {
     const [modificationFilter, setModificationFilter] = useState<ModificationFilter>(ModificationFilter.All);
     const {modpack: initialModpackData, suggestion: initialSuggestionData, curUser} = Route.useLoaderData();
     const navigate = useNavigate();
-
     const { data: modpack, isPending: modpackPending } = useQuery({
         queryFn: appQueries.modpack(modpackId).queryFn,
         queryKey: appQueries.modpack(modpackId).queryKey,
@@ -644,9 +641,8 @@ export default function SuggestionView() {
                                         }
 
                                         return <CommandItem value={modData.name} key={modification.id} className="size-full p-0">
-                                            <ModificationDisplay curseforgeMod={modData} modification={modification} modpack={modpack} modificationReferenceIds={modificationReferenceIds} />
+                                            <ModificationDisplay suggestion={suggestion} curUser={curUser} curseforgeMod={modData} modification={modification} modpack={modpack} modificationReferenceIds={modificationReferenceIds} />
                                         </CommandItem>
-
                                     })
                                 }
                             </div>
