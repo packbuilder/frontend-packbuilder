@@ -6,7 +6,7 @@ import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/rea
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
-import { ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
+import { CurseForgeSearchFilter, ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 import InfoPill from "@/components/info-pill";
 import { Separator } from "@/components/ui/separator";
@@ -77,12 +77,12 @@ function PaginationButtons({ paginationData, curPage } : {
     }
 
 
-    return <div className="flex justify-center items-center">
-        <Button className="" variant={"default"} onClick={previousPage}>
+    return <div className="flex justify-center items-center gap-2">
+        <Button className="rounded-full" variant={"outline"} onClick={previousPage}>
             <ArrowLeft />
         </Button>
         <h2 className="font-bold">{curPage + 1}</h2>
-        <Button className="" variant={"default"} onClick={nextPage}>
+        <Button className="rounded-full" variant={"outline"} onClick={nextPage}>
             <ArrowRight />
         </Button>
     </div>
@@ -211,9 +211,11 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
             sortMethod: search.sortMethod,
         })
     });
-    const [sort, setSort] = useState("0");
+    const [sort, setSort] = useState<CurseForgeSearchFilter>(CurseForgeSearchFilter.Featured);
     const navigate = useNavigate({from: Route.fullPath});
     const queryClient = useQueryClient();
+    const submitButtonRef = useRef(null);
+    const searchModsInputRef = useRef(null);
     const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader));
 
     const modificationReferenceIdSet = useMemo(
@@ -238,6 +240,17 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
         navigate({search: () => ({page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
     }
 
+    const handleSortChange = (newValue: CurseForgeSearchFilter) => {
+        const submitButton = submitButtonRef.current as unknown as HTMLButtonElement;
+        const searchModsInput = searchModsInputRef.current as unknown as HTMLInputElement;
+
+        setSort(newValue);
+
+        if(searchModsInput.value.length > 0) {
+            submitButton.click();
+        }
+    }
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -245,16 +258,20 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
             </DialogTrigger>
             <DialogContent className="flex-col items-center justify-center">
                 <DialogHeader className="mt-4 flex justify-center items-center">
-                    <DialogTitle className="text-3xl font-bold">Add mods</DialogTitle>
+                    <DialogTitle className="font-bold">Add mods</DialogTitle>
                     <DialogDescription>Suggest mods to add by browsing curseforge mods!</DialogDescription>
                     <form method="post" id="addMods" onSubmit={handleSubmit}>
                         <div className="flex items-center justify-center gap-2 flex-wrap">
                             <div className="flex items-center justify-center gap-2">
-                                <Select value={sort} onValueChange={setSort}>
-                                    <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                                <div className="relative">
+                                    <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search..." defaultValue={searchQuery} required className="text-sm" ref={searchModsInputRef}/>
+                                    <Button variant={"ghost"} type="submit" className="absolute right-0" ref={submitButtonRef}><Search/></Button>
+                                </div>
+                                <Select value={sort} onValueChange={handleSortChange}>
+                                    <SelectTrigger className="">
                                         <SelectValue placeholder="Set sort method..."/>
                                     </SelectTrigger> 
-                                    <SelectContent className="bg-white text-black">
+                                    <SelectContent className="">
                                         <SelectGroup>     
                                             <SelectLabel>Sort</SelectLabel>
                                             <SelectItem className="cursor-pointer" value="0">Featured</SelectItem>
@@ -264,16 +281,11 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
-                                <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search mods..." defaultValue={searchQuery} required/>
-                                <Button variant={"default"} type="submit"><Search/></Button>
                             </div>
                             {/* TODO: put error message here */}
                             <div>{}</div>
                         </div>
                     </form>
-                    <div>
-                        <PaginationButtons paginationData={modSearchResults?.pagination} curPage={page}/>
-                    </div>
                 </DialogHeader>
                 <div className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-[80%]">
                     {pendingSearchResults ? (
@@ -308,6 +320,9 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                         No search results
                         </div>
                     )}
+                </div>
+                <div>
+                    <PaginationButtons paginationData={modSearchResults?.pagination} curPage={page}/>
                 </div>
             </DialogContent>
         </Dialog>
@@ -467,45 +482,6 @@ export default function SuggestionView() {
     );
     const {data: modificationModData, isPending: pendingModificationData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
-    // TODO: Move merge functionality to modpack view page (All commented out code is related to merging)
-
-    // const enableErrorMessage = (message: string) => {
-    //     setErrorMessage(message);
-    //     setShowSuccessMessage(false);
-    //     setShowErrorMessage(true);
-    // }
-
-    // const enableSuccessMessage = (message: string) => {
-    //     setSuccessMessage(message);
-    //     setShowErrorMessage(false);
-    //     setShowSuccessMessage(true);
-    // }
-
-    // const mergeSuggestion = async () => {
-
-    //     if(suggestion.state !== SuggestionState.Verified) {
-    //         enableErrorMessage("Could not merge suggestion. It is either outdated or has conflicts that need to be resolved by the suggestion creator.");
-    //         return;
-    //     } else if(suggestion.modifications.length <= 0) {
-    //         enableErrorMessage("You cannot merge suggestions with no modifications.");
-    //         return;
-    //     }
-
-    //     const status = await createModpackVersion(modpackId, suggestionId);
-
-    //     if(!status || status < 200 || status > 200) {
-    //         enableErrorMessage("There was a problem with merging this suggestion. Try again later.")
-    //         return;
-    //     }
-
-    //     await queryClient.invalidateQueries({queryKey: ["modpack", modpackId], exact: true});
-    //     await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionId], exact: true});
-    //     await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionId]})
-    //     await router.invalidate({sync: true});  
-
-    //     enableSuccessMessage("This suggestion is now in the proccess of being merged!")
-    // }
-
     const handleSelectValueChange = (newValue: ModificationFilter) => {
         setModificationFilter(newValue);
     }
@@ -526,12 +502,6 @@ export default function SuggestionView() {
                 return suggestion?.modifications;
         }
     }, [suggestion?.modifications, modificationFilter]);
-
-    // useEffect(() => {
-    //     if(suggestion.modifications.length === 0) {
-    //         enableErrorMessage("This suggestion cannot be merged because it contains no modifications.");
-    //     }
-    // })
 
     if(modpackPending || suggestionPending) {
         return <Spinner />
@@ -586,8 +556,6 @@ export default function SuggestionView() {
                     <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion} />
                 </div>
             }
-            {/* {showErrorMessage && <ErrorMessage text={errorMessage}/>}
-            {showSuccessMessage && <SuccessMessage text={successMessage} />} */}
         </header>
 
         <Separator className="my-2" />
@@ -596,7 +564,7 @@ export default function SuggestionView() {
             <h1 className="min-md:self-start">Modifications</h1>
             <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
                 <div className="flex items-center justify-start w-full gap-1">
-                    <ClearableCommandInput placeholder="Search modifications..." />
+                    <ClearableCommandInput placeholder="Search..." />
                     <div className="flex max-md:flex-col items-center justify-center">
                         <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
                             <div className="flex items-center justify-center gap-2">

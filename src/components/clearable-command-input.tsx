@@ -16,6 +16,6 @@ export default function ClearableCommandInput({
 
     return <div className="flex items-center justify-center w-full relative">
         <CommandInput value={value} onValueChange={handleValueChange}  className={className} {...props}/>
-        <Button variant={"ghost"} className="absolute right-1" onClick={() => handleValueChange("")}><X/></Button>
+        <Button variant={"default"} className="absolute right-0 dark:bg-[var(--surface-1)] border-none h-full" onClick={() => handleValueChange("")}><X/></Button>
     </div>
 }

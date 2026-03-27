@@ -26,6 +26,13 @@ export enum SuggestionFilter {
     Unverified = "2"
 }
 
+export enum CurseForgeSearchFilter {
+    Featured = "0",
+    Popularity = "1",
+    TotalDownloads = "2",
+    Rating = "3"
+}
+
 export enum SuggestionState {
     Unverified = "0",
     Verified = "1",

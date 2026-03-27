@@ -30,6 +30,7 @@ import z from "zod";
 import SuggestionCard from "@/components/suggestion/suggestion-card";
 import SuggestionDisplay from "@/components/suggestion/suggestion-card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import ClearableCommandInput from "@/components/clearable-command-input";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -527,7 +528,7 @@ export default function ModpackView() {
 
             <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
                 <div className="flex items-center justify-center w-full gap-1">
-                    <CommandInput  placeholder={display === "mods" ? `Search ${displayedVersion.versionMods.length} mods...` : `Search ${suggestions?.length} suggestions...`} />
+                    <ClearableCommandInput  placeholder="Search..." />
                     <div className="flex max-md:flex-col items-center justify-center">
                         <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
                             <div className="flex items-center justify-center gap-2">
@@ -563,7 +564,7 @@ export default function ModpackView() {
                                         <SelectGroup>     
                                             <SelectLabel>Select filter</SelectLabel>
                                             <SelectItem className="cursor-pointer" value={"0"}>All</SelectItem>
-                                            <SelectItem className="cursor-pointer" value={"1"}>Outdated</SelectItem>
+                                            <SelectItem className="cursor-pointer" value={"1"}>Unverified</SelectItem>
                                             <SelectItem className="cursor-pointer" value={"2"}>Verified</SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
@@ -573,7 +574,7 @@ export default function ModpackView() {
                         </div>
                     </div>
                 </div>
-                <CommandList>
+                <CommandList className="w-full">
                     <CommandEmpty className={`flex flex-col justify-center items-center min-w-[300px] min-h-[300px] border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
                         <h2>It's looking empty in here...</h2>
                     </CommandEmpty>
