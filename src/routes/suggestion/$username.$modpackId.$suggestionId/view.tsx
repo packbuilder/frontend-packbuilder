@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreateModificationDisplay, ModificationDisplay } from "@/components/suggestion/modification-card";
+import { CreateModificationDisplay, ModificationDisplay } from "@/components/suggestion/modification-display";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
@@ -27,6 +27,7 @@ import type { Suggestion } from "@/types/suggestion";
 import type { VersionMod } from "@/types/versionMod";
 import type { Modpack } from "@/types/modpack";
 import ClearableCommandInput from "@/components/clearable-command-input";
+import DisplayContainer from "@/components/display-container";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -156,10 +157,10 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
                 <h2 className="font-bold text-lg">Game Version & Mod Loader</h2>
                 <div className={`flex items-center justify-center gap-2`}>
                     <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                        <SelectTrigger>
                             <SelectValue placeholder="Select game version..."/>
                         </SelectTrigger> 
-                        <SelectContent className="bg-white text-black" side="bottom">
+                        <SelectContent side="bottom">
                             <SelectGroup>     
                                 <SelectLabel>Select version</SelectLabel>
                                 {
@@ -173,10 +174,10 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
                         </SelectContent>
                     </Select>
                     <Select value={modLoader.toString()} onValueChange={setModLoader}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                        <SelectTrigger>
                             <SelectValue placeholder="Select game version..."/>
                         </SelectTrigger> 
-                        <SelectContent className="bg-white text-black" side="bottom">
+                        <SelectContent side="bottom">
                             <SelectGroup>     
                                 <SelectLabel>Select mod loader</SelectLabel>
                                 {
@@ -260,11 +261,11 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                 <DialogHeader className="mt-4 flex justify-center items-center">
                     <DialogTitle className="font-bold">Add mods</DialogTitle>
                     <DialogDescription>Suggest mods to add by browsing curseforge mods!</DialogDescription>
-                    <form method="post" id="addMods" onSubmit={handleSubmit}>
-                        <div className="flex items-center justify-center gap-2 flex-wrap">
-                            <div className="flex items-center justify-center gap-2">
-                                <div className="relative">
-                                    <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search..." defaultValue={searchQuery} required className="text-sm" ref={searchModsInputRef}/>
+                    <form className="w-full" method="post" id="addMods" onSubmit={handleSubmit}>
+                        <div className="flex items-center justify-center gap-2 flex-wrap w-full">
+                            <div className="flex items-center justify-center gap-2 w-full">
+                                <div className="relative w-full">
+                                    <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search..." defaultValue={searchQuery} required className="text-sm w-full" ref={searchModsInputRef}/>
                                     <Button variant={"ghost"} type="submit" className="absolute right-0" ref={submitButtonRef}><Search/></Button>
                                 </div>
                                 <Select value={sort} onValueChange={handleSortChange}>
@@ -287,9 +288,9 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                         </div>
                     </form>
                 </DialogHeader>
-                <div className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col h-96 w-96 overflow-y-auto overflow-x-clip w-[80%]">
+                <DisplayContainer>
                     {pendingSearchResults ? (
-                        <div className="size-full flex items-center justify-center w-full">
+                        <div className="size-full h-96 max-w-full flex items-center justify-center">
                             <Spinner className="size-20" />
                         </div>
                     ) : modSearchResults && modSearchResults.mods.length > 0 ? (
@@ -320,7 +321,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                         No search results
                         </div>
                     )}
-                </div>
+                </DisplayContainer>
                 <div>
                     <PaginationButtons paginationData={modSearchResults?.pagination} curPage={page}/>
                 </div>
@@ -340,30 +341,46 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion,
                     <DialogTitle className="text-3xl font-bold">Remove mods</DialogTitle>
                     <DialogDescription>Suggest mods to remove from the modpack!</DialogDescription>
                 </DialogHeader>
-                <div  className="flex flex-col justify-start items-start w-full border border-white dark:white flex flex-col max-h-96 h-fit w-96 overflow-y-auto overflow-x-clip w-[80%]" >
-                    {(modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
-                        let isEnabled = true;
-                        let disabledMessage = "";
-                        modificationReferenceIds.forEach(referenceId => {
-                            if(referenceId === mod.referenceId) {
-                                isEnabled = false;
-                                disabledMessage = "This mod is already in your list of changes."
-                            }
-                        });
-                        return <CreateModificationDisplay 
-                            modificationReferenceIds={modificationReferenceIds} 
-                            suggestion={suggestion} 
-                            modpack={modpack} 
-                            curseforgeMod={mod} 
-                            key={index} 
-                            modAction={ModAction.Removed} 
-                            isEnabled={isEnabled} 
-                            disabledMessage={disabledMessage}
-                        />
-                    })}
+                  <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
+                    <div className="flex items-center justify-start w-full gap-1">
+                        <ClearableCommandInput placeholder="Search..." />
+                    </div>
+                    <CommandList className="max-h-fit w-full">
+                        <CommandEmpty>
+                            <DisplayContainer className="flex items-center justify-center h-[300px]">
+                                <h2>It's looking empty in here...</h2>
+                            </DisplayContainer>
+                        </CommandEmpty>
+                            <CommandGroup>
+                                <DisplayContainer>
+                                    {(modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
+                                        let isEnabled = true;
+                                        let disabledMessage = "";
+                                        modificationReferenceIds.forEach(referenceId => {
+                                            if(referenceId === mod.referenceId) {
+                                                isEnabled = false;
+                                                disabledMessage = "This mod is already in your list of changes."
+                                            }
+                                        });
+                                        return <CommandItem className="w-full p-0">     
+                                            <CreateModificationDisplay 
+                                                modificationReferenceIds={modificationReferenceIds} 
+                                                suggestion={suggestion} 
+                                                modpack={modpack} 
+                                                curseforgeMod={mod} 
+                                                key={index} 
+                                                modAction={ModAction.Removed} 
+                                                isEnabled={isEnabled} 
+                                                disabledMessage={disabledMessage}
+                                            />
+                                        </CommandItem>
+                                    })}
 
-                    {(!modpackModData || modpackModData.length === 0) && <div className="size-full flex items-center justify-center"><h2>No mods to remove.</h2></div>}
-                </div>
+                                    {(!modpackModData || modpackModData.length === 0) && <div className="size-full flex items-center justify-center"><h2>No mods to remove.</h2></div>}
+                                </DisplayContainer>
+                            </CommandGroup>
+                    </CommandList>
+                </Command>
             </DialogContent>
         </Dialog>
     )
@@ -411,14 +428,13 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
                 <div className="flex flex-col items-center justify-center">
                     <div className="flex border flex-col justify-start items-start w-full flex flex-col h-96 w-96 overflow-y-auto w-[80%]">
                         <div className="flex flex-col items-start justify-center">
-                            <h2 className="font-bold text-xl px-4 py-2">How the proccess works</h2>
+                            <h2 className="font-bold text-xl px-4 py-2">Things to know about verification.</h2>
                             <Separator />
                             <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
-                                <h2> 1. Verification of your suggestion happens automatically but may take some time.</h2>
-                                <h2> 2. During verification, your suggestion will be put in a queue to be verified and will enter a pending state.</h2>
-                                <h2> 3. You cannot make changes to your suggestion while it's in a pending state.</h2>
-                                <h2> 4. Once your suggestion is verified, it is able to be merged by the modpack owner.</h2>
-                                <h2> 5. You can make changes to your suggestion after it's verified, however doing so will un-verify the suggestion and you will have to re-verify after you make additional changes.</h2>
+                                <p> 1. Verification of your suggestion happens automatically but may take some time.</p>
+                                <p> 2. You cannot make changes to your suggestion while it's in a pending state.</p>
+                                <p> 3. Once your suggestion is verified, the modpack owner will be able to merge your suggestion into the modpack.</p>
+                                <p> 4. If you make changes to your suggestion after it has been verified, you will have to re-verify the suggestion again.</p>
                             </div>
                         </div>
                         <Separator />
@@ -426,9 +442,9 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
                             <h2 className="font-bold text-xl px-4 py-2">What happens during verification.</h2>
                             <Separator />
                             <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
-                                <h2> 1. All missing required mod dependencies are resolved automatically and added to your suggestion as modifications to be added.</h2>
-                                <h2> 2. Any incompatible mods that are already in the modpack will be added to your modifications list as mods to be removed.</h2>
-                                <h2> 3. Any conflicting modifications that are in your suggestion will automatically be deleted.</h2>
+                                <p> 1. All missing required mod dependencies are resolved automatically by being added to your suggestion modification list.</p>
+                                <p> 2. Any incompatible mods that are already in the modpack will be added to your modifications list as mods to be removed.</p>
+                                <p> 3. Any conflicting modifications that are in your suggestion will automatically be deleted.</p>
                             </div>
                         </div>
                     </div>
@@ -512,7 +528,7 @@ export default function SuggestionView() {
         return;
     }
 
-    return <section className="flex flex-col items-center justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
+    return <section className="flex flex-col items-center max-w-full justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
         <header className="flex flex-col justify-between items-center gap-6  min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img src={placeholder} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
@@ -528,18 +544,18 @@ export default function SuggestionView() {
                             </div>
                             : suggestion.state.toString() === SuggestionState.VerificationPending ?
                             <div className="flex items-center justify-center gap-2">
-                                <CloudCog className="size-4 min-md:size-6"/>
+                                <CloudCog className="size-4 min-md:size-6 text-white"/>
                                 <h3>This suggestion is undergoing verification.</h3>
                             </div>
                             : 
                             suggestion.state.toString() === SuggestionState.MergePending ?
                             <div className="flex items-center justify-center gap-2">
-                                <Merge className="size-4 min-md:size-6"/>
+                                <Merge className="size-4 min-md:size-6 text-white"/>
                                 <h3>This suggestion is being merged.</h3>
                             </div>
                             :
                             <div className="flex items-center justify-center gap-2">
-                                <CloudCheck className="size-4 min-md:size-6"/>
+                                <CloudCheck className="size-4 min-md:size-6 text-green-500"/>
                                 <h3>This suggestion has been verified.</h3>
                             </div>
                         }
@@ -588,14 +604,16 @@ export default function SuggestionView() {
                     </div>
                 </div>
                 <CommandList className="max-h-fit w-full">
-                    <CommandEmpty className={`flex flex-col justify-center items-center min-w-[300px] min-h-[300px] border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
-                        <h2>It's looking empty in here...</h2>
+                    <CommandEmpty className={pendingModificationData ? "hidden" : ""}>
+                        <DisplayContainer className="flex items-center justify-center h-96">
+                            <h2>It's looking empty in here...</h2>
+                        </DisplayContainer>
                     </CommandEmpty>
                         <CommandGroup>
-                            <div className={`flex flex-col justify-start items-start min-w-[300px] ${suggestion.modifications.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                            <DisplayContainer>
                                 {
                                     pendingModificationData ? (
-                                        <div className="size-full flex items-center justify-center w-full">
+                                        <div className="size-96 max-w-full flex items-center justify-center">
                                             <Spinner className="size-20" />
                                         </div>
                                     )
@@ -613,7 +631,7 @@ export default function SuggestionView() {
                                         </CommandItem>
                                     })
                                 }
-                            </div>
+                            </DisplayContainer>
                         </CommandGroup>
                 </CommandList>
             </Command>

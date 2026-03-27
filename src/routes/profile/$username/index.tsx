@@ -11,7 +11,7 @@ import { updateProfile } from '@/lib/api';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import { appQueries } from '@/hooks/appQueries';
 import {ModpackCardCompact} from '@/components/modpack/modpack-card';
-import SuggestionCard from '@/components/suggestion/suggestion-card';
+import SuggestionCard from '@/components/suggestion/suggestion-display';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 

@@ -220,7 +220,7 @@ export function CreateModificationDisplay(
                     <InfoPill>
                         <div className="flex items-center justify-center items-center gap-1">
                             <TriangleAlert className="text-red-500 size-4" />
-                            <h3 className="text-xs text-nowrap">{disabledMessage}</h3> 
+                            <h3 className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</h3> 
                         </div>
                     </InfoPill>
                 </div>

@@ -27,10 +27,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
-import SuggestionCard from "@/components/suggestion/suggestion-card";
-import SuggestionDisplay from "@/components/suggestion/suggestion-card";
+import SuggestionCard from "@/components/suggestion/suggestion-display";
+import SuggestionDisplay from "@/components/suggestion/suggestion-display";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import ClearableCommandInput from "@/components/clearable-command-input";
+import DisplayContainer from "@/components/display-container";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -526,7 +527,7 @@ export default function ModpackView() {
         <section className="flex items-center justify-center gap-4 flex-col w-9/10">
             <SelectDisplayRadioGroup />
 
-            <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
+            <Command className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
                 <div className="flex items-center justify-center w-full gap-1">
                     <ClearableCommandInput  placeholder="Search..." />
                     <div className="flex max-md:flex-col items-center justify-center">
@@ -574,16 +575,18 @@ export default function ModpackView() {
                         </div>
                     </div>
                 </div>
-                <CommandList className="w-full">
-                    <CommandEmpty className={`flex flex-col justify-center items-center min-w-[300px] min-h-[300px] border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
-                        <h2>It's looking empty in here...</h2>
+                <CommandList className="w-full max-h-fit">
+                    <CommandEmpty className={display === "mods" && pendingModData || display === "suggestions" && pendingSuggestionData ? "hidden" : ""}>
+                        <DisplayContainer className="flex items-center justify-center h-96">
+                            <h2>It's looking empty in here...</h2>
+                        </DisplayContainer>
                     </CommandEmpty>
                     {display === "mods" ? 
                         <CommandGroup className="w-full">
-                            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                            <DisplayContainer>
                                     {
                                         pendingModData ? (
-                                            <div className="size-full flex items-center justify-center w-full">
+                                            <div className="size-96 max-w-full flex items-center justify-center w-full">
                                                 <Spinner className="size-20" />
                                             </div>
                                         )
@@ -601,11 +604,11 @@ export default function ModpackView() {
                                             </CommandItem>
                                         })  : ""
                                     }
-                            </div>
+                            </DisplayContainer>
                         </CommandGroup>
                         :
                         <CommandGroup>
-                            <div className={`flex flex-col justify-start items-start min-w-[300px] ${displayedVersion.versionMods.length === 0 && "min-h-[400px]"} border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 w-96 overflow-y-auto overflow-x-clip w-full`}>
+                            <DisplayContainer>
                                 {
                                     pendingSuggestionData ? (
                                         <div className="size-full flex items-center justify-center w-full">
@@ -620,7 +623,7 @@ export default function ModpackView() {
                                     })  
                                     : ""
                                 }
-                            </div>
+                            </DisplayContainer>
                         </CommandGroup>
                     }
                 </CommandList>
