@@ -51,6 +51,7 @@ p {
   --color-primary: var(--primary);
   --surface-1: var(--surface-1);
   --surface-2: var(--surface-2);
+  --surface-3: var(--surface-3);
   --text-primary: var(--text-primary)
   --text-secondary: var(--text-secondary)
   --text-tertiary: var(--text-tertiary)
@@ -119,6 +120,7 @@ p {
   --background: #16181c;
   --surface-1: #27292e;
   --surface-2: rgba(255, 255, 255, 0.2);
+  --surface-3: #34363c
   --text-primary: #E6E6E6;
   --text-secondary: #b0bac5; 
   --text-tertiary: #6B6B6B;   
@@ -161,11 +163,6 @@ p {
   body {
     @apply bg-background text-foreground;
   }
-}
-
-button,
-[role="button"] {
-  cursor: pointer;
 }
 
 html {

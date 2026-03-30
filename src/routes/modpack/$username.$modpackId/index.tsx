@@ -450,50 +450,6 @@ export default function ModpackView() {
         setSuggestionFilter(newValue);
     }
 
-    // TODO: Implement this merging functionality code to this page. Most likely inside of a dialog component
-
-    // const enableErrorMessage = (message: string) => {
-    //     setErrorMessage(message);
-    //     setShowSuccessMessage(false);
-    //     setShowErrorMessage(true);
-    // }
-
-    // const enableSuccessMessage = (message: string) => {
-    //     setSuccessMessage(message);
-    //     setShowErrorMessage(false);
-    //     setShowSuccessMessage(true);
-    // }
-
-    // const mergeSuggestion = async () => {
-
-    //     if(suggestion.state !== SuggestionState.Verified) {
-    //         enableErrorMessage("Could not merge suggestion. It is either outdated or has conflicts that need to be resolved by the suggestion creator.");
-    //         return;
-    //     } else if(suggestion.modifications.length <= 0) {
-    //         enableErrorMessage("You cannot merge suggestions with no modifications.");
-    //         return;
-    //     }
-
-    //     const status = await createModpackVersion(modpackId, suggestionId);
-
-    //     if(!status || status < 200 || status > 200) {
-    //         enableErrorMessage("There was a problem with merging this suggestion. Try again later.")
-    //         return;
-    //     }
-
-    //     await queryClient.invalidateQueries({queryKey: ["modpack", modpackId], exact: true});
-    //     await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionId], exact: true});
-    //     await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionId]})
-    //     await router.invalidate({sync: true});  
-
-    //     enableSuccessMessage("This suggestion is now in the proccess of being merged!")
-    // }
-    // useEffect(() => {
-    //     if(suggestion.modifications.length === 0) {
-    //         enableErrorMessage("This suggestion cannot be merged because it contains no modifications.");
-    //     }
-    // })
-
     return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
@@ -522,9 +478,8 @@ export default function ModpackView() {
         </header>
 
         <Separator className="my-4"/>
-        {/* TODO: Move merging functionality from suggestion view page to this pagec */}
         
-        <section className="flex items-center justify-center gap-4 flex-col w-9/10">
+        <section className="flex items-center justify-center gap-4 flex-col w-19/20">
             <SelectDisplayRadioGroup />
 
             <Command className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
@@ -583,7 +538,7 @@ export default function ModpackView() {
                     </CommandEmpty>
                     {display === "mods" ? 
                         <CommandGroup className="w-full">
-                            <DisplayContainer>
+                            <DisplayContainer className={`${displayedVersion.versionMods.length === 0 ? "hidden" : ""}`}>
                                     {
                                         pendingModData ? (
                                             <div className="size-96 max-w-full flex items-center justify-center w-full">
@@ -608,7 +563,7 @@ export default function ModpackView() {
                         </CommandGroup>
                         :
                         <CommandGroup>
-                            <DisplayContainer>
+                            <DisplayContainer className={`${filteredSuggestions.length === 0 ? "hidden" : ""}`}>
                                 {
                                     pendingSuggestionData ? (
                                         <div className="size-full flex items-center justify-center w-full">
@@ -618,7 +573,7 @@ export default function ModpackView() {
                                     :
                                     filteredSuggestions && suggestions ? filteredSuggestions.map((suggestion, index) => {
                                         return <CommandItem value={suggestion.username} key={index} className="size-full max-w-full p-0">
-                                            <SuggestionDisplay suggestion={suggestion} />
+                                            <SuggestionDisplay suggestion={suggestion} modpack={modpack} curUser={curUser} />
                                         </CommandItem>
                                     })  
                                     : ""

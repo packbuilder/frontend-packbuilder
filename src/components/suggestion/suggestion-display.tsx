@@ -6,19 +6,55 @@ import { Separator } from "../ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
 import BreadCrumbLink from "../breadcrumb-link";
 import InfoPill from "../info-pill";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createModpackVersion } from "@/lib/api";
+import type { User } from "@/types/user";
+import type { Modpack } from "@/types/modpack";
+import { useRouter } from "@tanstack/react-router";
+import { Button } from "../ui/button";
+import DisplayImage from "../display-image";
 
-export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
+export default function SuggestionDisplay({suggestion, modpack, curUser} : {suggestion: Suggestion, modpack: Modpack, curUser: User | null}) {
+    const queryClient = useQueryClient();
+    const router = useRouter();
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
+    const modpackIdStr = modpack.id.toString(); 
+    const suggestionIdStr = suggestion.id.toString();
     
-    return <BreadCrumbLink link={`suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} text="View" className="w-full group bg-[var(--surface-1)] transition duration-200">
-            <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)] group-hover:bg-white/5">
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const status = await createModpackVersion(modpackIdStr, suggestionIdStr);
+        
+            if(!status || status < 200 || status > 200) {
+                throw new Error("Unable to merge suggestion with modpack.");
+            }
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({queryKey: ["modpack", modpackIdStr], exact: true});
+            await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionIdStr], exact: true});
+            await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionIdStr]})
+            await router.invalidate({sync: true}); 
+        },
+        onError: (error: Error) => {
+            console.error(error);
+        }
+    })
+
+    const handleClick = () => {
+        if(suggestion.state === SuggestionState.Verified && curUser?.id === modpack.id && suggestion.modifications.length > 0) {
+            mutation.mutate();
+        }
+    }
+    
+    return <div className="w-full bg-[var(--surface-1)]">
+            <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)]">
                 <div className="flex items-center justify-center min-md:row-span-3">
-                    <img src={placeholderAvatar} className="size-15 rounded-sm shrink-0 min-md:size-25" />
+                    <DisplayImage src={placeholderAvatar} />
                 </div>
                 <header className="flex flex-col gap-2 w-full justify-center min-md:col-start-2 min-md:row-span-2">
                     <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
-                        <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)] group-hover:underline">
+                        <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)]">
                             {suggestion.username}'s suggestion
                         </h2>
                         <Separator orientation="vertical" />
@@ -34,7 +70,7 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
                     <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{suggestion.memo}</p>
                 </header>
                 <div className="flex items-center justify-between w-full max-h-fit text-sm col-span-2 min-md:col-start-2 min-md:row-start-3">
-                    <div className="flex items-center flex-wrap w-full justify-start gap-2">
+                    <div className="flex items-center w-full justify-start gap-1">
                         <InfoPill>
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?
@@ -63,7 +99,17 @@ export default function SuggestionDisplay({suggestion} : {suggestion: Suggestion
                         </InfoPill>
                     </div>
                 </div>
+                <div className="flex items-center justify-start w-full max-h-fit col-span-2 gap-2">
+                    <BreadCrumbLink link={`suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} text="View">
+                        <Button variant={"default"}>
+                            <h3>View</h3>
+                        </Button>
+                    </BreadCrumbLink>
+                    <Button variant={suggestion.state === SuggestionState.Verified && curUser?.id === modpack.userId && suggestion.modifications.length > 0 ? "default" : "disabled"} onClick={handleClick}>
+                        <h3>Merge</h3>
+                    </Button>
+                </div>
             </div>
             <Separator />
-    </BreadCrumbLink>
+    </div>
 }

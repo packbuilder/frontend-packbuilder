@@ -15,6 +15,7 @@ import type { FormEvent } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import type { User } from "@/types/user";
+import DisplayImage from "../display-image";
 
 export function ModificationDisplay({curseforgeMod, modification, modpack, suggestion, modificationReferenceIds, curUser} : {curseforgeMod: CurseForgeMod, modification: Modification, modpack: Modpack, suggestion: Suggestion, modificationReferenceIds: string[], curUser: User | null | undefined}) {
 
@@ -71,6 +72,7 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
             <div className="flex items-center justify-between w-full h-fit col-span-2 min-md:row-start-2 min-md:col-start-2">
                 <div className="flex items-center justify-center flex-wrap gap-2">
                     <div className="flex items-center justify-center gap-2">
+                        {/* TODO: Figure out a better way to inform the user on what missing dependencies means? */}
                         <InfoPill>
                             {
                                 modification.conflictState === ConflictState.MissingDependencies ? 
@@ -174,7 +176,7 @@ export function CreateModificationDisplay(
     return <div className="w-full bg-[var(--surface-1)] transition duration-200">
         <div className="grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2">
             <div className="flex items-center justify-center">
-                <img src={curseforgeMod.logoUrl} className="size-15 rounded-sm shrink-0 min-md:size-25" />
+                <DisplayImage src={curseforgeMod.logoUrl} />
             </div>
             <header className="flex flex-col gap-2 w-full justify-center">
                 <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">

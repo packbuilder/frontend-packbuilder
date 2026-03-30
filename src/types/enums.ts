@@ -17,7 +17,8 @@ export enum ModAction {
 export enum ModificationFilter {
     All = "0",
     Added = "1",
-    Removed = "2"
+    Removed = "2",
+    Conflicting = "3"
 }
 
 export enum SuggestionFilter {

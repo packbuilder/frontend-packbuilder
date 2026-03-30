@@ -6,6 +6,7 @@ import { Separator } from "../ui/separator";
 import { ConflictState } from "@/types/enums";
 import { timeSinceCurDate } from "@/lib/utils";
 import InfoPill from "../info-pill";
+import DisplayImage from "../display-image";
 
 export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
     const formattedDownloadCount = new Intl.NumberFormat('en-US', {
@@ -16,7 +17,7 @@ export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: 
     return <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer" className="w-full group bg-[var(--surface-1)] transition duration-200">
         <div className="grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 group-hover:bg-white/5 min-md:grid-cols-[auto_minmax(0,3fr)_1fr]">
             <div className="flex items-center justify-center w-fit min-md:row-span-3">
-                <img src={curseforgeMod.logoUrl} className="size-15 rounded-sm shrink-0 min-md:size-25" />
+                <DisplayImage src={curseforgeMod.logoUrl} />
             </div>
             <header className="flex flex-col gap-2 w-full justify-center">
                 <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">

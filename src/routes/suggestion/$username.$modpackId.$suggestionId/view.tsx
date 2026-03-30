@@ -6,7 +6,7 @@ import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/rea
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
-import { CurseForgeSearchFilter, ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
+import { ConflictState, CurseForgeSearchFilter, ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 import InfoPill from "@/components/info-pill";
 import { Separator } from "@/components/ui/separator";
@@ -317,7 +317,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                         );
                         })
                     ) : (
-                        <div className="size-full flex items-center justify-center w-full">
+                        <div className="size-full flex items-center justify-center w-full h-96">
                         No search results
                         </div>
                     )}
@@ -508,11 +508,15 @@ export default function SuggestionView() {
         switch (modificationFilter) {
             case ModificationFilter.Added:
                 return suggestion?.modifications.filter(
-                    mod => mod.modAction === ModAction.Added
+                    modification => modification.modAction === ModAction.Added
                 );
             case ModificationFilter.Removed:
                 return suggestion?.modifications.filter(
-                    mod => mod.modAction === ModAction.Removed
+                    modification => modification.modAction === ModAction.Removed
+                );
+            case ModificationFilter.Conflicting:
+                return suggestion?.modifications.filter(
+                    modification => modification.conflictState !== ConflictState.NoConflicts
                 );
             default:
                 return suggestion?.modifications;
@@ -538,23 +542,23 @@ export default function SuggestionView() {
                     <InfoPill>     
                         {
                             suggestion.state.toString() === SuggestionState.Unverified ?     
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-2 text-sm">
                                 <CloudAlert className="text-red-500 size-4 min-md:size-6"/>
-                                <p>This suggestion has not been verified.</p>
+                                <h3>This suggestion has not been verified.</h3>
                             </div>
                             : suggestion.state.toString() === SuggestionState.VerificationPending ?
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-2 text-sm">
                                 <CloudCog className="size-4 min-md:size-6 text-white"/>
                                 <h3>This suggestion is undergoing verification.</h3>
                             </div>
                             : 
                             suggestion.state.toString() === SuggestionState.MergePending ?
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-2 text-sm">
                                 <Merge className="size-4 min-md:size-6 text-white"/>
                                 <h3>This suggestion is being merged.</h3>
                             </div>
                             :
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-2 text-sm">
                                 <CloudCheck className="size-4 min-md:size-6 text-green-500"/>
                                 <h3>This suggestion has been verified.</h3>
                             </div>
@@ -579,7 +583,7 @@ export default function SuggestionView() {
         <section className="flex items-center justify-center gap-4 flex-col w-9/10">
             <h1 className="min-md:self-start">Modifications</h1>
             <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
-                <div className="flex items-center justify-start w-full gap-1">
+                <div className="flex items-center justify-start w-full gap-2">
                     <ClearableCommandInput placeholder="Search..." />
                     <div className="flex max-md:flex-col items-center justify-center">
                         <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
@@ -596,6 +600,7 @@ export default function SuggestionView() {
                                             <SelectItem className="cursor-pointer" value={"0"}>All</SelectItem>
                                             <SelectItem className="cursor-pointer" value={"1"}>Added</SelectItem>
                                             <SelectItem className="cursor-pointer" value={"2"}>Removed</SelectItem>
+                                            <SelectItem className="cursor-pointer" value={"3"}>Conflicting</SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
@@ -610,7 +615,7 @@ export default function SuggestionView() {
                         </DisplayContainer>
                     </CommandEmpty>
                         <CommandGroup>
-                            <DisplayContainer>
+                            <DisplayContainer className={`${filteredModifications.length === 0 ? "hidden" : ""}`}>
                                 {
                                     pendingModificationData ? (
                                         <div className="size-96 max-w-full flex items-center justify-center">
