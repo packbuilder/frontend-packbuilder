@@ -97,10 +97,10 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
             </DialogHeader>
             <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-center gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
-                    <h1 className="font-bold text-lg">Modpack name</h1>
+                    <h2 className="font-bold text-lg">Modpack name</h2>
                     <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
                 </div>
-                <h1 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h1>
+                <h2 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h2>
                 <div className='flex items-center justify-center gap-2'>
                     <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
                         <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
@@ -212,7 +212,7 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
             </DialogHeader>
             <form method="post" ref={formRef} id="import-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
-                    <h1 className="font-bold text-md">Upload your manifest.json here</h1>
+                    <h2 className="font-bold text-md">Upload your manifest.json here</h2>
                     <Input className='' id="file-upload" type="file" name="file" accept='.json'/>
                 </div>
             </form>
@@ -250,12 +250,12 @@ function Home() {
                 </div>
             </div>
             {modpacks && 
-                <div className='flex flex-col items-center justify-center max-w-3/5'>
-                    <Carousel className="flex justify-center items-center max-w-9/10">
-                        <CarouselContent className='py-6'>
+                <div className='flex flex-col items-center justify-center max-w-3/5 w-fit'>
+                    <Carousel className="flex justify-center items-center w-full">
+                        <CarouselContent className='py-6 px-2'>
                             {
                                 modpacks.map((modpack: Modpack, index: number) => {
-                                    return <CarouselItem className='flex items-center justify-center'>
+                                    return <CarouselItem className='flex items-center justify-center min-md:basis-1/2'>
                                         <ModpackCardLarge modpack={modpack} key={index}/>
                                     </CarouselItem>
                                 })
@@ -270,37 +270,40 @@ function Home() {
             {
                 !modpacks && 
                 <GlassCard className='size-45 flex items-center justify-center'>
-                    <h1 className='text-lg text-center'>
+                    <h2 className='text-lg text-center'>
                         You have no modpacks
-                    </h1>
+                    </h2>
                 </GlassCard>  
             }
         </div>
-        <div className="flex flex-col justify-between items-center w-full mx-auto h-full"> 
-            <div className="flex flex-col justify-around items-center mb-3">
-                <h1 className="text-3xl font-bold p-2">Bookmarked modpacks</h1>
+       <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
+            <div className="flex flex-col justify-around items-center mb-4">
+                <h1 className="text-3xl font-bold p-2">Your Bookmarks</h1>
             </div>
             {bookmarks && 
-                <Carousel className="flex w-3/5 justify-center items-center">
-                    <CarouselContent className='py-6'>
-                        {
-                            bookmarks.map((bookmark: Bookmark, index: number) => {
-                                return <CarouselItem className='flex items-center justify-center'>
-                                    <ModpackCardLarge modpack={bookmark.modpack} key={index}/>
-                                </CarouselItem>
-                            })
-                        }
-                    </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                </Carousel>
+                <div className='flex flex-col items-center justify-center max-w-3/5 w-fit'>
+                    <Carousel className="flex justify-center items-center w-full">
+                        <CarouselContent className='py-6 px-2'>
+                            {
+                                bookmarks.map((bookmark: Bookmark, index: number) => {
+                                    return <CarouselItem className='flex items-center justify-center'>
+                                        <ModpackCardLarge modpack={bookmark.modpack} key={index}/>
+                                    </CarouselItem>
+                                })
+                            }
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                    </Carousel>
+                </div>
             }
 
-            {!bookmarks && 
+            {
+                !bookmarks && 
                 <GlassCard className='size-45 flex items-center justify-center'>
-                    <h1 className='text-lg text-center'>
-                        No bookmarks :(
-                    </h1>
+                    <h2 className='text-lg text-center'>
+                        You have no bookmarks
+                    </h2>
                 </GlassCard>  
             }
         </div>

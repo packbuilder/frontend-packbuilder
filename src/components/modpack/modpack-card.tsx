@@ -13,7 +13,7 @@ export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
         <GlassCard className="size-fit max-w-45 flex flex-col items-center justify-center gap-2 p-2">
             <img className="rounded w-40 h-45" src={modpackImage} alt="" />
             <div className="flex flex-col text-center items-center justify-center w-3/4">
-                <h1 className="font-bold text-lg text-center w-full truncate">{modpack.name}</h1>
+                <h2 className="font-bold text-lg text-center w-full truncate">{modpack.name}</h2>
                 <p className="text-center text-md w-full truncate">By {modpack.user!.name}</p>
             </div>
         </GlassCard>
@@ -28,7 +28,7 @@ export function ModpackCardCompact({modpack} : {modpack: Modpack}) {
             <div className="flex items-center justify-center gap-2">
                 <img className="border-white border-2 rounded-[50%] size-[50px]" src={modpackImage} alt="" />
                 <div className="flex flex-col items-center justify-center">
-                    <h1 className="font-bold text-xl text-left w-full">{modpack.name}</h1>
+                    <h2 className="font-bold text-xl text-left w-full">{modpack.name}</h2>
                     <p className="text-left w-full">{modpack.user!.name}</p>
                 </div>
             </div>
