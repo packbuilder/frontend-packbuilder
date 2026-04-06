@@ -1,7 +1,6 @@
 import store from "@/store/store";
 import { Link } from "@tanstack/react-router";
 
-
 type BreadCrumbLinkProps = {
   link: string;
   text: string;

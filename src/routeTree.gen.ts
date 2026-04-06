@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
+import { Route as LoginCreateAccountRouteImport } from './routes/login/create-account'
 import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$username/index'
 import { Route as ModpackUsernameModpackIdIndexRouteImport } from './routes/modpack/$username.$modpackId/index'
 import { Route as SuggestionUsernameModpackIdSuggestionIdViewRouteImport } from './routes/suggestion/$username.$modpackId.$suggestionId/view'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const LoginIndexRoute = LoginIndexRouteImport.update({
   id: '/login/',
   path: '/login/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginCreateAccountRoute = LoginCreateAccountRouteImport.update({
+  id: '/login/create-account',
+  path: '/login/create-account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileUsernameIndexRoute = ProfileUsernameIndexRouteImport.update({
@@ -45,6 +51,7 @@ const SuggestionUsernameModpackIdSuggestionIdViewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login/create-account': typeof LoginCreateAccountRoute
   '/login': typeof LoginIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
@@ -52,6 +59,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login/create-account': typeof LoginCreateAccountRoute
   '/login': typeof LoginIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
@@ -60,6 +68,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login/create-account': typeof LoginCreateAccountRoute
   '/login/': typeof LoginIndexRoute
   '/profile/$username/': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId/': typeof ModpackUsernameModpackIdIndexRoute
@@ -69,6 +78,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login/create-account'
     | '/login'
     | '/profile/$username'
     | '/modpack/$username/$modpackId'
@@ -76,6 +86,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login/create-account'
     | '/login'
     | '/profile/$username'
     | '/modpack/$username/$modpackId'
@@ -83,6 +94,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/login/create-account'
     | '/login/'
     | '/profile/$username/'
     | '/modpack/$username/$modpackId/'
@@ -91,6 +103,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginCreateAccountRoute: typeof LoginCreateAccountRoute
   LoginIndexRoute: typeof LoginIndexRoute
   ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
   ModpackUsernameModpackIdIndexRoute: typeof ModpackUsernameModpackIdIndexRoute
@@ -111,6 +124,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/create-account': {
+      id: '/login/create-account'
+      path: '/login/create-account'
+      fullPath: '/login/create-account'
+      preLoaderRoute: typeof LoginCreateAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile/$username/': {
@@ -139,6 +159,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginCreateAccountRoute: LoginCreateAccountRoute,
   LoginIndexRoute: LoginIndexRoute,
   ProfileUsernameIndexRoute: ProfileUsernameIndexRoute,
   ModpackUsernameModpackIdIndexRoute: ModpackUsernameModpackIdIndexRoute,
