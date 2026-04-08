@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as LoginCreateAccountRouteImport } from './routes/login/create-account'
 import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$username/index'
+import { Route as LoginVerifyEmailUserIdRouteImport } from './routes/login/verify-email/$userId'
 import { Route as ModpackUsernameModpackIdIndexRouteImport } from './routes/modpack/$username.$modpackId/index'
 import { Route as SuggestionUsernameModpackIdSuggestionIdViewRouteImport } from './routes/suggestion/$username.$modpackId.$suggestionId/view'
 
@@ -36,6 +37,11 @@ const ProfileUsernameIndexRoute = ProfileUsernameIndexRouteImport.update({
   path: '/profile/$username/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginVerifyEmailUserIdRoute = LoginVerifyEmailUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => LoginVerifyEmailRoute,
+} as any)
 const ModpackUsernameModpackIdIndexRoute =
   ModpackUsernameModpackIdIndexRouteImport.update({
     id: '/modpack/$username/$modpackId/',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
   '/login': typeof LoginIndexRoute
+  '/login/verify-email/$userId': typeof LoginVerifyEmailUserIdRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
   '/suggestion/$username/$modpackId/$suggestionId/view': typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
   '/login': typeof LoginIndexRoute
+  '/login/verify-email/$userId': typeof LoginVerifyEmailUserIdRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
   '/suggestion/$username/$modpackId/$suggestionId/view': typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
   '/login/': typeof LoginIndexRoute
+  '/login/verify-email/$userId': typeof LoginVerifyEmailUserIdRoute
   '/profile/$username/': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId/': typeof ModpackUsernameModpackIdIndexRoute
   '/suggestion/$username/$modpackId/$suggestionId/view': typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login/create-account'
     | '/login'
+    | '/login/verify-email/$userId'
     | '/profile/$username'
     | '/modpack/$username/$modpackId'
     | '/suggestion/$username/$modpackId/$suggestionId/view'
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login/create-account'
     | '/login'
+    | '/login/verify-email/$userId'
     | '/profile/$username'
     | '/modpack/$username/$modpackId'
     | '/suggestion/$username/$modpackId/$suggestionId/view'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login/create-account'
     | '/login/'
+    | '/login/verify-email/$userId'
     | '/profile/$username/'
     | '/modpack/$username/$modpackId/'
     | '/suggestion/$username/$modpackId/$suggestionId/view'
@@ -139,6 +151,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/profile/$username'
       preLoaderRoute: typeof ProfileUsernameIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/login/verify-email/$userId': {
+      id: '/login/verify-email/$userId'
+      path: '/$userId'
+      fullPath: '/login/verify-email/$userId'
+      preLoaderRoute: typeof LoginVerifyEmailUserIdRouteImport
+      parentRoute: typeof LoginVerifyEmailRoute
     }
     '/modpack/$username/$modpackId/': {
       id: '/modpack/$username/$modpackId/'

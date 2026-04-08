@@ -180,7 +180,7 @@ export default function ProfileView() {
     )
   }
 
-  // TODO: Properly style for mobile and desktop
+  // TODO: Properly style for mobile and desktop and update style to match other pages
 
   return (
     <section className='flex flex-wrap gap-4 items-center justify-center mt-10'>
