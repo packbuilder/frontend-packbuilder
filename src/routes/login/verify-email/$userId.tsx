@@ -9,7 +9,7 @@ export const Route = createFileRoute('/login/verify-email/$userId')({
     const {user} = context;
     const {userId} = params
 
-    if(user) {
+    if(user && user.isVerified) {
       throw redirect({to: "/"})
     }
 
