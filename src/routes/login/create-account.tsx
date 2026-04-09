@@ -3,19 +3,20 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { createAccount, sendVerificationEmail } from '@/lib/api'
+import { createUserDtoSchema } from '@/types/dtos/createProfileDto'
+import { PopoverArrow } from '@radix-ui/react-popover'
+import { useMutation } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import type { FormEvent } from 'react'
+import { Check, ClipboardCopy, MailSearch } from 'lucide-react'
+import { useState, type FormEvent} from 'react'
 
 export const Route = createFileRoute('/login/create-account')({
   component: RouteComponent,
 })
 
-function CreateAccountForm({ ...props }: React.ComponentProps<typeof Card>) {
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-  }
+function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: FormEvent<HTMLFormElement>) => void} & React.ComponentProps<typeof Card>) {
 
   return (
     <Card {...props}>
@@ -30,12 +31,13 @@ function CreateAccountForm({ ...props }: React.ComponentProps<typeof Card>) {
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="name">Display name</FieldLabel>
-              <Input id="name" type="text" placeholder="Your username..." required />
+              <Input id="name" name='username' type="text" placeholder="Your username..." required />
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
+                name='email'
                 type="email"
                 placeholder="m@example.com"
                 required
@@ -46,7 +48,7 @@ function CreateAccountForm({ ...props }: React.ComponentProps<typeof Card>) {
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input id="password" type="password" required />
+              <Input id="password" name='password' type="password" required />
               <FieldDescription>
                 Must be at least 8 characters long.
               </FieldDescription>
@@ -55,7 +57,7 @@ function CreateAccountForm({ ...props }: React.ComponentProps<typeof Card>) {
               <FieldLabel htmlFor="confirm-password">
                 Confirm Password
               </FieldLabel>
-              <Input id="confirm-password" type="password" required />
+              <Input id="confirm-password" name='confirmPassword' type="password" required />
               <FieldDescription>Please confirm your password.</FieldDescription>
             </Field>
             <FieldGroup>
@@ -76,9 +78,102 @@ function CreateAccountForm({ ...props }: React.ComponentProps<typeof Card>) {
   )
 }
 
+// TODO: Add frontend timer to button.
+function VerifyEmailCard({username} : {username: string}) { 
+  const [open, setOpen] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const status = await sendVerificationEmail(username);
+
+      if(!status || status < 200 || status > 200) {
+        throw new Error("Unable to send verifiaction email.")
+      }
+    },
+    onSuccess: () => {
+
+    },
+    onError: (error: Error) => {
+      console.error(error.message)
+    }
+  }) 
+
+  return <Card>
+      <CardHeader>
+        <MailSearch className='size-10'/>
+        <CardTitle>Verify your email!</CardTitle>
+        <CardDescription>
+          An email has been sent to the email you signed up with containing instructions for verifying your email.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className='flex items-center justify-center flex-col'>
+        <h2>Didn't recieve the verification email?</h2>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant={"default"} onClick={() => mutation.mutate()}>
+              Resend email
+            </Button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            side={"bottom"}
+            align="center"
+            sideOffset={8}
+            className="w-auto px-3 py-1.5 text-sm pointer-events-none bg-white text-black shadow-md border"
+          >
+            Email sent!
+            <PopoverArrow className="fill-white" />
+          </PopoverContent>
+        </Popover>
+      </CardContent>
+    </Card>
+}
+
 
 function RouteComponent() {
+  const [displayEmailVerification, setDisplayEmailVerification] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const username = formData.get("username") as string;
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      const confirmPassword = formData.get("confirmPassword") as string;
+
+      if(password !== confirmPassword) {
+        throw new Error("Your password does not match your confirm password.")
+      }
+
+      const createUserDto = createUserDtoSchema.parse({username, email, password})
+
+      const response = await createAccount(createUserDto);
+
+      if(!response || response.status < 200 || response.status > 200) {
+        throw new Error("Problem with creating account");
+      }
+
+      return username;
+    },
+    onSuccess: async (username: string) => {
+      // TODO: On success get rid of form and pop up modal that shows user email verification info type beat
+      setDisplayEmailVerification(true);
+      setUsername(username);
+    },
+    onError: async (error: Error) => {
+      // TODO: Display errors properly. Perhaps make error component to catch errors?
+      console.error(error.message);
+    }
+  })
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    mutation.mutate(formData);
+  }
+
   return <section className='w-full flex items-center justify-center mb-4'>
-      <CreateAccountForm className='max-w-9/10 w-full min-md:max-w-3/5' />
+    {!displayEmailVerification && <CreateAccountForm className='max-w-9/10 w-full min-md:max-w-3/5' handleSubmit={handleSubmit} />}
+    {displayEmailVerification && username && <VerifyEmailCard username={username} />}
   </section>
 }

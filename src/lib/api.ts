@@ -15,6 +15,7 @@ import z from "zod";
 import { curseForgeModListResponseSchema } from "@/types/curseforge/curseforgeModArrayResponse";
 import type { CreateModpackDto } from "@/types/dtos/createModpackDto";
 import { bookmarkSchema } from "@/types/bookmark";
+import type { CreateUserDto } from "@/types/dtos/createProfileDto";
 
 const api = useApi();
 
@@ -33,6 +34,18 @@ export async function login(email: string, password: string) {
         const response = await api.post(`/sessions`, {email, password});
         const data = response.data as string
         return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function sendVerificationEmail(username: string) {
+    try {
+        const response = await api.post(`/email/send-verification/${username}`);
+
+        return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
@@ -288,6 +301,18 @@ export async function getMinecraftVersions() {
 
         const data = response.data as string[];
         return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function createAccount(body: CreateUserDto) {
+    try {
+        const response = await api.post("/users", body);
+
+        return response;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);

@@ -38,9 +38,9 @@ const ProfileUsernameIndexRoute = ProfileUsernameIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginVerifyEmailUserIdRoute = LoginVerifyEmailUserIdRouteImport.update({
-  id: '/$userId',
-  path: '/$userId',
-  getParentRoute: () => LoginVerifyEmailRoute,
+  id: '/login/verify-email/$userId',
+  path: '/login/verify-email/$userId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ModpackUsernameModpackIdIndexRoute =
   ModpackUsernameModpackIdIndexRouteImport.update({
@@ -117,6 +117,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginCreateAccountRoute: typeof LoginCreateAccountRoute
   LoginIndexRoute: typeof LoginIndexRoute
+  LoginVerifyEmailUserIdRoute: typeof LoginVerifyEmailUserIdRoute
   ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
   ModpackUsernameModpackIdIndexRoute: typeof ModpackUsernameModpackIdIndexRoute
   SuggestionUsernameModpackIdSuggestionIdViewRoute: typeof SuggestionUsernameModpackIdSuggestionIdViewRoute
@@ -154,10 +155,10 @@ declare module '@tanstack/react-router' {
     }
     '/login/verify-email/$userId': {
       id: '/login/verify-email/$userId'
-      path: '/$userId'
+      path: '/login/verify-email/$userId'
       fullPath: '/login/verify-email/$userId'
       preLoaderRoute: typeof LoginVerifyEmailUserIdRouteImport
-      parentRoute: typeof LoginVerifyEmailRoute
+      parentRoute: typeof rootRouteImport
     }
     '/modpack/$username/$modpackId/': {
       id: '/modpack/$username/$modpackId/'
@@ -180,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginCreateAccountRoute: LoginCreateAccountRoute,
   LoginIndexRoute: LoginIndexRoute,
+  LoginVerifyEmailUserIdRoute: LoginVerifyEmailUserIdRoute,
   ProfileUsernameIndexRoute: ProfileUsernameIndexRoute,
   ModpackUsernameModpackIdIndexRoute: ModpackUsernameModpackIdIndexRoute,
   SuggestionUsernameModpackIdSuggestionIdViewRoute:
