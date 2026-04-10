@@ -10,7 +10,7 @@ import { PopoverArrow } from '@radix-ui/react-popover'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Check, ClipboardCopy, MailSearch } from 'lucide-react'
-import { useState, type FormEvent} from 'react'
+import { useEffect, useState, type FormEvent} from 'react'
 
 export const Route = createFileRoute('/login/create-account')({
   component: RouteComponent,
@@ -79,44 +79,69 @@ function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: For
 }
 
 // TODO: Add frontend timer to button.
-function VerifyEmailCard({username} : {username: string}) { 
+function VerifyEmailCard({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const status = await sendVerificationEmail(username);
+      const status = await sendVerificationEmail(email);
 
-      if(!status || status < 200 || status > 200) {
-        throw new Error("Unable to send verifiaction email.")
+      console.log(status)
+
+      if (!status || status < 200 || status > 200) {
+        throw new Error("Unable to send verification email.");
       }
     },
     onSuccess: () => {
-
+      setOpen(true);
+      setCooldown(60);
     },
     onError: (error: Error) => {
-      console.error(error.message)
-    }
-  }) 
+      console.error(error.message);
+    },
+  });
 
-  return <Card>
+  useEffect(() => {
+    if (cooldown === 0) return;
+
+    const interval = setInterval(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldown]);
+
+  return (
+    <Card>
       <CardHeader>
-        <MailSearch className='size-10'/>
+        <MailSearch className="size-10" />
         <CardTitle>Verify your email!</CardTitle>
         <CardDescription>
-          An email has been sent to the email you signed up with containing instructions for verifying your email.
+          An email has been sent to the email you signed up with containing
+          instructions for verifying your email.
         </CardDescription>
       </CardHeader>
-      <CardContent className='flex items-center justify-center flex-col'>
+
+      <CardContent className="flex items-center justify-center flex-col">
         <h2>Didn't recieve the verification email?</h2>
+
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant={"default"} onClick={() => mutation.mutate()}>
-              Resend email
+            <Button
+              variant={`${cooldown > 0 || mutation.isPending ? "disabled" : "default"}`}
+              onClick={() => mutation.mutate()}
+            >
+              {cooldown > 0
+                ? `Resend in ${cooldown}s`
+                : mutation.isPending
+                ? "Sending..."
+                : "Resend email"}
             </Button>
           </PopoverTrigger>
 
           <PopoverContent
-            side={"bottom"}
+            side="bottom"
             align="center"
             sideOffset={8}
             className="w-auto px-3 py-1.5 text-sm pointer-events-none bg-white text-black shadow-md border"
@@ -127,12 +152,12 @@ function VerifyEmailCard({username} : {username: string}) {
         </Popover>
       </CardContent>
     </Card>
+  );
 }
-
 
 function RouteComponent() {
   const [displayEmailVerification, setDisplayEmailVerification] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -145,7 +170,7 @@ function RouteComponent() {
         throw new Error("Your password does not match your confirm password.")
       }
 
-      const createUserDto = createUserDtoSchema.parse({username, email, password})
+      const createUserDto = createUserDtoSchema.parse({name: username, email, password})
 
       const response = await createAccount(createUserDto);
 
@@ -153,12 +178,12 @@ function RouteComponent() {
         throw new Error("Problem with creating account");
       }
 
-      return username;
+      return email;
     },
-    onSuccess: async (username: string) => {
+    onSuccess: async (email: string) => {
       // TODO: On success get rid of form and pop up modal that shows user email verification info type beat
       setDisplayEmailVerification(true);
-      setUsername(username);
+      setEmail(email);
     },
     onError: async (error: Error) => {
       // TODO: Display errors properly. Perhaps make error component to catch errors?
@@ -174,6 +199,6 @@ function RouteComponent() {
 
   return <section className='w-full flex items-center justify-center mb-4'>
     {!displayEmailVerification && <CreateAccountForm className='max-w-9/10 w-full min-md:max-w-3/5' handleSubmit={handleSubmit} />}
-    {displayEmailVerification && username && <VerifyEmailCard username={username} />}
+    {displayEmailVerification && email && <VerifyEmailCard email={email} />}
   </section>
 }

@@ -41,9 +41,9 @@ export async function login(email: string, password: string) {
     }
 }
 
-export async function sendVerificationEmail(username: string) {
+export async function sendVerificationEmail(email: string) {
     try {
-        const response = await api.post(`/email/send-verification/${username}`);
+        const response = await api.post(`/email/send-verification/${email}`);
 
         return response.status;
     } catch (error) {
