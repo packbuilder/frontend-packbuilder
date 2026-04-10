@@ -6,7 +6,7 @@ export const userSchema = z.object({
     name: z.string(),
     email: z.string(),
     avatar: z.string(),
-    isVerified: z.boolean()
+    emailVerified: z.boolean()
 });
 
 export type User = z.infer<typeof userSchema>
