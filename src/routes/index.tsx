@@ -255,7 +255,7 @@ function Home() {
                         <CarouselContent className='py-6 px-2'>
                             {
                                 modpacks.map((modpack: Modpack, index: number) => {
-                                    return <CarouselItem className='flex items-center justify-center min-md:basis-1/2'>
+                                    return <CarouselItem key={index} className='flex items-center justify-center min-md:basis-1/2'>
                                         <ModpackCardLarge modpack={modpack} key={index}/>
                                     </CarouselItem>
                                 })
@@ -263,18 +263,18 @@ function Home() {
                         </CarouselContent>
                         <CarouselPrevious />
                         <CarouselNext />
+                        {
+                            !modpacks || modpacks.length === 0 && 
+                            <GlassCard className='size-45 flex items-center justify-center'>
+                                <h2 className='text-lg text-center'>
+                                    You have no modpacks
+                                </h2>
+                            </GlassCard>  
+                        }
                     </Carousel>
                 </div>
             }
 
-            {
-                !modpacks && 
-                <GlassCard className='size-45 flex items-center justify-center'>
-                    <h2 className='text-lg text-center'>
-                        You have no modpacks
-                    </h2>
-                </GlassCard>  
-            }
         </div>
        <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
             <div className="flex flex-col justify-around items-center mb-4">
@@ -286,7 +286,7 @@ function Home() {
                         <CarouselContent className='py-6 px-2'>
                             {
                                 bookmarks.map((bookmark: Bookmark, index: number) => {
-                                    return <CarouselItem className='flex items-center justify-center'>
+                                    return <CarouselItem key={index} className='flex items-center justify-center'>
                                         <ModpackCardLarge modpack={bookmark.modpack} key={index}/>
                                     </CarouselItem>
                                 })
@@ -294,18 +294,18 @@ function Home() {
                         </CarouselContent>
                         <CarouselPrevious />
                         <CarouselNext />
+                        {
+                            !bookmarks || bookmarks.length === 0 && 
+                            <GlassCard className='size-45 flex items-center justify-center'>
+                                <h2 className='text-lg text-center'>
+                                    You have no bookmarks
+                                </h2>
+                            </GlassCard>  
+                        }
                     </Carousel>
                 </div>
             }
 
-            {
-                !bookmarks && 
-                <GlassCard className='size-45 flex items-center justify-center'>
-                    <h2 className='text-lg text-center'>
-                        You have no bookmarks
-                    </h2>
-                </GlassCard>  
-            }
         </div>
     </section>
 }

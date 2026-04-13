@@ -1,10 +1,7 @@
 import {
-  AlertCircle,
   AlertTriangle,
-  BadgeCheck,
   LogOut,
   MailQuestion,
-  MailWarning,
   User2,
 } from "lucide-react"
 import {
@@ -73,8 +70,8 @@ export default function NavUser({
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>
-              <div className="px-1 py-1.5">
-                <InfoPill className={`${user.emailVerified && "hidden"} gap-1 items-start`}>
+              <div className={`px-1 py-1.5 ${user.emailVerified && "hidden"}`}>
+                <InfoPill className={`gap-1 items-start`}>
                   <AlertTriangle className="text-yellow-500 size-4"/>
                   <h3 className="text-xs">Your email is not verified</h3>
                 </InfoPill>
@@ -94,7 +91,7 @@ export default function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup className={`${user.emailVerified && "hidden"}`}>
               <DropdownMenuItem className="cursor-pointer">
-                  <BreadCrumbLink link={`profile/verify-email`} text="Verify Email" className="w-full">
+                  <BreadCrumbLink link={`profile/verify-email`} text="Verify Email  " className="w-full">
                     <div className="flex items-center justify-start gap-2">
                       <MailQuestion />
                       Verify Email

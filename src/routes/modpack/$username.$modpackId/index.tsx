@@ -7,7 +7,7 @@ import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
 import type { VersionMod } from "@/types/versionMod";
 import BreadCrumbLink from "@/components/breadcrumb-link";
-import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useLoaderData, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,8 +57,12 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
     const modIds = modpack.versions[0]?.versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
     const modData = await queryClient.ensureQueryData(appQueries.curseForgeModData(referenceIds));
+    const userBookmarked = await queryClient.ensureQueryData({
+        queryKey: ["bookmark", modpackId],
+        queryFn: () => getBookmark(modpack.id.toString())
+    })
 
-    return {curUser: user, modpack, queryClient, modData, minecraftVersions, suggestions}
+    return {curUser: user, modpack, queryClient, modData, minecraftVersions, suggestions, userBookmarked}
   },
   component: ModpackView,
 })
@@ -295,7 +299,8 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
 }
 
 function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: User}) {
-    const [isBookmarked, setIsBookmarked] = useState(false);
+    const {userBookmarked} = Route.useLoaderData();
+    const [isBookmarked, setIsBookmarked] = useState(userBookmarked ? true : false);
     const [isClicked, setIsClicked] = useState(false);
     const queryClient = useQueryClient();
 

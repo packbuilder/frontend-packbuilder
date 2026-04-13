@@ -42,10 +42,10 @@ export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggesti
         page,
         sortMethod
     }),
-    loader: async ({context: {user, queryClient}, params: {modpackId, suggestionId}}) => {
+    loader: async ({context: {user, queryClient}, params: {suggestionId, modpackId}}) => {
         const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(modpackId, suggestionId));
         const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId));
-
+        
         if(!suggestion || !modpack) {
             throw redirect({to: "/"});
         }
@@ -478,8 +478,8 @@ export default function SuggestionView() {
         refetchOnMount: true,        
     });
     const { data: suggestion, isPending: suggestionPending } = useQuery({
-        queryFn: appQueries.suggestion(suggestionId, modpackId).queryFn,
-        queryKey: appQueries.suggestion(suggestionId, modpackId).queryKey,
+        queryFn: appQueries.suggestion(modpackId, suggestionId).queryFn,
+        queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
         initialData: initialSuggestionData,       
         refetchOnMount: true,        
     });

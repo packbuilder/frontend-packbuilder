@@ -4,7 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import Header from '@/components/header'
 import { getUserToken } from '@/lib/api'
 import { parseUserToken } from '@/lib/utils'
-import type { User } from '@/types/user'
+import { userSchema, type User } from '@/types/user'
 
 interface MyRouterContext {
   queryClient: QueryClient,
@@ -73,7 +73,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     }
 
     try {
-      const user = parseUserToken(token) as User;
+      const user = userSchema.parse(parseUserToken(token));
+      
+      console.log(user);
       
       if(!user) {
         return;

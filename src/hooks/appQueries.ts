@@ -5,12 +5,12 @@ import { queryOptions } from "@tanstack/react-query";
 
 export const appQueries = {
     suggestion: (modpackId: string, suggestionId: string) => queryOptions({
-        queryKey: ["suggestion", suggestionId],
+        queryKey: ["suggestion", Number(modpackId), Number(suggestionId)],
         queryFn: () => getSuggestion(modpackId, suggestionId),
     }),
 
     modpack: (modpackId: string) => queryOptions({
-        queryKey: ["modpack", modpackId],
+        queryKey: ["modpack", Number(modpackId)],
         queryFn: () => getModpack(modpackId),
     }),
 
@@ -50,7 +50,7 @@ export const appQueries = {
     }),
 
     modpackSuggestions: (modpackId: string) => queryOptions({
-        queryKey: ["modpackSuggestions", modpackId],
+        queryKey: ["modpackSuggestions", Number(modpackId)],
         queryFn: () => getModpackSuggestions(modpackId)
     }),  
 
@@ -61,7 +61,7 @@ export const appQueries = {
     }),
 
     curseForgeSearchResults: (searchQuery: string, page: number, sortMethod: "0" | "1" | "2" | "3", gameVersion: string, modLoader: ModLoader) => queryOptions({
-        queryKey: ["modSearchResults", searchQuery, page, sortMethod],
+        queryKey: ["modSearchResults", searchQuery, page, sortMethod, gameVersion, modLoader],
         queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod, gameVersion, modLoader)
     }),
 

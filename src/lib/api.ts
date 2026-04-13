@@ -173,6 +173,7 @@ export async function getUserBookmarks() {
                 'Authorization': `Bearer ${token}`,
             }
         });
+
         const data = z.array(bookmarkSchema).parse(response.data);
         return data;
     } catch (error) {
@@ -270,11 +271,11 @@ export async function getModpackSuggestions(modpackId: string) {
     }
 }
 
-export async function getSuggestion(modpackId: string, id: string) {
+export async function getSuggestion(modpackId: string, suggestionId: string) {
     const token = getUserToken();
-    
+
     try {
-        const response = await api.get(`/modpacks/${modpackId}/suggestions/${id}`, {
+        const response = await api.get(`/modpacks/${modpackId}/suggestions/${suggestionId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
