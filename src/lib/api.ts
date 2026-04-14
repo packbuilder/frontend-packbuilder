@@ -43,7 +43,31 @@ export async function login(email: string, password: string) {
 
 export async function sendVerificationEmail(email: string) {
     try {
-        const response = await api.post(`/email/send-verification/${email}`);
+        const response = await api.post(`/verification/request/${email}`);
+
+        return response.status;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function sendPasswordResetEmail(email: string) {
+    try {
+        const response = await api.post(`/password-reset/request/${email}`);
+
+        return response.status;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function resetPassword(userId: string, newPassword: string, resetToken: string) {
+    try {
+        const response = await api.post(`/password-reset/request/${userId}`, {newPassword, token: resetToken});
 
         return response.status;
     } catch (error) {

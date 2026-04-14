@@ -23,7 +23,6 @@ import avatarImage from "@/Seed-Avatar.jpg"
 import BreadCrumbLink from "./breadcrumb-link"
 import Cookies from "js-cookie"
 import { useNavigate, useRouter } from "@tanstack/react-router"
-import { DropdownMenuRadioGroup } from "@radix-ui/react-dropdown-menu"
 import InfoPill from "./info-pill"
 
 export default function NavUser({

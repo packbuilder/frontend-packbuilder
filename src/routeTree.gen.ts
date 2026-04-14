@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as ProfileVerifyEmailRouteImport } from './routes/profile/verify-email'
+import { Route as ProfileResetPasswordRouteImport } from './routes/profile/reset-password'
 import { Route as LoginCreateAccountRouteImport } from './routes/login/create-account'
 import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$username/index'
 import { Route as ModpackUsernameModpackIdIndexRouteImport } from './routes/modpack/$username.$modpackId/index'
@@ -30,6 +31,11 @@ const LoginIndexRoute = LoginIndexRouteImport.update({
 const ProfileVerifyEmailRoute = ProfileVerifyEmailRouteImport.update({
   id: '/profile/verify-email',
   path: '/profile/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileResetPasswordRoute = ProfileResetPasswordRouteImport.update({
+  id: '/profile/reset-password',
+  path: '/profile/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginCreateAccountRoute = LoginCreateAccountRouteImport.update({
@@ -58,6 +64,7 @@ const SuggestionUsernameModpackIdSuggestionIdViewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
+  '/profile/reset-password': typeof ProfileResetPasswordRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
+  '/profile/reset-password': typeof ProfileResetPasswordRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
+  '/profile/reset-password': typeof ProfileResetPasswordRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login/': typeof LoginIndexRoute
   '/profile/$username/': typeof ProfileUsernameIndexRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login/create-account'
+    | '/profile/reset-password'
     | '/profile/verify-email'
     | '/login'
     | '/profile/$username'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login/create-account'
+    | '/profile/reset-password'
     | '/profile/verify-email'
     | '/login'
     | '/profile/$username'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login/create-account'
+    | '/profile/reset-password'
     | '/profile/verify-email'
     | '/login/'
     | '/profile/$username/'
@@ -116,6 +128,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginCreateAccountRoute: typeof LoginCreateAccountRoute
+  ProfileResetPasswordRoute: typeof ProfileResetPasswordRoute
   ProfileVerifyEmailRoute: typeof ProfileVerifyEmailRoute
   LoginIndexRoute: typeof LoginIndexRoute
   ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
@@ -144,6 +157,13 @@ declare module '@tanstack/react-router' {
       path: '/profile/verify-email'
       fullPath: '/profile/verify-email'
       preLoaderRoute: typeof ProfileVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/reset-password': {
+      id: '/profile/reset-password'
+      path: '/profile/reset-password'
+      fullPath: '/profile/reset-password'
+      preLoaderRoute: typeof ProfileResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/create-account': {
@@ -180,6 +200,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginCreateAccountRoute: LoginCreateAccountRoute,
+  ProfileResetPasswordRoute: ProfileResetPasswordRoute,
   ProfileVerifyEmailRoute: ProfileVerifyEmailRoute,
   LoginIndexRoute: LoginIndexRoute,
   ProfileUsernameIndexRoute: ProfileUsernameIndexRoute,

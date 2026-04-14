@@ -17,6 +17,8 @@ export const Route = createFileRoute('/login/')({
   }
 });
 
+// TODO: Restyle login form and add functionality for user to reset password if they forgot it
+
 function Login() {
   const [formError, setFormError] = useState("");
   const {removeBreadCrumb} = store();
@@ -45,17 +47,22 @@ function Login() {
   }
 
   return (
-    <form method="post" id="login" onSubmit={(event: FormEvent<HTMLFormElement>) => handleLogin(event)}>
-        <div>{formError}</div>
-        <div className="flex flex-row justify-center items-center gap-2">
-            <Label className=""><h1>Email</h1></Label>
-            <Input id={"email"} type="email" name={"email"} placeholder="Your message..." required />
+    <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
+      <form method="post" id="login" onSubmit={(event: FormEvent<HTMLFormElement>) => handleLogin(event)}>
+          <div>{formError}</div>
+          <div className="flex flex-col justify-center items-center gap-2">
+              <Label className=""><h1>Email</h1></Label>
+              <Input id={"email"} type="email" name={"email"} placeholder="Your message..." required />
 
-            <Label className=""><h1>Password</h1></Label>
-            <Input
-            id={"password"} type="password" name={"password"} placeholder="Your message..."/>
-            <Button variant={"default"} type="submit">Login <LogIn/></Button>
-        </div>
-    </form>
+              <Label className=""><h1>Password</h1></Label>
+              <Input
+              id={"password"} type="password" name={"password"} placeholder="Your message..."/>
+              <Button variant={"default"} type="submit">Login <LogIn/></Button>
+          </div>
+      </form>
+      <Button variant={"default"}>
+        <p>Forgot password?</p>
+      </Button>
+    </section>
   )
 }
