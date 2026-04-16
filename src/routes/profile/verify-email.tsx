@@ -52,7 +52,7 @@ function RouteComponent() {
   }, [cooldown]);
 
   return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
-      <Card>
+    <Card>
       <CardHeader className='flex flex-col items-center justify-center'>
         <MailSearch className="size-10" />
         <CardTitle>Verify your email</CardTitle>

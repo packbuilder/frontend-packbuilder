@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as ProfileVerifyEmailRouteImport } from './routes/profile/verify-email'
 import { Route as ProfileResetPasswordRouteImport } from './routes/profile/reset-password'
+import { Route as LoginForgotPasswordRouteImport } from './routes/login/forgot-password'
 import { Route as LoginCreateAccountRouteImport } from './routes/login/create-account'
 import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$username/index'
 import { Route as ModpackUsernameModpackIdIndexRouteImport } from './routes/modpack/$username.$modpackId/index'
@@ -36,6 +37,11 @@ const ProfileVerifyEmailRoute = ProfileVerifyEmailRouteImport.update({
 const ProfileResetPasswordRoute = ProfileResetPasswordRouteImport.update({
   id: '/profile/reset-password',
   path: '/profile/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginForgotPasswordRoute = LoginForgotPasswordRouteImport.update({
+  id: '/login/forgot-password',
+  path: '/login/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginCreateAccountRoute = LoginCreateAccountRouteImport.update({
@@ -64,6 +70,7 @@ const SuggestionUsernameModpackIdSuggestionIdViewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
+  '/login/forgot-password': typeof LoginForgotPasswordRoute
   '/profile/reset-password': typeof ProfileResetPasswordRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
+  '/login/forgot-password': typeof LoginForgotPasswordRoute
   '/profile/reset-password': typeof ProfileResetPasswordRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login/create-account': typeof LoginCreateAccountRoute
+  '/login/forgot-password': typeof LoginForgotPasswordRoute
   '/profile/reset-password': typeof ProfileResetPasswordRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login/': typeof LoginIndexRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login/create-account'
+    | '/login/forgot-password'
     | '/profile/reset-password'
     | '/profile/verify-email'
     | '/login'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login/create-account'
+    | '/login/forgot-password'
     | '/profile/reset-password'
     | '/profile/verify-email'
     | '/login'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login/create-account'
+    | '/login/forgot-password'
     | '/profile/reset-password'
     | '/profile/verify-email'
     | '/login/'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginCreateAccountRoute: typeof LoginCreateAccountRoute
+  LoginForgotPasswordRoute: typeof LoginForgotPasswordRoute
   ProfileResetPasswordRoute: typeof ProfileResetPasswordRoute
   ProfileVerifyEmailRoute: typeof ProfileVerifyEmailRoute
   LoginIndexRoute: typeof LoginIndexRoute
@@ -166,6 +179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login/forgot-password': {
+      id: '/login/forgot-password'
+      path: '/login/forgot-password'
+      fullPath: '/login/forgot-password'
+      preLoaderRoute: typeof LoginForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login/create-account': {
       id: '/login/create-account'
       path: '/login/create-account'
@@ -200,6 +220,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginCreateAccountRoute: LoginCreateAccountRoute,
+  LoginForgotPasswordRoute: LoginForgotPasswordRoute,
   ProfileResetPasswordRoute: ProfileResetPasswordRoute,
   ProfileVerifyEmailRoute: ProfileVerifyEmailRoute,
   LoginIndexRoute: LoginIndexRoute,

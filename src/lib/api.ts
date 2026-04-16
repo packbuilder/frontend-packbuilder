@@ -67,7 +67,7 @@ export async function sendPasswordResetEmail(email: string) {
 
 export async function resetPassword(userId: string, newPassword: string, resetToken: string) {
     try {
-        const response = await api.post(`/password-reset/request/${userId}`, {newPassword, token: resetToken});
+        const response = await api.post(`/password-reset/${userId}`, {newPassword, token: resetToken});
 
         return response.status;
     } catch (error) {
