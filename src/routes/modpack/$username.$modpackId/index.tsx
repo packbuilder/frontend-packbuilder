@@ -28,7 +28,7 @@ import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import SuggestionCard from "@/components/suggestion/suggestion-display";
-import SuggestionDisplay from "@/components/suggestion/suggestion-display";
+import SuggestionInteractive from "@/components/suggestion/suggestion-display";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
@@ -578,7 +578,7 @@ export default function ModpackView() {
                                     :
                                     filteredSuggestions && suggestions ? filteredSuggestions.map((suggestion, index) => {
                                         return <CommandItem value={suggestion.username} key={index} className="size-full max-w-full p-0">
-                                            <SuggestionDisplay suggestion={suggestion} modpack={modpack} curUser={curUser} />
+                                            <SuggestionInteractive suggestion={suggestion} modpack={modpack} curUser={curUser} />
                                         </CommandItem>
                                     })  
                                     : ""

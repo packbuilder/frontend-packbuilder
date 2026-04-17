@@ -4,7 +4,7 @@ import { userSchema } from "./user";
 
 export const modpackSchema = z.object({
     id: z.number(),
-    user: userSchema.optional(),
+    user: userSchema,
     
     name: z.string(),
     slug: z.string(),
