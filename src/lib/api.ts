@@ -6,7 +6,6 @@ import { suggestionSchema } from "@/types/suggestion";
 import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
 import { AxiosError } from "axios";
 import type { CreateModificationDto } from "@/types/dtos/createModificationDto";
-import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import Cookies from "js-cookie";
 import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
 import type { ModLoader } from "@/types/enums";
@@ -16,6 +15,8 @@ import { curseForgeModListResponseSchema } from "@/types/curseforge/curseforgeMo
 import type { CreateModpackDto } from "@/types/dtos/createModpackDto";
 import { bookmarkSchema } from "@/types/bookmark";
 import type { CreateUserDto } from "@/types/dtos/createProfileDto";
+import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
+import type { ChangeEmailDto } from "@/types/dtos/changeEmailDto";
 
 const api = useApi();
 
@@ -458,6 +459,24 @@ export async function updateSuggestion(modpackId: string, body: CreateSuggestion
     
     try {
         const response = await api.put(`/modpacks/${modpackId}/suggestions/${suggestionId}`, body, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        return response.status;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function changeEmail(body: ChangeEmailDto) {
+    const token = getUserToken();
+    
+    try {
+        const response = await api.put(`/email-reset`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
