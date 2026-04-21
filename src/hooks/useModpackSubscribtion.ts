@@ -3,6 +3,8 @@ import { useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useSignalR } from "@/components/signalr/signalr-provider"
 
+// TODO: This is where all logic for you events will live. Just create events on backend that represent the corresponding data changes the events will be sent here.
+
 export function useModpackSubscription(modpackId: string | undefined) {
   const { connection } = useSignalR()
   const queryClient = useQueryClient()
