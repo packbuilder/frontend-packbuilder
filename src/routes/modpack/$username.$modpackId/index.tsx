@@ -32,6 +32,7 @@ import SuggestionInteractive from "@/components/suggestion/suggestion-display";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
+import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -398,7 +399,6 @@ export default function ModpackView() {
     const { pathname } = useLocation();
     const {modpackId} = Route.useParams();
     const navigate = useNavigate();
-    // TODO: Get rid of suspense query
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
     const {display} = Route.useSearch({
         select: (search) => ({
@@ -454,6 +454,8 @@ export default function ModpackView() {
     const handleFilterChange = (newValue: SuggestionFilter) => {
         setSuggestionFilter(newValue);
     }
+
+    useModpackSubscription(modpack.id)
 
     return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">

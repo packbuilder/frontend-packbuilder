@@ -28,6 +28,7 @@ import type { VersionMod } from "@/types/versionMod";
 import type { Modpack } from "@/types/modpack";
 import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
+import { useSuggestionSubscription } from "@/hooks/useSuggestionSubscription";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -531,6 +532,8 @@ export default function SuggestionView() {
         navigate({to: "/"});
         return;
     }
+
+    useSuggestionSubscription(suggestion.modpackId, suggestion.id);
 
     return <section className="flex flex-col items-center max-w-full justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
         <header className="flex flex-col justify-between items-center gap-6  min-md:flex-row min-md:gap-6">

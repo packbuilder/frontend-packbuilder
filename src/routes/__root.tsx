@@ -5,6 +5,7 @@ import Header from '@/components/header'
 import { getUserToken } from '@/lib/api'
 import { parseUserToken } from '@/lib/utils'
 import { userSchema, type User } from '@/types/user'
+import { SignalRProvider } from '@/components/signalr/signalr-provider'
 
 interface MyRouterContext {
   queryClient: QueryClient,
@@ -18,6 +19,7 @@ function RootLayout() {
 
   return (
     <>
+    <SignalRProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
           <main className="min-h-dvh size-full bg-background flex flex-col items-center justify-start">
@@ -26,6 +28,7 @@ function RootLayout() {
           </main>
         </ThemeProvider>
       </QueryClientProvider>
+    </SignalRProvider>
     </>
   );
 }
@@ -33,34 +36,38 @@ function RootLayout() {
 function ErrorComponent({ error }: { error: Error }) {
   const {user} = Route.useRouteContext();
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-      <main className="min-h-dvh size-full bg-background">
-        <Header user={user} />
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="text-4xl text-center text-bold">
-            There was an error rendering this page :(
-          </h1>
-          <h2 className="text-2xl text-center text-bold">{error.message}</h2>
-        </div>
-      </main>
-    </ThemeProvider>
+    <SignalRProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="website-theme">
+        <main className="min-h-dvh size-full bg-background">
+          <Header user={user} />
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl text-center text-bold">
+              There was an error rendering this page :(
+            </h1>
+            <h2 className="text-2xl text-center text-bold">{error.message}</h2>
+          </div>
+        </main>
+      </ThemeProvider>
+    </SignalRProvider>
   );
 }
 
 function NotFoundComponent() {
   const {user} = Route.useRouteContext();
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="website-theme">
-      <main className="min-h-dvh size-full bg-background">
-        <Header user={user} />
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="text-4xl text-center text-bold">
-            This page does not exist :(
-          </h1>
-          <h2 className="text-2xl text-center text-bold">Maybe try searching a little harder?</h2>
-        </div>
-      </main>
-    </ThemeProvider>
+    <SignalRProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="website-theme">
+        <main className="min-h-dvh size-full bg-background">
+          <Header user={user} />
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl text-center text-bold">
+              This page does not exist :(
+            </h1>
+            <h2 className="text-2xl text-center text-bold">Maybe try searching a little harder?</h2>
+          </div>
+        </main>
+      </ThemeProvider>
+    </SignalRProvider>
   )
 }
 

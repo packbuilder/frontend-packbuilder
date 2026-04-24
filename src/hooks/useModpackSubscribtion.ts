@@ -2,63 +2,76 @@
 import { useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useSignalR } from "@/components/signalr/signalr-provider"
+import { appQueries } from "./appQueries"
+import { useRouter } from "@tanstack/react-router";
 
-// TODO: This is where all logic for you events will live. Just create events on backend that represent the corresponding data changes the events will be sent here.
-
-export function useModpackSubscription(modpackId: string | undefined) {
-  const { connection } = useSignalR()
-  const queryClient = useQueryClient()
+export function useModpackSubscription(modpackId: number | undefined) {
+  const { connection } = useSignalR();
+  const router = useRouter();
+  const queryClient = useQueryClient()  
 
   useEffect(() => {
     if (!connection || !modpackId) return
 
     let isActive = true
-    const groupName = `modpack-${modpackId}`
 
-    // ---- event handler ----
-    const onSuggestionUpdated = (payload: {
-      suggestionId: string
-      modpackId: string
+    const onSuggestionUpdated = async (payload: {
+      suggestionId: number,
+      modpackId: number
     }) => {
-      if (payload.modpackId !== modpackId) return
+        if (payload.modpackId !== modpackId) return
+        
+        await queryClient.invalidateQueries({
+            queryKey: appQueries.modpackSuggestions(modpackId.toString()).queryKey
+        });
+        await router.invalidate();
+    }
 
-      // safest default
-      queryClient.invalidateQueries({
-        queryKey: ["suggestions", modpackId],
-      })
+    const onModpackUpdated = async (payload: {
+        modpackId: number,
+    }) => {
+        if(payload.modpackId !== modpackId) return
+
+        await queryClient.invalidateQueries({
+            queryKey: appQueries.modpack(modpackId.toString()).queryKey
+        });
+
+        await queryClient.invalidateQueries({
+            queryKey: appQueries.modpackSuggestions(modpackId.toString()).queryKey
+        });
+
+        await router.invalidate();
     }
 
     connection.on("SuggestionUpdated", onSuggestionUpdated)
+    connection.on("ModpackUpdated", onModpackUpdated)
 
-    // ---- join group ----
     async function join() {
-      try {
-        await connection?.invoke("JoinModpack", modpackId)
-      } catch {
-        // retry a bit if needed
-      }
+        try {
+            await connection?.invoke("JoinModpack", modpackId?.toString())
+        } catch {
+            console.error(`unable to connect to signalr modpack ${modpackId} group.`)
+        }
     }
 
     join()
 
-    // ---- rejoin on reconnect ----
     const handleReconnect = () => {
-      if (isActive) {
-        connection.invoke("JoinModpack", modpackId)
-      }
+        if (isActive) {
+            connection.invoke("JoinModpack", modpackId)
+        }
     }
 
     connection.onreconnected(handleReconnect)
 
-    // ---- cleanup ----
     return () => {
-      isActive = false
+        isActive = false
 
-      connection.off("SuggestionUpdated", onSuggestionUpdated)
-      connection.off("onreconnected", handleReconnect)
+        connection.off("SuggestionUpdated", onSuggestionUpdated)
+        connection.off("ModpackUpdated", onModpackUpdated)
+        connection.off("onreconnected", handleReconnect)
 
-      // leave group when navigating away
-      connection.invoke("LeaveModpack", modpackId).catch(() => {})
+        connection.invoke("LeaveModpack", modpackId).catch(() => {})
     }
   }, [connection, modpackId, queryClient])
 }

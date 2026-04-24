@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo } from "react"
+import React, { createContext, useContext, useEffect } from "react"
 import * as signalR from "@microsoft/signalr"
+import { connection } from "./signalr-connection"
 
 type Context = {
   connection: signalR.HubConnection | null
@@ -8,40 +9,33 @@ type Context = {
 const SignalRContext = createContext<Context>({ connection: null })
 
 export function SignalRProvider({ children }: { children: React.ReactNode }) {
-
-    const connection = useMemo(() => {
-        return new signalR.HubConnectionBuilder()
-        .withUrl("/hubs/modpacks")
-        .withAutomaticReconnect()
-        .build()
-    }, [])
-
     useEffect(() => {
-        let isMounted = true
+        const startConnection = async () => {
+            
+            if (connection.state === signalR.HubConnectionState.Connected || 
+                connection.state === signalR.HubConnectionState.Connecting) {
+                return;
+            }
 
-        async function start() {
-        try {
-            await connection.start()
-            // optional: console.log("SignalR connected")
-        } catch (err) {
-            // retry with backoff if you want
-            setTimeout(start, 2000)
+            try {
+                await connection.start();
+            } catch (error) {
+                console.error("SignalR start failed:", error);
+            }
         }
-        }
-
-        if (isMounted) start()
-
+        startConnection();
         return () => {
-            isMounted = false
-            connection.stop()
-        }
-    }, [connection])
+            if (connection.state === signalR.HubConnectionState.Connected) {
+                connection.stop();
+            }
+        };
+    }, [connection]);
 
     return (
         <SignalRContext.Provider value={{ connection }}>
             {children}
         </SignalRContext.Provider>
-    )
+    );
 }
 
 export function useSignalR() {
