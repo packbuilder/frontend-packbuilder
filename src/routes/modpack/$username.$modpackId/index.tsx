@@ -413,6 +413,7 @@ export default function ModpackView() {
 
     const {data: suggestions, isPending: pendingSuggestionData} = useSuspenseQuery(appQueries.modpackSuggestions(modpack.id.toString()));
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
+    // TODO: Upon suggestion being merged into modpack, maybe set displayed version to new version?
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
     const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All)
 

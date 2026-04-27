@@ -440,7 +440,7 @@ export async function createModpackVersion(modpackId: string, suggestionId: stri
     const token = getUserToken();
     
     try {
-        const response = await api.post(`/modpacks/${modpackId}/versions/${suggestionId}`, null, {
+        const response = await api.post(`/modpacks/${modpackId}/versions/create/${suggestionId}`, null, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
