@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as ProfileVerifyEmailRouteImport } from './routes/profile/verify-email'
+import { Route as ProfileVerificationResultRouteImport } from './routes/profile/verification-result'
 import { Route as ProfileResetPasswordRouteImport } from './routes/profile/reset-password'
 import { Route as LoginForgotPasswordRouteImport } from './routes/login/forgot-password'
 import { Route as LoginCreateAccountRouteImport } from './routes/login/create-account'
@@ -34,6 +35,12 @@ const ProfileVerifyEmailRoute = ProfileVerifyEmailRouteImport.update({
   path: '/profile/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileVerificationResultRoute =
+  ProfileVerificationResultRouteImport.update({
+    id: '/profile/verification-result',
+    path: '/profile/verification-result',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProfileResetPasswordRoute = ProfileResetPasswordRouteImport.update({
   id: '/profile/reset-password',
   path: '/profile/reset-password',
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/login/create-account': typeof LoginCreateAccountRoute
   '/login/forgot-password': typeof LoginForgotPasswordRoute
   '/profile/reset-password': typeof ProfileResetPasswordRoute
+  '/profile/verification-result': typeof ProfileVerificationResultRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/login/create-account': typeof LoginCreateAccountRoute
   '/login/forgot-password': typeof LoginForgotPasswordRoute
   '/profile/reset-password': typeof ProfileResetPasswordRoute
+  '/profile/verification-result': typeof ProfileVerificationResultRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
   '/profile/$username': typeof ProfileUsernameIndexRoute
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/login/create-account': typeof LoginCreateAccountRoute
   '/login/forgot-password': typeof LoginForgotPasswordRoute
   '/profile/reset-password': typeof ProfileResetPasswordRoute
+  '/profile/verification-result': typeof ProfileVerificationResultRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login/': typeof LoginIndexRoute
   '/profile/$username/': typeof ProfileUsernameIndexRoute
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/login/create-account'
     | '/login/forgot-password'
     | '/profile/reset-password'
+    | '/profile/verification-result'
     | '/profile/verify-email'
     | '/login'
     | '/profile/$username'
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/login/create-account'
     | '/login/forgot-password'
     | '/profile/reset-password'
+    | '/profile/verification-result'
     | '/profile/verify-email'
     | '/login'
     | '/profile/$username'
@@ -130,6 +142,7 @@ export interface FileRouteTypes {
     | '/login/create-account'
     | '/login/forgot-password'
     | '/profile/reset-password'
+    | '/profile/verification-result'
     | '/profile/verify-email'
     | '/login/'
     | '/profile/$username/'
@@ -142,6 +155,7 @@ export interface RootRouteChildren {
   LoginCreateAccountRoute: typeof LoginCreateAccountRoute
   LoginForgotPasswordRoute: typeof LoginForgotPasswordRoute
   ProfileResetPasswordRoute: typeof ProfileResetPasswordRoute
+  ProfileVerificationResultRoute: typeof ProfileVerificationResultRoute
   ProfileVerifyEmailRoute: typeof ProfileVerifyEmailRoute
   LoginIndexRoute: typeof LoginIndexRoute
   ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
@@ -170,6 +184,13 @@ declare module '@tanstack/react-router' {
       path: '/profile/verify-email'
       fullPath: '/profile/verify-email'
       preLoaderRoute: typeof ProfileVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/verification-result': {
+      id: '/profile/verification-result'
+      path: '/profile/verification-result'
+      fullPath: '/profile/verification-result'
+      preLoaderRoute: typeof ProfileVerificationResultRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile/reset-password': {
@@ -222,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginCreateAccountRoute: LoginCreateAccountRoute,
   LoginForgotPasswordRoute: LoginForgotPasswordRoute,
   ProfileResetPasswordRoute: ProfileResetPasswordRoute,
+  ProfileVerificationResultRoute: ProfileVerificationResultRoute,
   ProfileVerifyEmailRoute: ProfileVerifyEmailRoute,
   LoginIndexRoute: LoginIndexRoute,
   ProfileUsernameIndexRoute: ProfileUsernameIndexRoute,

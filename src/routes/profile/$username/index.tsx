@@ -53,6 +53,8 @@ export const Route = createFileRoute('/profile/$username/')({
   component: ProfileView,
 });
 
+// TODO: Since current user data source of truth is the beforeload router context and no longer stored in the jwt, the user no longer needs to be logged out upon profile changes unless the user changes their email or password. Make those changes here.
+
 function EditProfileDialog() {
   const {curUser} = Route.useLoaderData();
   const [hideForm, setHideForm] = useState(true);
@@ -63,9 +65,7 @@ function EditProfileDialog() {
   const formRef = useRef(null);
 
     const handleLogout = async () => {
-      Cookies.remove("_packbuilder_jwt");
       await router.invalidate();
-      navigate({to: "/login", reloadDocument: true});
     }
 
     const submitForm = () => {

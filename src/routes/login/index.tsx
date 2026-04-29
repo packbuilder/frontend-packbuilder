@@ -19,8 +19,6 @@ export const Route = createFileRoute('/login/')({
   }
 });
 
-// TODO: Restyle login form and add functionality for user to reset password if they forgot it
-
 function Login() {
   const [formError, setFormError] = useState("");
   const {removeBreadCrumb} = store();
@@ -30,9 +28,6 @@ function Login() {
     mutationFn: async (formData: FormData) => {
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
-
-      console.log(email, password)
-    
       const token = await login(email, password);
     
       if (!token) {

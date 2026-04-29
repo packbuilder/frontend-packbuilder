@@ -38,6 +38,7 @@ export default function NavUser({
     await router.invalidate({sync: true});
     navigate({to: "/login", reloadDocument: true});
   }
+  console.log(user.emailVerified);
 
   return (
         <DropdownMenu>

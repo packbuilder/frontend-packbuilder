@@ -87,7 +87,6 @@ export async function verifySuggestion(suggestionId: number, modpackId: string) 
                 'Authorization': `Bearer ${token}`,
             },
         });
-
         return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -107,6 +106,25 @@ export async function searchCurseforgeMods(searchQuery: string, page: number, so
         });
 
         const data = curseForgeModListResponseSchema.parse(response.data);
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function getUserById(userId: number) {
+    const token = getUserToken();
+
+    try {
+        const response = await api.get(`users/${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        const data = userSchema.parse(response.data);
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError

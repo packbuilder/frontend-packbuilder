@@ -2,10 +2,11 @@ import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from '@/components/theme-provider'
 import Header from '@/components/header'
-import { getUserToken } from '@/lib/api'
+import { getUserById, getUserToken } from '@/lib/api'
 import { parseUserToken } from '@/lib/utils'
-import { userSchema, type User } from '@/types/user'
+import { type User } from '@/types/user'
 import { SignalRProvider } from '@/components/signalr/signalr-provider'
+import { userTokenSchema } from '@/types/userToken'
 
 interface MyRouterContext {
   queryClient: QueryClient,
@@ -80,9 +81,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     }
 
     try {
-      const user = userSchema.parse(parseUserToken(token));
-      
-      console.log(user);
+      const userToken = userTokenSchema.parse(parseUserToken(token));
+      const user = await getUserById(userToken.id);
       
       if(!user) {
         return;

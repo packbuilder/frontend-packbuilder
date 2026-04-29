@@ -4,12 +4,7 @@ import { twMerge } from "tailwind-merge"
 
 type CustomJwtPayload = {
   exp: number,
-  Avatar: string,
-  UpdatedAt: string,
-  CreatedAt: string,
   EmailVerified: string,
-  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string,
-  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string,
 }
 
@@ -23,11 +18,8 @@ export function parseUserToken(jwt: string) {
   const emailVerified = data.EmailVerified.toLowerCase() === "true" ? true : false;
   
   return {
-    email: data["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
-    name: data["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
     id: parseInt(data["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]),
     emailVerified,
-    avatar: data.Avatar
   }
 }
 
