@@ -4,13 +4,12 @@ import placeholderAvatar from "@/Seed-Avatar.jpg"
 import { ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import { Separator } from "../ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
-import BreadCrumbLink from "../breadcrumb-link";
 import InfoPill from "../info-pill";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createModpackVersion } from "@/lib/api";
 import type { User } from "@/types/user";
 import type { Modpack } from "@/types/modpack";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { Button } from "../ui/button";
 import DisplayImage from "../display-image";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
@@ -73,11 +72,11 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
                     </div>
                 </div>
                 <div className="flex items-center justify-start w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">
-                    <BreadCrumbLink link={`suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} text="View">
+                    <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.username, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}}>
                         <Button variant={"default"}>
                             <h3>View</h3>
                         </Button>
-                    </BreadCrumbLink>
+                    </Link>
                     <MergeSuggestionDialog modpack={modpack} curUser={curUser} suggestion={suggestion} />
                 </div>
             </div>
@@ -89,7 +88,7 @@ export function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
     
-    return <BreadCrumbLink text="Suggestion" link={`/suggestion/${suggestion.username}/${suggestion.modpackId}/${suggestion.id}/view`} className="w-full group bg-[var(--surface-1)]">
+    return <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.username, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}} className="w-full group bg-[var(--surface-1)]">
             <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)] group-hover:bg-white/5 transition duration-200">
                 <div className="flex items-center justify-center min-md:row-span-3">
                     <DisplayImage src={placeholderAvatar} />
@@ -143,7 +142,7 @@ export function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
                 </div>
             </div>
             <Separator />
-    </BreadCrumbLink>
+    </Link>
 }
 
 function MergeSuggestionDialog({modpack, suggestion, curUser} : {modpack: Modpack, suggestion: Suggestion, curUser: User | null}) {

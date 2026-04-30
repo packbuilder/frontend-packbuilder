@@ -1,12 +1,12 @@
 import type { Modpack } from "@/types/modpack";
 import { History } from "lucide-react";
 import DisplayImage from "../display-image";
-import BreadCrumbLink from "../breadcrumb-link";
 import modpackImage from "@/modpack.gif"
 import { Separator } from "../ui/separator";
+import { Link } from "@tanstack/react-router";
 
 export default function ModpackDisplay({modpack} : {modpack: Modpack}) {
-    return <BreadCrumbLink text="Modpack" link={`/modpack/${modpack.user?.name}/${modpack.id}`} className="w-full group bg-[var(--surface-1)] transition duration-200">
+    return <Link to="/modpack/$username/$modpackId" params={{username: modpack.user.name, modpackId: modpack.id.toString()}} className="w-full group bg-[var(--surface-1)] transition duration-200">
         <div className="grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto] gap-x-3 gap-y-3 p-2 py-4 group-hover:bg-white/5 min-md:grid-cols-[auto_minmax(0,3fr)_1fr]">
             <div className="flex items-center justify-center w-fit min-md:row-span-2">
                 <DisplayImage src={modpackImage} />
@@ -29,5 +29,5 @@ export default function ModpackDisplay({modpack} : {modpack: Modpack}) {
             </header>
         </div>
         <Separator />
-    </BreadCrumbLink>
+    </Link>
 }

@@ -1,12 +1,10 @@
-import BreadCrumbLink from '@/components/breadcrumb-link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FieldGroup, Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { login } from '@/lib/api';
-import store from '@/store/store';
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import Cookies from 'js-cookie';
 import { useState, type FormEvent } from 'react';
 
@@ -16,12 +14,14 @@ export const Route = createFileRoute('/login/')({
     if(context.user) {
       throw redirect({to:"/"})
     }
+    const breadcrumbs = ["Login"];
+    
+    return {breadcrumbs}
   }
 });
 
 function Login() {
   const [formError, setFormError] = useState("");
-  const {removeBreadCrumb} = store();
   const navigate = useNavigate();
 
   const mutation = useMutation({
@@ -41,8 +41,6 @@ function Login() {
         secure: true,
         expires: 7
       });
-      
-      removeBreadCrumb("Login")
       navigate({to:"/"});
     },
     onError: (error: Error) => {
@@ -83,13 +81,12 @@ function Login() {
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <BreadCrumbLink
-                    link='/login/forgot-password'
-                    text='Forgot Password'
+                  <Link
+                    to='/login/forgot-password'
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </BreadCrumbLink>
+                  </Link>
                 </div>
                 <Input id="password" name='password' type="password" required />
               </Field>
@@ -99,7 +96,7 @@ function Login() {
                   Login with Google
                 </Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <BreadCrumbLink link="/login/create-account" text='Sign up'>Sign up</BreadCrumbLink>
+                  Don&apos;t have an account? <Link to="/login/create-account">Sign up</Link>
                 </FieldDescription>
               </Field>
               <FieldError>

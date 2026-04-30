@@ -20,9 +20,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { User } from "@/types/user"
 import avatarImage from "@/Seed-Avatar.jpg"
-import BreadCrumbLink from "./breadcrumb-link"
 import Cookies from "js-cookie"
-import { useNavigate, useRouter } from "@tanstack/react-router"
+import { Link, useNavigate, useRouter } from "@tanstack/react-router"
 import InfoPill from "./info-pill"
 
 export default function NavUser({
@@ -38,7 +37,6 @@ export default function NavUser({
     await router.invalidate({sync: true});
     navigate({to: "/login", reloadDocument: true});
   }
-  console.log(user.emailVerified);
 
   return (
         <DropdownMenu>
@@ -80,23 +78,23 @@ export default function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer">
-                <BreadCrumbLink link={`profile/${user.name}`} text="Profile" className="w-full">
+                <Link to={"/profile/$username"} params={{username: user.name}} className="w-full">
                   <div className="flex items-center justify-start gap-2">
                     <User2 />
                     Profile
                   </div>
-                </BreadCrumbLink>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup className={`${user.emailVerified && "hidden"}`}>
               <DropdownMenuItem className="cursor-pointer">
-                  <BreadCrumbLink link={`profile/verify-email`} text="Verify Email  " className="w-full">
+                  <Link to={"/profile/verify-email"} className="w-full">
                     <div className="flex items-center justify-start gap-2">
                       <MailQuestion />
                       Verify Email
                     </div>
-                  </BreadCrumbLink>
+                  </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </DropdownMenuGroup>

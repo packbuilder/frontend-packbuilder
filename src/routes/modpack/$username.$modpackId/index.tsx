@@ -1,4 +1,4 @@
-import { BadgeCheck, Bookmark, BookmarkCheck, BookmarkIcon, Check, Download, Edit, ExternalLink, Gamepad, Gamepad2Icon, LogOut, Save, Settings, Trash2, TriangleAlert, Users, X } from "lucide-react";
+import { Bookmark, Check, Download, Edit, Gamepad, Save, Settings, Trash2, X } from "lucide-react";
 import modpackImage from "@/modpack.gif";
 import { createBookmark, deleteBookmark, deleteModpack, getBookmark, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
 import type { VersionMod } from "@/types/versionMod";
-import BreadCrumbLink from "@/components/breadcrumb-link";
-import { createFileRoute, redirect, useLoaderData, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
-import { ConflictState, ModLoader, SuggestionFilter, SuggestionState } from "@/types/enums";
+import { ModLoader, SuggestionFilter, SuggestionState } from "@/types/enums";
 import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
@@ -24,12 +23,10 @@ import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
 import { VersionModDisplay } from "@/components/modpack/mod-display";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
-import SuggestionCard from "@/components/suggestion/suggestion-display";
 import SuggestionInteractive from "@/components/suggestion/suggestion-display";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
@@ -63,7 +60,9 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
         queryFn: () => getBookmark(modpack.id.toString())
     })
 
-    return {curUser: user, modpack, queryClient, modData, minecraftVersions, suggestions, userBookmarked}
+    const breadcrumbs = ["Modpacks", modpack.name];
+
+    return {curUser: user, modpack, queryClient, modData, minecraftVersions, suggestions, userBookmarked, breadcrumbs}
   },
   component: ModpackView,
 })

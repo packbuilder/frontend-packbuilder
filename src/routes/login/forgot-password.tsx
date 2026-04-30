@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
+import { FieldGroup, Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { sendPasswordResetEmail, sendVerificationEmail } from '@/lib/api';
+import { sendPasswordResetEmail } from '@/lib/api';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
 import { MailSearch } from 'lucide-react';
@@ -10,6 +10,10 @@ import { useState, useEffect, type FormEvent } from 'react';
 
 export const Route = createFileRoute('/login/forgot-password')({
   component: RouteComponent,
+  loader: () => {
+    const breadcrumbs = ["Login", "Forgot Password"];
+    return {breadcrumbs}
+  }
 })
 
 function RouteComponent() {

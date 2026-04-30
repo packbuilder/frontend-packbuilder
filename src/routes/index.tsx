@@ -1,9 +1,7 @@
-import BreadCrumbLink from '@/components/breadcrumb-link';
 import ErrorMessage from '@/components/feedback/error-message';
 import SuccessMessage from '@/components/feedback/success-message';
 import { GlassCard } from '@/components/glass-card';
 import {ModpackCardLarge} from '@/components/modpack/modpack-card';
-import ToolbarTooltip from '@/components/toolbar-tooltip';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -25,16 +23,16 @@ import { useState, useRef, type FormEvent } from 'react';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute("/")({
-  loader: async ({
-    context: { queryClient, user: curUser }
-  }) => {
-    const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
-    const bookmarks = await queryClient.ensureQueryData(appQueries.userBookmarks(curUser));
-    const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
+    loader: async ({
+        context: { queryClient, user: curUser }
+    }) => {
+        const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
+        const bookmarks = await queryClient.ensureQueryData(appQueries.userBookmarks(curUser));
+        const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
 
-    return {curUser, modpacks, minecraftVersions, bookmarks};
-  },
-  component: Home,
+        return {curUser, modpacks, minecraftVersions, bookmarks};
+    },
+    component: Home,
 });
 
 function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, minecraftVersions: string[]}) {

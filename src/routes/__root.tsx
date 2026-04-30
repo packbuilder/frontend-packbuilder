@@ -35,12 +35,10 @@ function RootLayout() {
 }
 
 function ErrorComponent({ error }: { error: Error }) {
-  const {user} = Route.useRouteContext();
   return (
     <SignalRProvider>
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
-          <Header user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
               There was an error rendering this page :(
@@ -54,12 +52,10 @@ function ErrorComponent({ error }: { error: Error }) {
 }
 
 function NotFoundComponent() {
-  const {user} = Route.useRouteContext();
   return (
     <SignalRProvider>
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
-          <Header user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
               This page does not exist :(

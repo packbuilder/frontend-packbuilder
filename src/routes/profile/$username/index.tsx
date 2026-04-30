@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import pfp from "@/Seed-Avatar.jpg"
 import { Button } from "@/components/ui/button";
 import { Edit, Save, X } from "lucide-react";
@@ -10,21 +10,19 @@ import { useMemo, useRef, useState, type FormEvent } from "react";
 import { changeEmail, updateProfile } from '@/lib/api';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import { appQueries } from '@/hooks/appQueries';
-import SuggestionInteractive, { SuggestionDisplay } from '@/components/suggestion/suggestion-display';
+import { SuggestionDisplay } from '@/components/suggestion/suggestion-display';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import ModpackDisplay from '@/components/modpack/modpack-display';
 import DisplayContainer from '@/components/display-container';
 import { fallback, zodValidator } from '@tanstack/zod-adapter';
 import z from 'zod';
-import { ModLoader, SuggestionFilter, SuggestionState } from '@/types/enums';
+import { SuggestionFilter, SuggestionState } from '@/types/enums';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { VersionModDisplay } from '@/components/modpack/mod-display';
 import { Spinner } from '@/components/ui/spinner';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import ClearableCommandInput from "@/components/clearable-command-input";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { enumNameFromValue } from '@/lib/utils';
 import { changeEmailDtoSchema } from '@/types/dtos/changeEmailDto';
 
 const dataDisplaySchema = z.object({
@@ -47,8 +45,9 @@ export const Route = createFileRoute('/profile/$username/')({
 
     const userModpacks = await queryClient.ensureQueryData(appQueries.userModpacks(userData));
     const userSuggestions = await queryClient.ensureQueryData(appQueries.userSuggestions(userData));
+    const breadcrumbs = ["Profile", userData.name];
 
-    return {curUser, userData, userModpacks, userSuggestions, queryClient}
+    return {curUser, userData, userModpacks, userSuggestions, queryClient, breadcrumbs}
   },
   component: ProfileView,
 });
@@ -57,10 +56,8 @@ export const Route = createFileRoute('/profile/$username/')({
 
 function EditProfileDialog() {
   const {curUser} = Route.useLoaderData();
-  const [hideForm, setHideForm] = useState(true);
   const [isOpen, setOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const navigate = useNavigate({from: "/"});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
   const formRef = useRef(null);
 
@@ -154,6 +151,7 @@ function EditProfileDialog() {
                           />
                       </div>
                   </div>
+                  {errorMessage}
               </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">

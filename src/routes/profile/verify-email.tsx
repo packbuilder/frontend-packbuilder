@@ -15,8 +15,9 @@ export const Route = createFileRoute('/profile/verify-email')({
     }
 
     const status = await sendVerificationEmail(user.email); 
+    const breadcrumbs = ["Profile", "verify-email"];
 
-    return {curUser: user, status}
+    return {curUser: user, status, breadcrumbs}
   },
   component: RouteComponent,
 })

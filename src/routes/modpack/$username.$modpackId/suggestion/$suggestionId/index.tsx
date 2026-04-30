@@ -10,7 +10,7 @@ import { ConflictState, CurseForgeSearchFilter, ModAction, ModificationFilter, M
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 import InfoPill from "@/components/info-pill";
 import { Separator } from "@/components/ui/separator";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreateModificationDisplay, ModificationDisplay } from "@/components/suggestion/modification-display";
@@ -36,7 +36,7 @@ const addModSearchSchema = z.object({
     searchQuery: fallback(z.string(), "").default('')
 });
 
-export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggestionId/view')({
+export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$suggestionId/')({
     validateSearch: zodValidator(addModSearchSchema),
     loaderDeps: ({search: {searchQuery, page, sortMethod}}) => ({
         searchQuery,
@@ -51,12 +51,12 @@ export const Route = createFileRoute('/suggestion/$username/$modpackId/$suggesti
             throw redirect({to: "/"});
         }
 
-        return { curUser: user, suggestion, modpack };
+        const breadcrumbs = ["Modpacks", modpack.name, "Suggestions", `${suggestion.username}'s suggestion`]
+
+        return { curUser: user, suggestion, modpack, breadcrumbs };
     },
     component: SuggestionView,
 });
-
-// TODO: Style all components for all screen sizes.
 
 function PaginationButtons({ paginationData, curPage } : { 
     paginationData: CurseForgePagination | undefined, 

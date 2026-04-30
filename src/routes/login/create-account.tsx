@@ -1,4 +1,3 @@
-import BreadCrumbLink from '@/components/breadcrumb-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field'
@@ -8,12 +7,16 @@ import { createAccount, sendVerificationEmail } from '@/lib/api'
 import { createUserDtoSchema } from '@/types/dtos/createProfileDto'
 import { PopoverArrow } from '@radix-ui/react-popover'
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
-import { Check, ClipboardCopy, MailSearch } from 'lucide-react'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { MailSearch } from 'lucide-react'
 import { useEffect, useState, type FormEvent} from 'react'
 
 export const Route = createFileRoute('/login/create-account')({
   component: RouteComponent,
+  loader: () => {
+    const breadcrumbs = ["Login", "Create Account"];
+    return {breadcrumbs}
+  },
 })
 
 function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: FormEvent<HTMLFormElement>) => void} & React.ComponentProps<typeof Card>) {
@@ -67,7 +70,7 @@ function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: For
                   Sign up with Google
                 </Button>
                 <FieldDescription className="px-6 text-center">
-                  Already have an account? <BreadCrumbLink link="/login" text='Login'>Sign in</BreadCrumbLink>
+                  Already have an account? <Link to="/login">Sign in</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

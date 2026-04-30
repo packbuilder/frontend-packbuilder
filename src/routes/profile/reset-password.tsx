@@ -1,11 +1,10 @@
-import BreadCrumbLink from '@/components/breadcrumb-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { resetPassword } from '@/lib/api'
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
 import { MailSearch } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
@@ -29,7 +28,9 @@ export const Route = createFileRoute('/profile/reset-password')({
       throw redirect({to: "/"});
     }
 
-    return;
+    const breadcrumbs = ["Profile", "reset-password"];
+
+    return {breadcrumbs};
   },
   component: RouteComponent,
 })
@@ -42,11 +43,11 @@ function SuccessCard() {
         You have successfully changed your password! You can now login using your new password
       </CardDescription>
       <CardContent className='flex items-center justify-center'>
-        <BreadCrumbLink text='Login' link='/login'>
+        <Link to='/login'>
           <Button variant={"default"}>
             Login
           </Button>
-        </BreadCrumbLink>
+        </Link>
       </CardContent>
     </Card>
   )

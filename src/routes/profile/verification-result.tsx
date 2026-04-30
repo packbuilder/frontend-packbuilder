@@ -1,7 +1,6 @@
-import BreadCrumbLink from '@/components/breadcrumb-link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-router'
 import { fallback, zodValidator } from '@tanstack/zod-adapter';
 import { MailCheck, MailX } from 'lucide-react';
 import { useEffect } from 'react';
@@ -23,7 +22,9 @@ export const Route = createFileRoute('/profile/verification-result')({
       throw redirect({to: "/"});
     }
 
-    return {user, queryClient};
+    const breadcrumbs = ["Profile", "verify-email"];
+
+    return {user, queryClient, breadcrumbs};
   },
   component: RouteComponent,
 })
@@ -59,17 +60,17 @@ function RouteComponent() {
       <CardContent className="flex items-center justify-center flex-col text-center gap-2">
         {
             status === "success" ? 
-              <BreadCrumbLink link='/' text='Home'>
+              <Link to='/'>
                 <Button variant='default'>
                   <span>Home</span>
                 </Button>
-              </BreadCrumbLink>
+              </Link>
              :
-              <BreadCrumbLink link='/profile/verify-email' text='Verify Email'>
+              <Link to='/profile/verify-email'>
                 <Button variant={"default"}>
                   <span>Request new verification email</span>
                 </Button>
-              </BreadCrumbLink>
+              </Link>
         }
       </CardContent>
     </Card>
