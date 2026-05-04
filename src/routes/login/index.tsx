@@ -14,8 +14,10 @@ export const Route = createFileRoute('/login/')({
     if(context.user) {
       throw redirect({to:"/"})
     }
-    const breadcrumbs = ["Login"];
-    
+  },
+  loader: () => {
+    const breadcrumbs = [{text:"Login"}];
+
     return {breadcrumbs}
   }
 });

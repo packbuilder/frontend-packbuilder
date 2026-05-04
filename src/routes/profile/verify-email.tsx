@@ -15,7 +15,7 @@ export const Route = createFileRoute('/profile/verify-email')({
     }
 
     const status = await sendVerificationEmail(user.email); 
-    const breadcrumbs = ["Profile", "verify-email"];
+    const breadcrumbs = [{text: "Profile"}, {text: "verify-email"}];
 
     return {curUser: user, status, breadcrumbs}
   },

@@ -51,7 +51,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$
             throw redirect({to: "/"});
         }
 
-        const breadcrumbs = ["Modpacks", modpack.name, "Suggestions", `${suggestion.username}'s suggestion`]
+        const breadcrumbs = [{text: "Modpacks"}, {text: modpack.name, link: `/modpack/${modpack.user.name}/${modpack.id}`}, {text: "Suggestions"}, {text: `${suggestion.username}'s suggestion`, link: `/modpack/${modpack.user.name}/${modpack.id}/suggestion/${suggestion.id}`}]
 
         return { curUser: user, suggestion, modpack, breadcrumbs };
     },

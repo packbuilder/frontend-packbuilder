@@ -28,7 +28,7 @@ export const Route = createFileRoute('/profile/reset-password')({
       throw redirect({to: "/"});
     }
 
-    const breadcrumbs = ["Profile", "reset-password"];
+    const breadcrumbs = [{text: "Profile"}, {text: "reset-password"}];
 
     return {breadcrumbs};
   },

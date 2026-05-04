@@ -3,14 +3,17 @@ import { Button } from "./ui/button";
 import { Link, useMatches } from "@tanstack/react-router";
 import NavUser from "./header-profile";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./ui/breadcrumb";
+import type { BreadcrumbData } from "@/types/breadcrumb";
 
 function BreadCrumbs() {
     const matches = useMatches();
 
-    const filteredMatches = matches.filter(match => match.loaderData);
+    const filteredMatches = matches.filter(match => {
+        return match.loaderData;
+
+    });
     // Had to cast because typescript couldnt infer its type
-    const {breadcrumbs} = filteredMatches[0].loaderData as unknown as {breadcrumbs?: [string]};
-    // TODO: Fix text sizing, also maybe put inside of carousel instead of using scroll overflow management
+    const {breadcrumbs} = filteredMatches[0].loaderData as unknown as {breadcrumbs?: [BreadcrumbData]};
     return (
         <Breadcrumb className="max-md:overflow-x-scroll max-w-3/4 no-wrap">
             <BreadcrumbList className="max-w-full flex-nowrap">
@@ -22,13 +25,20 @@ function BreadCrumbs() {
                 </BreadcrumbLink>
             </BreadcrumbItem>
 
-            {breadcrumbs?.map((breadcrumb: string, index: number) => (
+            {breadcrumbs?.map((breadcrumb: BreadcrumbData, index: number) => (
                 <>
-                <BreadcrumbSeparator />
-
-                <BreadcrumbItem key={index} className="w-fit text-nowrap">
-                    {breadcrumb}
-                </BreadcrumbItem>
+                    <BreadcrumbSeparator key={index}/>
+                    {!breadcrumb.link ? 
+                        <BreadcrumbItem key={`${index}s`} className="w-fit text-nowrap">
+                            {breadcrumb.text}
+                        </BreadcrumbItem>
+                        :
+                        <BreadcrumbItem key={`${index}s`} className="w-fit text-nowrap">
+                            <Link to={breadcrumb.link}>
+                                <span className="text-white">{breadcrumb.text}</span>
+                            </Link>
+                        </BreadcrumbItem>
+                    }
                 </>
             ))}
             </BreadcrumbList>

@@ -1,8 +1,3 @@
-export type BreadCrumb = {
-    text: string,
-    link: string
-}
-
 export enum ModPlatform {
     Thunderstore = "0",
     CurseForge = "1"

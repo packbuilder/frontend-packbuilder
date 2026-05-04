@@ -60,7 +60,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
         queryFn: () => getBookmark(modpack.id.toString())
     })
 
-    const breadcrumbs = ["Modpacks", modpack.name];
+    const breadcrumbs = [{text: "Modpacks"}, {text: modpack.name, link: `/modpack/${modpack.user.name}/${modpack.id}`}];
 
     return {curUser: user, modpack, queryClient, modData, minecraftVersions, suggestions, userBookmarked, breadcrumbs}
   },
@@ -108,7 +108,7 @@ function RenameModpackDialog({curName} : {curName: string}) {
     
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger>
+            <DialogTrigger className="cursor-pointer">
                 <p className="text-left flex items-center justify-center gap-2 font-normal"><Edit/> Rename modpack</p>
             </DialogTrigger>
             <DialogContent className="p-4 bg-popover rounded-md z-100" onOpenAutoFocus={(e) => {
@@ -461,8 +461,8 @@ export default function ModpackView() {
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img src={modpackImage} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
-                <div className="flex flex-col min-md:items-start items-center justify-center gap-3">
-                    <h1 className="font-bold line-clamp-1">{modpack.name}</h1>
+                <div className="flex flex-col min-md:items-start items-center justify-center gap-3 max-w-3/4">
+                    <h1 className="font-bold w-full truncate">{modpack.name}</h1>
                     <div className="flex justify-center items-center text-lg gap-1 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />
                         <h2 className="text-[var(--text-secondary)]">

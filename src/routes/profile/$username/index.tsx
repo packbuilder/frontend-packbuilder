@@ -45,7 +45,7 @@ export const Route = createFileRoute('/profile/$username/')({
 
     const userModpacks = await queryClient.ensureQueryData(appQueries.userModpacks(userData));
     const userSuggestions = await queryClient.ensureQueryData(appQueries.userSuggestions(userData));
-    const breadcrumbs = ["Profile", userData.name];
+    const breadcrumbs = [{text: "Profile"}, {text: userData.name, link: `/profile/${userData.name}/`}];
 
     return {curUser, userData, userModpacks, userSuggestions, queryClient, breadcrumbs}
   },
