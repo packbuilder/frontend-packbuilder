@@ -6,6 +6,7 @@ import {
 } from "lucide-react"
 import {
   Avatar,
+  AvatarBadge,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
@@ -45,10 +46,10 @@ export default function NavUser({
               <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
                 <AvatarImage  src={avatarImage} alt={user.avatar} />
                 <AvatarFallback className="rounded-lg">{user.name.slice(0, 1)}</AvatarFallback>
+                <AvatarBadge>
+                  <AlertTriangle className="size-3" />
+                </AvatarBadge>
               </Avatar>
-              <span className={`rounded-full bg-yellow-500 text-black p-1 absolute right-0 bottom-0 ${user.emailVerified && "hidden"}`}>
-                <AlertTriangle className="size-3" />
-              </span>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent
