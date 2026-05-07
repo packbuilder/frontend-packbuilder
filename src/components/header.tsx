@@ -4,6 +4,7 @@ import { Link, useMatches } from "@tanstack/react-router";
 import NavUser from "./header-profile";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./ui/breadcrumb";
 import type { BreadcrumbData } from "@/types/breadcrumb";
+import React from "react";
 
 function BreadCrumbs() {
     const matches = useMatches();
@@ -26,20 +27,20 @@ function BreadCrumbs() {
             </BreadcrumbItem>
 
             {breadcrumbs?.map((breadcrumb: BreadcrumbData, index: number) => (
-                <>
-                    <BreadcrumbSeparator key={index}/>
+                <React.Fragment key={index}>
+                    <BreadcrumbSeparator/>
                     {!breadcrumb.link ? 
-                        <BreadcrumbItem key={`${index}s`} className="w-fit text-nowrap">
+                        <BreadcrumbItem className="w-fit text-nowrap">
                             {breadcrumb.text}
                         </BreadcrumbItem>
                         :
-                        <BreadcrumbItem key={`${index}s`} className="w-fit text-nowrap">
+                        <BreadcrumbItem className="w-fit text-nowrap">
                             <Link to={breadcrumb.link}>
                                 <span className="text-white">{breadcrumb.text}</span>
                             </Link>
                         </BreadcrumbItem>
                     }
-                </>
+                </React.Fragment>
             ))}
             </BreadcrumbList>
         </Breadcrumb>

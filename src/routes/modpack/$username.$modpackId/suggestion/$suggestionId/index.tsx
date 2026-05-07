@@ -6,7 +6,7 @@ import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/rea
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
-import { ConflictState, CurseForgeSearchFilter, ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
+import { ConflictState, CurseForgeSearchFilter, ImageType, ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 import InfoPill from "@/components/info-pill";
 import { Separator } from "@/components/ui/separator";
@@ -106,7 +106,7 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
             const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
             const status = await updateSuggestion(modpackId, body, parseInt(suggestionId));
 
-            if(!status || status < 200 || status > 200) {
+            if(!status || status < 200 || status > 299) {
                 throw new Error("There was a problem with updating this suggestion");
             }
         },
@@ -395,7 +395,7 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
         mutationFn: async () => {
             const status = await verifySuggestion(suggestion.id, modpackId);
 
-            if(!status || status < 200 || status > 200 ) {
+            if(!status || status < 200 || status > 299 ) {
                 throw new Error("Problem with verifying suggestion.");
             }
         },
@@ -538,10 +538,10 @@ export default function SuggestionView() {
     return <section className="flex flex-col items-center max-w-full justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
         <header className="flex flex-col justify-between items-center gap-6  min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
-                <img src={placeholder} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
+                <img src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3">
                     <h1 className="font-bold line-clamp-1 overflow-visible">{suggestion.username}'s suggestion</h1>
-                    <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Repellat tempore, vero autem nesciunt a quibusdam doloremque reiciendis ut recusandae maiores perferendis non? Accusantium excepturi quaerat provident mollitia error nam consequuntur. {suggestion.memo}</h3> 
+                    <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3"> {suggestion.memo}</h3> 
                     <InfoPill>     
                         {
                             suggestion.state.toString() === SuggestionState.Unverified ?     

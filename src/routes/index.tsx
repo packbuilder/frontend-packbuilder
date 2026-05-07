@@ -2,9 +2,12 @@ import ErrorMessage from '@/components/feedback/error-message';
 import SuccessMessage from '@/components/feedback/success-message';
 import { GlassCard } from '@/components/glass-card';
 import {ModpackCardLarge} from '@/components/modpack/modpack-card';
+import SelectAvatarDialog from '@/components/SelectAvatarDialog';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription  } from '@/components/ui/dialog';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { appQueries } from '@/hooks/appQueries';
@@ -12,10 +15,9 @@ import { createModpack, importModpack } from '@/lib/api';
 import { enumNameFromValue } from '@/lib/utils';
 import type { Bookmark } from '@/types/bookmark';
 import { createModpackDtoSchema } from '@/types/dtos/createModpackDto';
-import { ModLoader } from '@/types/enums';
+import { ImageType, ModLoader } from '@/types/enums';
 import type { Modpack } from '@/types/modpack';
 import type { User } from '@/types/user';
-import { DialogDescription } from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Plus, Save, X } from 'lucide-react';
@@ -43,14 +45,16 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
 
     const [minecraftVersion, setMinecraftVersion] = useState(minecraftVersions[0]);
     const [modLoader, setModLoader] = useState(ModLoader.Forge.toString());
+    const [avatar, setAvatar] = useState("modpack_avatar_1.gif");
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const modpackName = formData.get("name") as string;
-            const body = createModpackDtoSchema.parse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion})
+            const avatarStock = formData.get("avatarStock") as string;
+            const body = createModpackDtoSchema.parse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion, imageValue: avatarStock, imageType: ImageType.Stock})
             const status = await createModpack(body);
 
-            if(!status || status < 200 || status > 200) {
+            if(!status || status < 200 || status > 299) {
                 throw new Error("There was a problem with creating this modpack.");
             }
         },
@@ -90,51 +94,68 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
                     Create a Modpack from scratch!
                 </DialogTitle>
                 <DialogDescription className='text-md text-gray-400 text-left'>
-                    This will create an empty modpack.
+                    Set the details for your modpack and start packbuilding today!
                 </DialogDescription>
             </DialogHeader>
             <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-center gap-2" onSubmit={handleSubmit}>
-                <div className="flex flex-col justify-center items-start gap-2">
-                    <h2 className="font-bold text-lg">Modpack name</h2>
+                <FieldGroup>
+                    <Field>
+                        <FieldLabel htmlFor='avatarStock'><h2>Modpack avatar</h2></FieldLabel>
+                        <div className='flex items-center justify-start gap-2'>
+                            <div className='size-fit'>
+                                <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
+                                    <AvatarImage src={`/modpackAvatars/${avatar}`} alt="Modpack Picture" />
+                                    <AvatarFallback>ER</AvatarFallback>
+                                </Avatar>
+                            </div>
+                            <Input id='avatarStock' name='avatarStock' value={avatar} readOnly hidden/>
+                            <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} avatarType={"modpackAvatars"} />
+                        </div>
+                    </Field>
+                </FieldGroup>
+                <Field className='w-fit'>
+                    <FieldLabel htmlFor='name'><h2 className="font-bold text-lg">Modpack name</h2></FieldLabel>
                     <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
-                </div>
-                <h2 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h2>
-                <div className='flex items-center justify-center gap-2'>
-                    <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                            <SelectValue placeholder="Select game version..."/>
-                        </SelectTrigger> 
-                        <SelectContent className="bg-white text-black" side="bottom">
-                            <SelectGroup>     
-                                <SelectLabel>Select version</SelectLabel>
-                                {
-                                    minecraftVersions?.map((version, index) => {
-                                        return <SelectItem className="cursor-pointer" key={index} value={version}>
-                                            {version}
-                                        </SelectItem>
-                                    })
-                                }
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                    <Select value={modLoader.toString()} onValueChange={setModLoader}>
-                        <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                            <SelectValue placeholder="Select game version..."/>
-                        </SelectTrigger> 
-                        <SelectContent className="bg-white text-black" side="bottom">
-                            <SelectGroup>     
-                                <SelectLabel>Select mod loader</SelectLabel>
-                                {
-                                    Object.values(ModLoader).map((modLoader, index) => {
-                                        return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
-                                            {enumNameFromValue(ModLoader, modLoader)}
-                                        </SelectItem>
-                                    })
-                                }
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
+                </Field>
+                <Field>
+                    <FieldLabel><h2 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h2></FieldLabel>
+                    <div className='flex items-center justify-start gap-2'>
+                        <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
+                            <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                                <SelectValue placeholder="Select game version..."/>
+                            </SelectTrigger> 
+                            <SelectContent className="bg-white text-black" side="bottom">
+                                <SelectGroup>     
+                                    <SelectLabel>Select version</SelectLabel>
+                                    {
+                                        minecraftVersions?.map((version, index) => {
+                                            return <SelectItem className="cursor-pointer" key={index} value={version}>
+                                                {version}
+                                            </SelectItem>
+                                        })
+                                    }
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                        <Select value={modLoader.toString()} onValueChange={setModLoader}>
+                            <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                                <SelectValue placeholder="Select game version..."/>
+                            </SelectTrigger> 
+                            <SelectContent className="bg-white text-black" side="bottom">
+                                <SelectGroup>     
+                                    <SelectLabel>Select mod loader</SelectLabel>
+                                    {
+                                        Object.values(ModLoader).map((modLoader, index) => {
+                                            return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
+                                                {enumNameFromValue(ModLoader, modLoader)}
+                                            </SelectItem>
+                                        })
+                                    }
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </Field>
             </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
@@ -160,7 +181,7 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
         mutationFn: async (formData: FormData) => {
             const status = await importModpack(formData);
 
-            if(!status || status < 200 || status > 200) {
+            if(!status || status < 200 || status > 299) {
                 throw new Error("There was a problem with importing your modpack.");
             }
         },
@@ -249,11 +270,11 @@ function Home() {
             </div>
             {modpacks && 
                 <div className='flex flex-col items-center justify-center max-w-3/5 w-fit'>
-                    <Carousel className="flex justify-center items-center w-full">
+                    <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
                         <CarouselContent className='py-6 px-2'>
                             {
                                 modpacks.map((modpack: Modpack, index: number) => {
-                                    return <CarouselItem key={index} className='flex items-center justify-center min-md:basis-1/2'>
+                                    return <CarouselItem key={index} className={`flex items-center justify-center ${modpacks.length > 1 ? "min-md:basis-1/2" : ""}`}>
                                         <ModpackCardLarge modpack={modpack} key={index}/>
                                     </CarouselItem>
                                 })
@@ -280,11 +301,11 @@ function Home() {
             </div>
             {bookmarks && 
                 <div className='flex flex-col items-center justify-center max-w-3/5 w-fit'>
-                    <Carousel className="flex justify-center items-center w-full">
+                    <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
                         <CarouselContent className='py-6 px-2'>
                             {
                                 bookmarks.map((bookmark: Bookmark, index: number) => {
-                                    return <CarouselItem key={index} className='flex items-center justify-center'>
+                                    return <CarouselItem key={index} className={`flex items-center justify-center ${bookmarks.length > 1 ? "min-md:basis-1/2" : ""}`}>
                                         <ModpackCardLarge modpack={bookmark.modpack} key={index}/>
                                     </CarouselItem>
                                 })

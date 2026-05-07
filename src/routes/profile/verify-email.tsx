@@ -30,7 +30,7 @@ function RouteComponent() {
     mutationFn: async () => {
       const status = await sendVerificationEmail(curUser.email);
 
-      if (!status || status < 200 || status > 200) {
+      if (!status || status < 200 || status > 299) {
         throw new Error("Unable to send verification email.");
       }
     },

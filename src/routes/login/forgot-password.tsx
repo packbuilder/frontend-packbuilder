@@ -24,7 +24,7 @@ function RouteComponent() {
       const email = formData.get("email") as string;
       const status = await sendPasswordResetEmail(email);
 
-      if (!status || status < 200 || status > 200) {
+      if (!status || status < 200 || status > 299) {
         throw new Error("Unable to send verification email.");
       }
     },

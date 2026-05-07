@@ -123,7 +123,7 @@ export async function getUserById(userId: number) {
                 'Authorization': `Bearer ${token}`,
             },
         });
-
+       
         const data = userSchema.parse(response.data);
         return data;
     } catch (error) {
@@ -373,6 +373,8 @@ export async function createModpack(body: CreateModpackDto) {
                 'Authorization': `Bearer ${token}`,
             },
         });
+
+        console.log(response.status)
 
         return response.status;
     } catch (error) {

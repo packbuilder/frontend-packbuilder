@@ -1,7 +1,7 @@
 import type { Suggestion } from "@/types/suggestion";
 import { CloudAlert, CloudCheck, CloudCog, CirclePlus, CircleMinus, PackageOpen, Tag, Check, Trash2, X } from "lucide-react";
 import placeholderAvatar from "@/Seed-Avatar.jpg"
-import { ModAction, ModLoader, SuggestionState } from "@/types/enums";
+import { ImageType, ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import { Separator } from "../ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
 import InfoPill from "../info-pill";
@@ -22,7 +22,7 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
     return <div className="w-full bg-[var(--surface-1)]">
             <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)]">
                 <div className="flex items-center justify-center min-md:row-span-3">
-                    <DisplayImage src={placeholderAvatar} />
+                    <DisplayImage src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt="logo" />
                 </div>
                 <header className="flex flex-col gap-2 w-full justify-center min-md:col-start-2 min-md:row-span-2">
                     <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">

@@ -1,20 +1,17 @@
+import SelectAvatarDialog from '@/components/SelectAvatarDialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { createAccount, sendVerificationEmail } from '@/lib/api'
-import { enumNameFromValue } from '@/lib/utils'
 import { createUserDtoSchema } from '@/types/dtos/createProfileDto'
-import type { ModLoader } from '@/types/enums'
 import { PopoverArrow } from '@radix-ui/react-popover'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { MailSearch, Save, SquareUserRound, UserRoundPlus, X } from 'lucide-react'
-import type { Select } from 'radix-ui'
-import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction} from 'react'
+import { MailSearch } from 'lucide-react'
+import { useEffect, useState, type FormEvent} from 'react'
 
 export const Route = createFileRoute('/login/create-account')({
   component: RouteComponent,
@@ -48,7 +45,7 @@ function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: For
                   </Avatar>
                 </div>
                 <Input id='avatar' name='avatar' value={avatar} readOnly hidden/>
-                <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} />
+                <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} avatarType={"profileAvatars"} />
               </div>
             </Field>
             <Field>
@@ -100,49 +97,6 @@ function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: For
   )
 }
 
-function SelectAvatarDialog({curAvatar, setAvatar} : {curAvatar: string, setAvatar: Dispatch<SetStateAction<string>>}) {
-  const [isOpen, setOpen] = useState(false);
-  const [avatars, setAvatars] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch("/profileAvatars/manifest.json")
-     .then(res => res.json())
-      .then(value => setAvatars(value))
-        .catch((err: Error) => console.error(err.message))
-  }, []);
-
-  return <Dialog open={isOpen} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-            <Button variant={"outline"} className='size-fit'>
-                Select your avatar <SquareUserRound />
-            </Button>   
-        </DialogTrigger>
-        <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center w-9/10">
-            <DialogHeader className="w-full px-2 text-left">
-                <DialogTitle>Select your avatar</DialogTitle>
-                <DialogDescription>Choose between the stock profile pictures below.</DialogDescription>
-            </DialogHeader>
-            <div className='grid grid-cols-3 min-md:grid-cols-4 gap-4 max-sm:overflow-y-scroll p-2 w-full'>
-              {
-                avatars.map((value: string, index: number) => {
-                  return <Avatar className={`${curAvatar === value ? "outline-blue-500 outline-3  " : ""} size-15 cursor-pointer`} key={index} onClick={() => setAvatar(value)}>
-                    <AvatarImage src={`/profileAvatars/${value}`} alt={`Image ${index}`}/>
-                    <AvatarFallback>ER</AvatarFallback>
-                  </Avatar>
-                })
-              }
-            </div>
-            <DialogFooter className="w-full px-2">
-                <div className="w-full flex flex-row justify-end items-center gap-2">
-                    <DialogClose asChild>
-                        <Button variant={"destructive"}>Close <X/></Button>
-                    </DialogClose>
-                </div>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-}
-
 // TODO: Add frontend timer to button.
 function VerifyEmailCard({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
@@ -154,7 +108,7 @@ function VerifyEmailCard({ email }: { email: string }) {
 
       console.log(status)
 
-      if (!status || status < 200 || status > 200) {
+      if (!status || status < 200 || status > 299) {
         throw new Error("Unable to send verification email.");
       }
     },
@@ -240,7 +194,7 @@ function RouteComponent() {
 
       const response = await createAccount(createUserDto);
 
-      if(!response || response.status < 200 || response.status > 200) {
+      if(!response || response.status < 200 || response.status > 299) {
         throw new Error("Problem with creating account");
       }
 

@@ -24,6 +24,7 @@ import avatarImage from "@/Seed-Avatar.jpg"
 import Cookies from "js-cookie"
 import { Link, useNavigate, useRouter } from "@tanstack/react-router"
 import InfoPill from "./info-pill"
+import { ImageType } from "@/types/enums"
 
 export default function NavUser({
   user,
@@ -44,7 +45,7 @@ export default function NavUser({
           <DropdownMenuTrigger asChild>
             <div className="relative">
               <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
-                <AvatarImage  src={avatarImage} alt={user.avatar} />
+                <AvatarImage src={user.imageType === ImageType.Stock ? `/profileAvatars/${user.imageValue}` : user.imageValue} alt={"user profile picture"} />
                 <AvatarFallback className="rounded-lg">{user.name.slice(0, 1)}</AvatarFallback>
                 <AvatarBadge>
                   <AlertTriangle className="size-3" />
@@ -60,8 +61,8 @@ export default function NavUser({
           >
             <DropdownMenuLabel className="p-0 font-normal flex items-start justify-center flex-col">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-10 w-10 rounded-lg">
-                  <AvatarImage src={avatarImage} alt={user.name}/>
+                <Avatar className="h-10 w-10 rounded-lg border-white/30 border-1">
+                  <AvatarImage src={user.imageType === ImageType.Stock ? `/profileAvatars/${user.imageValue}` : user.imageValue} alt={"user profile picture"}/>
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">

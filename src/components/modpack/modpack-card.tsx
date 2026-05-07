@@ -5,14 +5,12 @@ import { Button } from "../ui/button";
 import { File } from "lucide-react";
 import { GlassCard } from "../glass-card";
 import { Link } from "@tanstack/react-router";
+import { ImageType } from "@/types/enums";
 
 export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
-    return <Link to="/modpack/$username/$modpackId" params={{
-        username: modpack.user.name,
-        modpackId: modpack.id.toString()
-    }}>
+    return <Link to="/modpack/$username/$modpackId" params={{username: modpack.user.name, modpackId: modpack.id.toString()}}>
         <GlassCard className="size-fit max-w-45 flex flex-col items-center justify-center gap-2 p-2">
-            <img className="rounded w-40 h-45" src={modpackImage} alt="" />
+            <img className="rounded w-40 h-45" src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt={"user profile picture"} />
             <div className="flex flex-col text-center items-center justify-center w-3/4">
                 <h2 className="font-bold text-lg text-center w-full truncate">{modpack.name}</h2>
                 <p className="text-center text-md w-full truncate">By {modpack.user!.name}</p>

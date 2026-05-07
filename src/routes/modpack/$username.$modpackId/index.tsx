@@ -1,5 +1,4 @@
 import { Bookmark, Check, Download, Edit, Gamepad, Save, Settings, Trash2, X } from "lucide-react";
-import modpackImage from "@/modpack.gif";
 import { createBookmark, deleteBookmark, deleteModpack, getBookmark, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
-import { ModLoader, SuggestionFilter, SuggestionState } from "@/types/enums";
+import { ImageType, ModLoader, SuggestionFilter, SuggestionState } from "@/types/enums";
 import { Spinner } from "@/components/ui/spinner";
 import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, DialogFooter  } from "@/components/ui/dialog";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
@@ -80,7 +79,7 @@ function RenameModpackDialog({curName} : {curName: string}) {
             const newName = formData.get("newName") as string;
             const status = await updateModpack(modpackId, {name: newName});
 
-            if(!status || status < 200 || status > 200) {
+            if(!status || status < 200 || status > 299) {
                 throw new Error("Problem with updating modpack name");
             }
         },
@@ -214,7 +213,7 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
         mutationFn: async () => {
             const status = await deleteModpack(modpackId);
 
-            if(!status || status < 200 || status > 200 ) {
+            if(!status || status < 200 || status > 299 ) {
                 throw new Error("Unable to delete modpack.");
             }
         },
@@ -275,7 +274,7 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm cursor-default">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage className="size-full rounded-lg" src={modpackImage} alt={modpack.name} />
+                  <AvatarImage className="size-full rounded-lg border-white/30 aspect-square border-1" src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="text-left text-sm flex items-center">
@@ -460,8 +459,8 @@ export default function ModpackView() {
     return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
-                <img src={modpackImage} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
-                <div className="flex flex-col min-md:items-start items-center justify-center gap-3 max-w-3/4">
+                <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
+                <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-md:max-w-3/4 w-full">
                     <h1 className="font-bold w-full truncate">{modpack.name}</h1>
                     <div className="flex justify-center items-center text-lg gap-1 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />

@@ -51,3 +51,8 @@ export enum ModLoader {
     Quilt = "5",
     NeoForge = "6",
 }
+
+export enum ImageType {
+    Stock = "0",
+    Upload = "1"
+}

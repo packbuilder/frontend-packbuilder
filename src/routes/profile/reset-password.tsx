@@ -73,7 +73,7 @@ function RouteComponent() {
 
       const status = await resetPassword(userId, newPassword, token);
 
-      if (!status || status < 200 || status > 200) {
+      if (!status || status < 200 || status > 299) {
         throw new Error("Unable to reset password");
       }
     },
