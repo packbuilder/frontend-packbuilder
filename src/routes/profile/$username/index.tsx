@@ -17,7 +17,7 @@ import ModpackDisplay from '@/components/modpack/modpack-display';
 import DisplayContainer from '@/components/display-container';
 import { fallback, zodValidator } from '@tanstack/zod-adapter';
 import z from 'zod';
-import { SuggestionFilter, SuggestionState } from '@/types/enums';
+import { ImageType, SuggestionFilter, SuggestionState } from '@/types/enums';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
@@ -354,9 +354,9 @@ export default function ProfileView() {
   return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
       <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
           <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
-              <img src={pfp} alt={curUser?.avatar}  className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
+              <img className='size-40 border-white/30 border-1' src={user.imageType === ImageType.Stock ? `/profileAvatars/${user.imageValue}` : user.imageValue} alt={"user profile picture"} />
               <div className="flex flex-col min-md:items-start items-center justify-center gap-3">
-                    <h1 className="font-bold line-clamp-1">{curUser?.name}</h1>
+                    <h1 className="font-bold line-clamp-1">{user.name}</h1>
                     {curUser?.id === user.id && <div className="flex items-center justify-center gap-2">
                         <EditProfileDialog />
                         <ChangeEmailDialog />

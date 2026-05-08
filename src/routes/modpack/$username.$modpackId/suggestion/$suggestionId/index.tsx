@@ -536,11 +536,11 @@ export default function SuggestionView() {
     useSuggestionSubscription(suggestion.modpackId, suggestion.id);
 
     return <section className="flex flex-col items-center max-w-full justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
-        <header className="flex flex-col justify-between items-center gap-6  min-md:flex-row min-md:gap-6">
-            <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
+        <header className="flex flex-col justify-between items-center gap-6 min-md:flex-row min-md:gap-6">
+            <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between min-w-0">
                 <img src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
-                <div className="flex flex-col min-md:items-start items-center justify-center gap-3">
-                    <h1 className="font-bold line-clamp-1 overflow-visible">{suggestion.username}'s suggestion</h1>
+                <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-w-0">
+                    <h1 className="font-bold truncate w-full leading-normal">{suggestion.username}'s suggestion</h1>
                     <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3"> {suggestion.memo}</h3> 
                     <InfoPill>     
                         {
@@ -571,7 +571,7 @@ export default function SuggestionView() {
             </div>
             {
                 suggestion.userId === curUser?.id && 
-                <div className="flex justify-center items-center gap-2 flex-wrap">
+                <div className="flex justify-center items-center gap-2 flex-wrap max-w-60">
                     <UpdateSuggestionDialog suggestion={suggestion} />
                     <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />

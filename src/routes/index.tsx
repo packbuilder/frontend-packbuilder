@@ -50,8 +50,8 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const modpackName = formData.get("name") as string;
-            const avatarStock = formData.get("avatarStock") as string;
-            const body = createModpackDtoSchema.parse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion, imageValue: avatarStock, imageType: ImageType.Stock})
+            const imageValue = formData.get("stockAvatar") as string;
+            const body = createModpackDtoSchema.parse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion, imageValue, imageType: ImageType.Stock})
             const status = await createModpack(body);
 
             if(!status || status < 200 || status > 299) {
@@ -100,7 +100,7 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
             <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-center gap-2" onSubmit={handleSubmit}>
                 <FieldGroup>
                     <Field>
-                        <FieldLabel htmlFor='avatarStock'><h2>Modpack avatar</h2></FieldLabel>
+                        <FieldLabel htmlFor='stockAvatar'><h2>Modpack avatar</h2></FieldLabel>
                         <div className='flex items-center justify-start gap-2'>
                             <div className='size-fit'>
                                 <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
@@ -108,54 +108,54 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
                                     <AvatarFallback>ER</AvatarFallback>
                                 </Avatar>
                             </div>
-                            <Input id='avatarStock' name='avatarStock' value={avatar} readOnly hidden/>
+                            <Input id='stockAvatar' name='stockAvatar' value={avatar} readOnly hidden/>
                             <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} avatarType={"modpackAvatars"} />
                         </div>
                     </Field>
+                    <Field className='w-fit'>
+                        <FieldLabel htmlFor='name'><h2 className="font-bold text-lg">Modpack name</h2></FieldLabel>
+                        <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
+                    </Field>
+                    <Field>
+                        <FieldLabel><h2 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h2></FieldLabel>
+                        <div className='flex items-center justify-start gap-2'>
+                            <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
+                                <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                                    <SelectValue placeholder="Select game version..."/>
+                                </SelectTrigger> 
+                                <SelectContent className="bg-white text-black" side="bottom">
+                                    <SelectGroup>     
+                                        <SelectLabel>Select version</SelectLabel>
+                                        {
+                                            minecraftVersions?.map((version, index) => {
+                                                return <SelectItem className="cursor-pointer" key={index} value={version}>
+                                                    {version}
+                                                </SelectItem>
+                                            })
+                                        }
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <Select value={modLoader.toString()} onValueChange={setModLoader}>
+                                <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
+                                    <SelectValue placeholder="Select game version..."/>
+                                </SelectTrigger> 
+                                <SelectContent className="bg-white text-black" side="bottom">
+                                    <SelectGroup>     
+                                        <SelectLabel>Select mod loader</SelectLabel>
+                                        {
+                                            Object.values(ModLoader).map((modLoader, index) => {
+                                                return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
+                                                    {enumNameFromValue(ModLoader, modLoader)}
+                                                </SelectItem>
+                                            })
+                                        }
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </Field>
                 </FieldGroup>
-                <Field className='w-fit'>
-                    <FieldLabel htmlFor='name'><h2 className="font-bold text-lg">Modpack name</h2></FieldLabel>
-                    <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
-                </Field>
-                <Field>
-                    <FieldLabel><h2 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h2></FieldLabel>
-                    <div className='flex items-center justify-start gap-2'>
-                        <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
-                            <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                                <SelectValue placeholder="Select game version..."/>
-                            </SelectTrigger> 
-                            <SelectContent className="bg-white text-black" side="bottom">
-                                <SelectGroup>     
-                                    <SelectLabel>Select version</SelectLabel>
-                                    {
-                                        minecraftVersions?.map((version, index) => {
-                                            return <SelectItem className="cursor-pointer" key={index} value={version}>
-                                                {version}
-                                            </SelectItem>
-                                        })
-                                    }
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                        <Select value={modLoader.toString()} onValueChange={setModLoader}>
-                            <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                                <SelectValue placeholder="Select game version..."/>
-                            </SelectTrigger> 
-                            <SelectContent className="bg-white text-black" side="bottom">
-                                <SelectGroup>     
-                                    <SelectLabel>Select mod loader</SelectLabel>
-                                    {
-                                        Object.values(ModLoader).map((modLoader, index) => {
-                                            return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
-                                                {enumNameFromValue(ModLoader, modLoader)}
-                                            </SelectItem>
-                                        })
-                                    }
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </Field>
             </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
@@ -176,10 +176,23 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
     const queryClient = useQueryClient();
     const router = useRouter();
     const formRef = useRef(null);
+    const [avatar, setAvatar] = useState("modpack_avatar_1.gif");
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
-            const status = await importModpack(formData);
+            const payload = new FormData();
+            const file = formData.get("file") as File | null;
+            const imageValue = formData.get("stockAvatar") as string;
+
+            if(!file) {
+                throw new Error("You must upload a manifest.json file.");
+            }
+
+            payload.append("file", file);
+            payload.append("avatarDto.imageValue", imageValue);
+            payload.append("avatarDto.imageType", ImageType.Stock);
+
+            const status = await importModpack(payload);
 
             if(!status || status < 200 || status > 299) {
                 throw new Error("There was a problem with importing your modpack.");
@@ -230,6 +243,19 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
                 </DialogDescription>
             </DialogHeader>
             <form method="post" ref={formRef} id="import-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
+                <Field>
+                    <FieldLabel htmlFor='stockAvatar'><h2>Modpack avatar</h2></FieldLabel>
+                    <div className='flex items-center justify-start gap-2'>
+                        <div className='size-fit'>
+                            <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
+                                <AvatarImage src={`/modpackAvatars/${avatar}`} alt="Modpack Picture" />
+                                <AvatarFallback>ER</AvatarFallback>
+                            </Avatar>
+                        </div>
+                        <Input id='stockAvatar' name='stockAvatar' value={avatar} readOnly hidden/>
+                        <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} avatarType={"modpackAvatars"} />
+                    </div>
+                </Field>
                 <div className="flex flex-col justify-center items-start gap-2">
                     <h2 className="font-bold text-md">Upload your manifest.json here</h2>
                     <Input className='' id="file-upload" type="file" name="file" accept='.json'/>
@@ -269,7 +295,7 @@ function Home() {
                 </div>
             </div>
             {modpacks && 
-                <div className='flex flex-col items-center justify-center max-w-3/5 w-fit'>
+                <div className='flex flex-col items-center justify-center max-w-3/5 min-md:max-w-115 w-fit'>
                     <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
                         <CarouselContent className='py-6 px-2'>
                             {
@@ -300,7 +326,7 @@ function Home() {
                 <h1 className="text-3xl font-bold p-2">Your Bookmarks</h1>
             </div>
             {bookmarks && 
-                <div className='flex flex-col items-center justify-center max-w-3/5 w-fit'>
+                <div className='flex flex-col items-center justify-center max-w-3/5 min-md:max-w-115 w-fit'>
                     <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
                         <CarouselContent className='py-6 px-2'>
                             {

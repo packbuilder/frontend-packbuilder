@@ -23,7 +23,7 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
             }
         },
         onSuccess: async () => {
-            navigate({to: "/"});
+            navigate({to: suggestion.modpack ? `/modpack/${suggestion.modpack.user.name}/${modpack.id}` : "/"})
 
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(modpack.id.toString(), suggestion.id.toString()).queryKey,
@@ -47,8 +47,8 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">
             <DialogHeader className="mt-4 flex justify-center items-center">
-                <DialogTitle className="font-bold text-left"><h2>Are you sure you want do delete this suggestion?</h2></DialogTitle>
-                <DialogDescription className="text-left"><p>Doing so is irriversable and will delete all data related to your suggestion.</p></DialogDescription>
+                <DialogTitle className="font-bold text-left">Are you sure you want do delete this suggestion?</DialogTitle>
+                <DialogDescription className="text-left">Doing so is irriversable and will delete all data related to your suggestion.</DialogDescription>
             </DialogHeader>
             <DialogFooter className="w-full flex-col justify-center items-start">
                 <Button variant={"default"} onClick={() => mutation.mutate()}>Delete suggestion <Check /></Button>

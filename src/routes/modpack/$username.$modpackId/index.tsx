@@ -460,8 +460,8 @@ export default function ModpackView() {
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
-                <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-md:max-w-3/4 w-full">
-                    <h1 className="font-bold w-full truncate">{modpack.name}</h1>
+                <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-md:max-w-3/4 w-full min-w-0">
+                    <h1 className="font-bold w-full truncate leading-normal">{modpack.name}</h1>
                     <div className="flex justify-center items-center text-lg gap-1 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />
                         <h2 className="text-[var(--text-secondary)]">
@@ -474,7 +474,7 @@ export default function ModpackView() {
                 </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 flex-wrap max-w-60">
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
                 <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>

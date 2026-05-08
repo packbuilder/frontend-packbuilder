@@ -43,7 +43,7 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
             return response.suggestionId
         },
         onSuccess: async (suggestionId: number) => {
-            navigate({to: `/suggestion/${curUser.name}/${modpack.id}/${suggestionId}/edit`})
+            navigate({to: `/modpack/${modpack.user.name}/${modpack.id}/suggestion/${suggestionId}`})
             
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
