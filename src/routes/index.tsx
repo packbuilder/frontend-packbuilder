@@ -320,6 +320,15 @@ function Home() {
                 </div>
             }
 
+            {
+                !modpacks && 
+                <GlassCard className='size-45 flex items-center justify-center'>
+                    <h2 className='text-lg text-center'>
+                        Log in to create modpacks!
+                    </h2>
+                </GlassCard>  
+            }
+
         </div>
        <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
             <div className="flex flex-col justify-around items-center mb-4">
@@ -349,6 +358,15 @@ function Home() {
                         }
                     </Carousel>
                 </div>
+            }
+
+            {
+                !bookmarks && 
+                <GlassCard className='size-45 flex items-center justify-center'>
+                    <h2 className='text-lg text-center'>
+                        Log in to bookmark modpacks!
+                    </h2>
+                </GlassCard>  
             }
 
         </div>

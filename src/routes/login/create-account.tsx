@@ -182,7 +182,7 @@ function RouteComponent() {
     mutationFn: async (formData: FormData) => {
       const username = formData.get("username") as string;
       const email = formData.get("email") as string;
-      const avatar = formData.get("avatar")
+      const avatar = formData.get("avatar") as string;
       const password = formData.get("password") as string;
       const confirmPassword = formData.get("confirmPassword") as string;
 
@@ -190,7 +190,7 @@ function RouteComponent() {
         throw new Error("Your password does not match your confirm password.")
       }
 
-      const createUserDto = createUserDtoSchema.parse({name: username, email, password})
+      const createUserDto = createUserDtoSchema.parse({name: username, email, password, imageType:"0", imageValue: avatar})
 
       const response = await createAccount(createUserDto);
 
