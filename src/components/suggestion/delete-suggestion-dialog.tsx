@@ -23,7 +23,7 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
             }
         },
         onSuccess: async () => {
-            navigate({to: suggestion.modpack ? `/modpack/${suggestion.modpack.user.name}/${modpack.id}` : "/"})
+            navigate({to: `/modpack/${modpack.user.name}/${modpack.id}`});
 
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(modpack.id.toString(), suggestion.id.toString()).queryKey,
