@@ -73,7 +73,7 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
     return <Dialog open={isOpen} onOpenChange={setOpen}>
         <DialogTrigger asChild>
             <Button variant={"outline"}>
-                <UserRoundPlus />
+                Create suggestion <UserRoundPlus />
             </Button>   
         </DialogTrigger>
         <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center w-9/10">
