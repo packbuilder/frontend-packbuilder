@@ -3,7 +3,6 @@ import { ImageType } from "../enums";
 
 export const updateProfileDtoSchema = z.object({
     name: z.string().optional(),
-    password: z.nullable(z.string()).optional(),
     imageValue: z.string().optional(),
     imageType: z.enum(ImageType).transform(Number).optional()
 });

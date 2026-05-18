@@ -496,7 +496,7 @@ export async function changeEmail(body: ChangeEmailDto) {
     const token = getUserToken();
     
     try {
-        const response = await api.put(`/email-reset`, body, {
+        const response = await api.post(`/email-reset`, body, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },

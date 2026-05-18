@@ -22,7 +22,7 @@ export const Route = createFileRoute('/profile/verification-result')({
       throw redirect({to: "/"});
     }
 
-    const breadcrumbs = [{text: "Profile"}, {text: "verify-email"}];
+    const breadcrumbs = [{text: "verify-email"}];
 
     return {user, queryClient, breadcrumbs};
   },

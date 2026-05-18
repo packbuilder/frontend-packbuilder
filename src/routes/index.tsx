@@ -1,3 +1,4 @@
+import { AlertButton } from '@/components/alert-button';
 import ErrorMessage from '@/components/feedback/error-message';
 import SuccessMessage from '@/components/feedback/success-message';
 import { GlassCard } from '@/components/glass-card';
@@ -288,10 +289,14 @@ function Home() {
             <div className="flex flex-col justify-around items-center mb-4">
                 <h1 className="text-3xl font-bold p-2">Your Modpacks</h1>
                 <div className='flex items-center justify-center gap-2'>
-                    {curUser && minecraftVersions && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
-                    {curUser && <ImportModpackDialog curUser={curUser} />}
-
-                    {!curUser && <Button onClick={() => toast("You must be logged in to create a modpack.")} variant={"outline"}>Log in to create modpacks</Button>}
+                    {curUser && minecraftVersions && curUser.emailVerified && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
+                    {curUser && curUser.emailVerified && <ImportModpackDialog curUser={curUser} />}
+                    {curUser && !curUser.emailVerified && <AlertButton alertText='Verify your email first'>
+                        Create modpack <Plus/>
+                    </AlertButton>}
+                    {curUser && !curUser.emailVerified && <AlertButton alertText='Verify your email first'>
+                        Import modpack <Plus/>
+                    </AlertButton>}
                 </div>
             </div>
             {modpacks && 

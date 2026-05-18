@@ -1,11 +1,11 @@
-import { Bookmark, Check, Download, Edit, Gamepad, Save, Settings, Trash2, X } from "lucide-react";
+import { AlertCircle, Bookmark, Check, Download, Edit, Gamepad, Save, Settings, Trash2, X } from "lucide-react";
 import { createBookmark, deleteBookmark, deleteModpack, getBookmark, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/copy-button";
 import { Input } from "@/components/ui/input";
 import type { VersionMod } from "@/types/versionMod";
-import { createFileRoute, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +29,7 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
+import InfoPill from "@/components/info-pill";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -460,7 +461,7 @@ export default function ModpackView() {
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-md:max-w-3/4 w-full min-w-0">
-                    <h1 className="font-bold w-full truncate leading-normal">{modpack.name}</h1>
+                    <h1 className="font-bold w-full truncate leading-normal max-md:text-center">{modpack.name}</h1>
                     <div className="flex justify-center items-center text-lg gap-1 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />
                         <h2 className="text-[var(--text-secondary)]">
@@ -477,12 +478,15 @@ export default function ModpackView() {
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
                 { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
                 <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>
-                {curUser && <CreateSuggestionDialog modpack={modpack} curUser={curUser} /> }
-                { curUser?.id === modpack.userId && <ModpackSettingsDropDown modpack={modpack} /> }
+                {curUser && curUser.emailVerified && <CreateSuggestionDialog modpack={modpack} curUser={curUser} /> }
+                { curUser?.id === modpack.userId && curUser.emailVerified && <ModpackSettingsDropDown modpack={modpack} /> }
             </div>
         </header>
 
+        {!curUser?.emailVerified && <Link to="/profile/verify-email"><h3 className="text-sm max-md:text-center font-bold mt-4 underline">In order to create suggestions or edit this modpack, you must verify your email.</h3></Link>}
+
         <Separator className="my-4"/>
+
         
         <section className="flex items-center justify-center gap-4 flex-col w-19/20">
             <SelectDisplayRadioGroup />
