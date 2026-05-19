@@ -168,7 +168,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
 
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <Button variant={"default"}><h3 className="hidden min-md:flex">Download</h3> <Download /></Button>
+            <Button variant={"default"}><h3 className="min-md:flex">Download</h3> <Download /></Button>
         </DialogTrigger>
         <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center">
             {downloadUrl && (
@@ -476,17 +476,18 @@ export default function ModpackView() {
 
             <div className="flex items-center justify-center gap-2 flex-wrap max-w-60">
                 <DownloadModpackManifestDialog modpackId={modpack.id.toString()} versionIteration={versionIteration} />
-                { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
-                <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>
                 {curUser && curUser.emailVerified && <CreateSuggestionDialog modpack={modpack} curUser={curUser} /> }
-                { curUser?.id === modpack.userId && curUser.emailVerified && <ModpackSettingsDropDown modpack={modpack} /> }
+                <div className="flex items-center justify-center gap-2">
+                    { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
+                    <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>
+                    { curUser?.id === modpack.userId && curUser.emailVerified && <ModpackSettingsDropDown modpack={modpack} /> }
+                </div>
             </div>
         </header>
 
-        {!curUser?.emailVerified && <Link to="/profile/verify-email"><h3 className="text-sm max-md:text-center font-bold mt-4 underline">In order to create suggestions or edit this modpack, you must verify your email.</h3></Link>}
+        {!curUser?.emailVerified && <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">In order to create suggestions or edit this modpack, you must verify your email. <br /> <Link to="/profile/verify-email" className="underline">Click here to verify your email.</Link></h3>}
 
         <Separator className="my-4"/>
-
         
         <section className="flex items-center justify-center gap-4 flex-col w-19/20">
             <SelectDisplayRadioGroup />

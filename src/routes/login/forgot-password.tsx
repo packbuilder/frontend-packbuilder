@@ -11,7 +11,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 export const Route = createFileRoute('/login/forgot-password')({
   component: RouteComponent,
   loader: () => {
-    const breadcrumbs = [{text: "Login"}, {text: "Forgot Password"}];
+    const breadcrumbs = [{text: "Login", link: "/login"}, {text: "Forgot Password"}];
     return {breadcrumbs}
   }
 })

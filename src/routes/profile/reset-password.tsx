@@ -10,8 +10,6 @@ import { MailSearch } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import z from 'zod'
 
-// TODO: Finish this page by creating functionality and redirecting user if params are the default fallback values
-
 const searchParamsSchema = z.object({
   token: fallback(z.string(), "").default(''),
   userId: fallback(z.number(), -1).default(-1)
@@ -28,7 +26,7 @@ export const Route = createFileRoute('/profile/reset-password')({
       throw redirect({to: "/"});
     }
 
-    const breadcrumbs = [{text: "reset-password"}];
+    const breadcrumbs = [{text: "Reset-password"}];
 
     return {breadcrumbs};
   },
@@ -40,9 +38,14 @@ function SuccessCard() {
     <Card className='items-center max-w-9/10 w-full min-md:max-w-3/5'>
       <CardHeader className='w-full text-center'>Password changed</CardHeader>
       <CardDescription className='text-center w-8/10'>
-        You have successfully changed your password! You can now login using your new password
+        You have successfully changed your password!
       </CardDescription>
       <CardContent className='flex items-center justify-center'>
+        <Link to='/'>
+          <Button variant={"default"}>
+            Home
+          </Button>
+        </Link>
         <Link to='/login'>
           <Button variant={"default"}>
             Login
@@ -71,13 +74,17 @@ function RouteComponent() {
         throw new Error("Passwords do not match.");
       }
 
+      if(newPassword.length < 8) {
+        throw new Error("Password must be at least 8 characters long.");
+      }
+
       const status = await resetPassword(userId, newPassword, token);
 
       if (!status || status < 200 || status > 299) {
         throw new Error("Unable to reset password");
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setSuccess(true);
     },
     onError: (error: Error) => {

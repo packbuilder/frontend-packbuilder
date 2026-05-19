@@ -72,7 +72,7 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
 
     return <Dialog open={isOpen} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-            <Button variant={"outline"}>
+            <Button variant={"default"}>
                 Create suggestion <UserRoundPlus />
             </Button>   
         </DialogTrigger>

@@ -16,7 +16,7 @@ import { useEffect, useState, type FormEvent} from 'react'
 export const Route = createFileRoute('/login/create-account')({
   component: RouteComponent,
   loader: () => {
-    const breadcrumbs = [{text: "Login"}, {text: "Create Account"}];
+    const breadcrumbs = [{text: "Login", link: "/login"}, {text: "Create Account"}];
     return {breadcrumbs}
   },
 })

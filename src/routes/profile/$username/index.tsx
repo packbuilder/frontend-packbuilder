@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from "@/components/ui/button";
-import { Edit, Link, Save, X } from "lucide-react";
+import { Edit, Link, Lock, Save, X } from "lucide-react";
 import Cookies from "js-cookie";
 import { updateProfileDtoSchema } from "@/types/dtos/updateProfileDto";
 import { Input } from "@/components/ui/input";
@@ -305,6 +305,7 @@ export default function ProfileView() {
             display: search.display
         })
     });
+    const navigate = useNavigate();
   
     if(!user) {
         return (
@@ -315,8 +316,6 @@ export default function ProfileView() {
     }
 
     const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All);
-
-    // TODO: Properly style for mobile and desktop and update style to match other pages
   
     const filteredSuggestions = useMemo(() => {
         if (!userSuggestions) return [];
@@ -348,6 +347,9 @@ export default function ProfileView() {
                         {curUser?.id === user.id && <div className="flex items-center justify-center gap-2">
                             <EditProfileDialog />
                             <ChangeEmailDialog />
+                            <Button variant={"default"} onClick={() => navigate({to: "/login/forgot-password"})}>
+                                Change password <Lock />
+                            </Button>
                         </div>}
                 </div>
             </div>

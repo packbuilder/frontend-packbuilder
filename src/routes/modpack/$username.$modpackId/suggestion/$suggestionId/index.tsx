@@ -2,7 +2,7 @@ import placeholder from "@/Seed-Avatar.jpg"
 import { updateSuggestion, verifySuggestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
-import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
@@ -570,7 +570,7 @@ export default function SuggestionView() {
                 </div>
             </div>
             {
-                suggestion.userId === curUser?.id && 
+                suggestion.userId === curUser?.id && curUser.emailVerified && 
                 <div className="flex justify-center items-center gap-2 flex-wrap max-w-60">
                     <UpdateSuggestionDialog suggestion={suggestion} />
                     <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
@@ -580,6 +580,8 @@ export default function SuggestionView() {
                 </div>
             }
         </header>
+
+        {!curUser?.emailVerified && suggestion.userId === curUser?.id && <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">In order to edit this suggestion, you must verify your email. <br /> <Link to="/profile/verify-email" className="underline">Click here to verify your email.</Link></h3>}
 
         <Separator className="my-2" />
 
