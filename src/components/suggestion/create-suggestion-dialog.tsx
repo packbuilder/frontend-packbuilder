@@ -13,6 +13,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { User } from "@/types/user";
 import type { Modpack } from "@/types/modpack";
+import { toast } from "sonner";
 
 export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Modpack, curUser: User | null}) {
     const [isOpen, setOpen] = useState(false);
@@ -37,24 +38,26 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
             const response = await createSuggestion(modpack.id.toString(), body);
 
             if(!response || response.status < 200 || response.status > 200 || !response.suggestionId) {
-                throw new Error("There was a problem with creating this suggestion");
+                throw new Error("There was a problem with creating your suggestion");
             }
 
             return response.suggestionId
         },
         onSuccess: async (suggestionId: number) => {
-            navigate({to: `/modpack/${modpack.user.name}/${modpack.id}/suggestion/${suggestionId}`})
+            toast.success(`Successfully created a suggestion for ${modpack.name}!`)
             
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
                 refetchType: "all"
             });
-
+            
             await router.invalidate({sync: true});
-
+            
+            navigate({to: `/modpack/${modpack.user.name}/${modpack.id}/suggestion/${suggestionId}`})
         },
         onError: (error) => {
-            console.error(error.message)
+            toast.error(error.message);
+            console.error(error.message);
         }
     });
 

@@ -1,6 +1,5 @@
 import type { Suggestion } from "@/types/suggestion";
 import { CloudAlert, CloudCheck, CloudCog, CirclePlus, CircleMinus, PackageOpen, Tag, Check, Trash2, X } from "lucide-react";
-import placeholderAvatar from "@/Seed-Avatar.jpg"
 import { ImageType, ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import { Separator } from "../ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
@@ -13,7 +12,8 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { Button } from "../ui/button";
 import DisplayImage from "../display-image";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function SuggestionInteractive({suggestion, modpack, curUser} : {suggestion: Suggestion, modpack: Modpack, curUser: User | null}) {
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
@@ -158,16 +158,19 @@ function MergeSuggestionDialog({modpack, suggestion, curUser} : {modpack: Modpac
             const status = await createModpackVersion(modpackIdStr, suggestionIdStr);
         
             if(!status || status < 200 || status > 200) {
-                throw new Error("Unable to merge suggestion with modpack.");
+                throw new Error(`There was a problem with merging ${suggestion.username}'s suggestion into modpack ${modpack.name}.`);
             }
         },
         onSuccess: async () => {
+            toast.success(`Successfully merged ${suggestion.username}'s suggestion into modpack ${modpack.name}.`);
+            setIsOpen(false);
             await queryClient.invalidateQueries({queryKey: ["modpack", modpackIdStr], exact: true});
             await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionIdStr], exact: true});
             await queryClient.invalidateQueries({queryKey: ["modificationModData", suggestionIdStr]})
             await router.invalidate({sync: true}); 
         },
         onError: (error: Error) => {
+            toast.error(error.message);
             console.error(error);
         }
     })

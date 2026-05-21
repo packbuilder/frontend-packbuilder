@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { MailSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/profile/verify-email')({
   loader: async ({context}) => {
@@ -28,16 +29,18 @@ function RouteComponent() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const status = await sendVerificationEmail(curUser.email);
+      const response = await sendVerificationEmail(curUser.email);
 
-      if (!status || status < 200 || status > 299) {
-        throw new Error("Unable to send verification email.");
+      if (!response || response.status < 200 || response.status > 299) {
+        throw new Error(response?.statusText || "There was a problem with sending your verification email.");
       }
     },
     onSuccess: () => {
+      toast.success("Successfully sent verification email!");
       setCooldown(60);
     },
     onError: (error: Error) => {
+      toast.error(error.message);
       console.error(error.message);
     },
   });

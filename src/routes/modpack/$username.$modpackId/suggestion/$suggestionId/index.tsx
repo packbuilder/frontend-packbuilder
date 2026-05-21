@@ -1,4 +1,3 @@
-import placeholder from "@/Seed-Avatar.jpg"
 import { updateSuggestion, verifySuggestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
@@ -29,6 +28,7 @@ import type { Modpack } from "@/types/modpack";
 import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
 import { useSuggestionSubscription } from "@/hooks/useSuggestionSubscription";
+import { toast } from "sonner";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -111,6 +111,8 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
             }
         },
         onSuccess: async () => {
+            toast.success("Successfully updated suggestion!");
+            setOpen(false);
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
                 refetchType: "all"
@@ -119,6 +121,7 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
             await router.invalidate({sync: true});
         },
         onError: (error) => {
+            toast.error(error.message)
             console.error(error.message)
         }
     });
@@ -213,6 +216,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
             sortMethod: search.sortMethod,
         })
     });
+    const [isOpen, setOpen] = useState(false);
     const [sort, setSort] = useState<CurseForgeSearchFilter>(CurseForgeSearchFilter.Featured);
     const navigate = useNavigate({from: Route.fullPath});
     const queryClient = useQueryClient();
@@ -254,7 +258,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
     }
 
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogTrigger asChild>
             <Button variant="green">Add mods</Button>
             </DialogTrigger>
@@ -330,10 +334,11 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
         </Dialog>
     )
 }
-// TODO: Add shadcn fuzzy search via command component so users can search mods they want to remove easily
+
 function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion, modpack} : {modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
+    const [isOpen, setOpen] = useState(false);
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant="destructive">Remove mods</Button>
             </DialogTrigger>
@@ -389,6 +394,7 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion,
 
 function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {suggestion: Suggestion, modificationReferenceIds: string[]}) {
     const {modpackId, suggestionId} = Route.useParams();
+    const [isOpen, setOpen] = useState(false);
     const queryClient = useQueryClient();
     
     const mutation = useMutation({
@@ -396,10 +402,12 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
             const status = await verifySuggestion(suggestion.id, modpackId);
 
             if(!status || status < 200 || status > 299 ) {
-                throw new Error("Problem with verifying suggestion.");
+                throw new Error("There was a problem with starting verification for your suggestion.");
             }
         },
         onSuccess: async () => {
+            toast.success("Your suggestion is now undergoing verification!");
+            setOpen(false);
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
                 refetchType: "all",
@@ -410,12 +418,13 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
             });
         },
         onError: (error) => {
+            toast.error(error.message);
             console.error(error.message);
         }
     });
 
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant={"default"}>
                     Verify suggestion <CloudCog />
@@ -464,10 +473,6 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
 }
 
 export default function SuggestionView() {
-    // const [errorMessage, setErrorMessage] = useState("");
-    // const [successMessage, setSuccessMessage] = useState("");
-    // const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-    // const [showErrorMessage, setShowErrorMessage] = useState(false);
     const {modpackId, suggestionId} = Route.useParams();
     const [modificationFilter, setModificationFilter] = useState<ModificationFilter>(ModificationFilter.All);
     const {modpack: initialModpackData, suggestion: initialSuggestionData, curUser} = Route.useLoaderData();

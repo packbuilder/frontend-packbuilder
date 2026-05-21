@@ -7,6 +7,7 @@ import { parseUserToken } from '@/lib/utils'
 import { type User } from '@/types/user'
 import { SignalRProvider } from '@/components/signalr/signalr-provider'
 import { userTokenSchema } from '@/types/userToken'
+import { Toaster } from 'sonner'
 
 interface MyRouterContext {
   queryClient: QueryClient,
@@ -24,6 +25,7 @@ function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
           <main className="min-h-dvh size-full bg-background flex flex-col items-center justify-start">
+            <Toaster position='top-center' theme='dark' richColors/>
             <Header user={user} />
             <Outlet />
           </main>
@@ -35,10 +37,14 @@ function RootLayout() {
 }
 
 function ErrorComponent({ error }: { error: Error }) {
+  const { user } = Route.useRouteContext();
+
   return (
     <SignalRProvider>
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
+          <Toaster position='top-center' theme='dark' richColors/>
+          <Header user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
               There was an error rendering this page :(
@@ -52,10 +58,13 @@ function ErrorComponent({ error }: { error: Error }) {
 }
 
 function NotFoundComponent() {
+  const { user } = Route.useRouteContext();
   return (
     <SignalRProvider>
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
+          <Toaster position='top-center' theme='dark' richColors/>
+          <Header user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
               This page does not exist :(

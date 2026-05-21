@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Button } from "../ui/button";  
 import type { Suggestion } from "@/types/suggestion";
 import type { Modpack } from "@/types/modpack";
+import { toast } from "sonner";
 
 export default function DeleteSuggestionDialog({suggestion, modpack} : {suggestion: Suggestion, modpack: Modpack}) {
     const [isOpen, setIsOpen] = useState(false);
@@ -18,25 +19,23 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
         mutationFn: async () => {
             const status = await deleteSuggestion(modpack.id.toString(), suggestion.id.toString());
 
-            if(!status || status < 200 || status > 200 ) {
-                throw new Error("Unable to delete suggestion.");
+            if(!status || status < 200 || status > 300 ) {
+                throw new Error("There was a problem with deleting your suggestion.");
             }
         },
         onSuccess: async () => {
+            toast(`Successfully deleted your suggestion from ${modpack.name}`);
+            
+            queryClient.invalidateQueries({
+                queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
+                refetchType: "all"
+            });
+            
             navigate({to: `/modpack/${modpack.user.name}/${modpack.id}`});
-
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(modpack.id.toString(), suggestion.id.toString()).queryKey,
-                refetchType: "all"
-            });
-
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(modpack.id.toString(), suggestion.id.toString()).queryKey,
-                refetchType: "all"
-            });
-
+            
         },
         onError: (error: Error) => {
+            toast.error(error.message);
             console.log(error.message);
         }
     });

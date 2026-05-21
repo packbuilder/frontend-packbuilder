@@ -6,7 +6,8 @@ import { login } from '@/lib/api';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import Cookies from 'js-cookie';
-import { useState, type FormEvent } from 'react';
+import { type FormEvent } from 'react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/login/')({
   component: Login,
@@ -23,7 +24,6 @@ export const Route = createFileRoute('/login/')({
 });
 
 function Login() {
-  const [formError, setFormError] = useState("");
   const navigate = useNavigate();
 
   const mutation = useMutation({
@@ -33,7 +33,7 @@ function Login() {
       const token = await login(email, password);
     
       if (!token) {
-        throw new Error("Problem logging in, check for correct email and password.")
+        throw new Error("Login unsuccessful, please try again.")
       }
     
       return token;
@@ -43,10 +43,12 @@ function Login() {
         secure: true,
         expires: 7
       });
+      toast.success("Login successful!");
       navigate({to:"/"});
     },
     onError: (error: Error) => {
-      setFormError(error.message);
+      toast.error(error.message);
+      console.error(error.message);
     }
   })
 
@@ -101,9 +103,6 @@ function Login() {
                   Don&apos;t have an account? <Link to="/login/create-account">Sign up</Link>
                 </FieldDescription>
               </Field>
-              <FieldError>
-                {formError}
-              </FieldError>
             </FieldGroup>
           </form>
         </CardContent>

@@ -8,6 +8,7 @@ import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
 import { MailSearch } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import z from 'zod'
 
 const searchParamsSchema = z.object({
@@ -86,8 +87,10 @@ function RouteComponent() {
     },
     onSuccess: async () => {
       setSuccess(true);
+      toast.success("Your password was successfully changed.")
     },
     onError: (error: Error) => {
+      toast.error(error.message);
       console.error(error.message);
     },
   });

@@ -1,6 +1,4 @@
 import { AlertButton } from '@/components/alert-button';
-import ErrorMessage from '@/components/feedback/error-message';
-import SuccessMessage from '@/components/feedback/success-message';
 import { GlassCard } from '@/components/glass-card';
 import {ModpackCardLarge} from '@/components/modpack/modpack-card';
 import SelectAvatarDialog from '@/components/SelectAvatarDialog';
@@ -60,6 +58,9 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
             }
         },
         onSuccess: async () => {
+            toast.success("Successfully create modpack");
+            setOpen(false);
+
             await queryClient.invalidateQueries({
                 queryKey: appQueries.userModpacks(curUser).queryKey,
                 refetchType: "all"
@@ -68,6 +69,7 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
             await router.invalidate({sync: true});
         },
         onError: (error) => {
+            toast.error(error.message);
             console.error(error.message)
         }
     });
@@ -115,7 +117,7 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
                     </Field>
                     <Field className='w-fit'>
                         <FieldLabel htmlFor='name'><h2 className="font-bold text-lg">Modpack name</h2></FieldLabel>
-                        <Input id="name" type="text" name="name" placeholder="Your modpack name..."/>
+                        <Input required id="name" type="text" name="name" placeholder="Your modpack name..."/>
                     </Field>
                     <Field>
                         <FieldLabel><h2 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h2></FieldLabel>
@@ -172,8 +174,6 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
 
 function ImportModpackDialog({curUser} : {curUser: User}) {
     const [isOpen, setOpen] = useState(false);
-    const [showError, setShowError] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
     const formRef = useRef(null);
@@ -200,8 +200,8 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
             }
         },
         onSuccess: async () => {
-            setShowError(false);
-            setShowSuccess(true);
+            toast.success('Successfully imported modpack!');
+            setOpen(false);
 
             await queryClient.invalidateQueries({
                 queryKey: appQueries.userModpacks(curUser).queryKey,
@@ -211,8 +211,7 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
             await router.invalidate({sync: true});
         },
         onError: (error) => {
-            setShowError(true);
-            setShowSuccess(false);
+            toast.error(error.message)
             console.error(error.message)
         }
     });
@@ -270,8 +269,6 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
                             <Button variant={"destructive"}>Cancel <X/></Button>
                         </DialogClose>
                     </div>
-                    {showError && <ErrorMessage text={"There was a problem with importing your modpack. Please ensure you are uploading a valid curseforge manifest.json file."}/>}
-                    {showSuccess && <SuccessMessage text={"Your modpack was successfully imported!"}/>}
                 </div>
             </DialogFooter>
         </DialogContent>

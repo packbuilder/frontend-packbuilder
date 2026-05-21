@@ -9,7 +9,7 @@ import { createAccount, sendVerificationEmail } from '@/lib/api'
 import { createUserDtoSchema } from '@/types/dtos/createProfileDto'
 import { PopoverArrow } from '@radix-ui/react-popover'
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { MailSearch } from 'lucide-react'
 import { useEffect, useState, type FormEvent} from 'react'
 
@@ -97,24 +97,23 @@ function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: For
   )
 }
 
-// TODO: Add frontend timer to button.
 function VerifyEmailCard({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const navigate = useNavigate();
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const status = await sendVerificationEmail(email);
+      const response = await sendVerificationEmail(email);
 
-      console.log(status)
-
-      if (!status || status < 200 || status > 299) {
-        throw new Error("Unable to send verification email.");
+      if (!response || response.status < 200 || response.status > 299) {
+        throw new Error(response?.statusText || "Problem with creating account");
       }
     },
     onSuccess: () => {
       setOpen(true);
       setCooldown(60);
+      navigate({to: "/login/create-account", replace: true});
     },
     onError: (error: Error) => {
       console.error(error.message);

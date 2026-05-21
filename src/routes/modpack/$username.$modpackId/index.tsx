@@ -30,6 +30,7 @@ import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 import InfoPill from "@/components/info-pill";
+import { toast } from "sonner";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -85,6 +86,8 @@ function RenameModpackDialog({curName} : {curName: string}) {
             }
         },
         onSuccess: async () => {
+            toast.success("Successfully renamed your modpack!");
+            setIsOpen(false)
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpack(modpackId).queryKey,
                 refetchType: "all"
@@ -96,6 +99,7 @@ function RenameModpackDialog({curName} : {curName: string}) {
             await router.invalidate({sync: true});
         },
         onError: (error: Error) => {
+            toast.error(error.message);
             console.log(error.message);
         }
     });

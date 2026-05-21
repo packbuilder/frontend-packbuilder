@@ -26,6 +26,7 @@ import { changeEmailDtoSchema } from '@/types/dtos/changeEmailDto';
 import SelectAvatarDialog from '@/components/SelectAvatarDialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["modpacks", "suggestions"]), "modpacks").default("modpacks"),
@@ -59,7 +60,6 @@ function EditProfileDialog() {
   const {username} = Route.useParams();
   const [isOpen, setOpen] = useState(false);
   const [avatar, setAvatar] = useState(curUser?.imageValue || "profile_avatar_1.jpg");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const formRef = useRef(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -80,18 +80,19 @@ function EditProfileDialog() {
         const status = await updateProfile(curUser!.id, updateUserDto);
 
         if(!status || status < 200 || status > 200) {
-          throw new Error("There was a problem with updating your profile information, please try again.")
+          throw new Error("There was a problem with updating your account details.");
         }
 
         return newName
       },
       onSuccess: async (newName: string) => {
-        console.log("Successfully updated user profile");
+        toast.success("Successfully updated your account details!");
+        setOpen(false);
         queryClient.invalidateQueries({queryKey: appQueries.userData(username).queryKey, refetchType: "all"});
         navigate({to: "/profile/$username", params: {username: newName}, replace: true});
     },
       onError: (error) => {
-        setErrorMessage(error.message);
+        toast.error(error.message);
         console.error(error)
       }
     });
@@ -137,7 +138,6 @@ function EditProfileDialog() {
                         <Input id="username" name='username' type="text" placeholder="Your username..." defaultValue={curUser?.name} required />
                     </Field>
                 </FieldGroup>
-                {errorMessage}
               </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
@@ -179,16 +179,18 @@ function ChangeEmailDialog() {
 
             const status = await changeEmail(changeEmailDto);
 
+            // TODO: Figure out how to send text through responses from backend for richer error details
+
             if(!status || status < 200 || status > 200) {
-                throw new Error("There was an error with updating your email.")
+                throw new Error("There was a problem with updating your email.")
             }
 
             return newEmail
         },
         onSuccess: async (newEmail: string) => {
+            toast.success(`Your email was successfully updated to ${newEmail}, You have been logged out of your account.`);
+            setOpen(false);
             await handleLogout();
-            setErrorMessage(null);
-            setSuccessMessage(`Your email has been updated, a new verification link has been sent to ${newEmail}. You have been logged out of packbuilder.`);
         },
         onError: (error) => {
             setSuccessMessage(null);

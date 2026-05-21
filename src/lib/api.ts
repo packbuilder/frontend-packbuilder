@@ -46,9 +46,10 @@ export async function sendVerificationEmail(email: string) {
     try {
         const response = await api.post(`/verification/request/${email}`);
 
-        return response.status;
+        return response;
     } catch (error) {
         const err = error as unknown as AxiosError
+        console.log("hi")
         console.error(err.message);
         return null;
     }

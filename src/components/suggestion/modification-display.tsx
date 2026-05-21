@@ -16,6 +16,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import type { User } from "@/types/user";
 import DisplayImage from "../display-image";
+import { toast } from "sonner";
 
 export function ModificationDisplay({curseforgeMod, modification, modpack, suggestion, modificationReferenceIds, curUser} : {curseforgeMod: CurseForgeMod, modification: Modification, modpack: Modpack, suggestion: Suggestion, modificationReferenceIds: string[], curUser: User | null | undefined}) {
 
@@ -28,11 +29,12 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
             const modificationId = formData.get("modificationId") as string;
             const status = await deleteModification(modpackIdStr, modificationId, suggestionIdStr);
 
-            if(!status || status < 200 || status > 200) {
-                throw new Error("Problem with deleting modification from this suggestion");
+            if(!status || status < 200 || status > 299) {
+                throw new Error(`There was a problem with deleting modification for ${curseforgeMod.name} from this suggestion`);
             }
         },
         onSuccess: async () => {
+            toast.success(`Successfully removed modification for ${curseforgeMod.name} from your suggestion!`);
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(modpackIdStr, suggestionIdStr).queryKey,
             });
@@ -42,6 +44,7 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
             });
         },
         onError: (error) => {
+            toast.error(error.message);
             console.error(error.message);
         }
     });
@@ -145,11 +148,12 @@ export function CreateModificationDisplay(
 
             const status = await createModification(modpack.id.toString(), suggestion.id.toString(), createModificationDto);
 
-            if(!status || status < 200 || status > 200) {
-                throw new Error("Problem with creating modification to add mod to suggestion list");
+            if(!status || status < 200 || status > 299) {
+                throw new Error(`There was a problem with adding a modification for ${curseforgeMod.name} to your suggestion.`);
             }
         },
         onSuccess: async () => {
+            toast.success(`Successfully added a modification for ${curseforgeMod.name} to your suggestion!`);
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(modpack.id.toString(), suggestion.id.toString()).queryKey,
                 refetchType: "all",
@@ -164,6 +168,7 @@ export function CreateModificationDisplay(
             });
         },
         onError: (error) => {
+            toast.error(error.message);
             console.error(error.message);
         }
     });
