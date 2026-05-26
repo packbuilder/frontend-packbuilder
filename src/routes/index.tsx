@@ -58,7 +58,7 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
             }
         },
         onSuccess: async () => {
-            toast.success("Successfully create modpack");
+            toast.success("Successfully created modpack");
             setOpen(false);
 
             await queryClient.invalidateQueries({

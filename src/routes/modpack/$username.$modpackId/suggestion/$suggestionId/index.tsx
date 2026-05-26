@@ -357,7 +357,7 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion,
                                 <h2>It's looking empty in here...</h2>
                             </DisplayContainer>
                         </CommandEmpty>
-                            <CommandGroup>
+                            <CommandGroup className={`${!modpackModData || modpackModData.length <= 0 ? "hidden" : ""}`}>
                                 <DisplayContainer>
                                     {(modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
                                         let isEnabled = true;
@@ -381,8 +381,6 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion,
                                             />
                                         </CommandItem>
                                     })}
-
-                                    {(!modpackModData || modpackModData.length === 0) && <div className="size-full flex items-center justify-center"><h2>No mods to remove.</h2></div>}
                                 </DisplayContainer>
                             </CommandGroup>
                     </CommandList>

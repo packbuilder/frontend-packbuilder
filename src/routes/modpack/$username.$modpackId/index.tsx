@@ -113,7 +113,7 @@ function RenameModpackDialog({curName} : {curName: string}) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger className="cursor-pointer">
-                <p className="text-left flex items-center justify-center gap-2 font-normal"><Edit/> Rename modpack</p>
+                <h3 className="text-left text-sm flex items-center justify-center gap-2 font-normal"><Edit/> Rename modpack</h3>
             </DialogTrigger>
             <DialogContent className="p-4 bg-popover rounded-md z-100" onOpenAutoFocus={(e) => {
                 e.preventDefault()
@@ -223,6 +223,7 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
             }
         },
         onSuccess: async () => {
+            toast.success(`Successfully deleted modpack!`)
             navigate({to: "/"})
             
             await queryClient.invalidateQueries({
@@ -237,13 +238,14 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
 
         },
         onError: (error: Error) => {
+            toast.error(error.message);
             console.log(error.message);
         }
     });
 
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <p className="text-left flex items-center justify-center gap-2 font-normal"><Trash2 /> Delete modpack</p>
+            <h3 className="text-left text-sm flex items-center justify-center gap-2 font-normal"><Trash2 /> Delete modpack</h3>
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">
             <DialogHeader className="flex justify-center items-center text-left">
@@ -270,7 +272,7 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
               </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-[var(--surface-1)]"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 w-fit rounded-lg bg-[var(--surface-1)]"
             side={"bottom"}
             align="end"
             sideOffset={4}
@@ -282,8 +284,8 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
                   <AvatarImage className="size-full rounded-lg border-white/30 aspect-square border-1" src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
-                <div className="text-left text-sm flex items-center">
-                  <span className="truncate font-medium">{modpack.name} settings</span>
+                <div className="text-left text-md font-bold flex items-center">
+                  <span className="truncate">{modpack.name} settings</span>
                 </div>
               </div>
             </DropdownMenuLabel>

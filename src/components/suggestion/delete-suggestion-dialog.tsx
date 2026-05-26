@@ -24,7 +24,7 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
             }
         },
         onSuccess: async () => {
-            toast(`Successfully deleted your suggestion from ${modpack.name}`);
+            toast.success(`Successfully deleted your suggestion from ${modpack.name}`);
             
             queryClient.invalidateQueries({
                 queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,

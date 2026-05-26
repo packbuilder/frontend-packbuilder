@@ -157,7 +157,7 @@ function MergeSuggestionDialog({modpack, suggestion, curUser} : {modpack: Modpac
         mutationFn: async () => {
             const status = await createModpackVersion(modpackIdStr, suggestionIdStr);
         
-            if(!status || status < 200 || status > 200) {
+            if(!status || status < 200 || status > 299) {
                 throw new Error(`There was a problem with merging ${suggestion.username}'s suggestion into modpack ${modpack.name}.`);
             }
         },

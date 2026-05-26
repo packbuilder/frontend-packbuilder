@@ -18,7 +18,7 @@ export const Route = createFileRoute('/profile/verification-result')({
   loader: async ({context, deps: {status}}) => {
     const {user, queryClient} = context;
 
-    if(!status || !user) {
+    if(!status) {
       throw redirect({to: "/"});
     }
 

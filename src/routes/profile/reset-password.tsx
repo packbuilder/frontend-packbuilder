@@ -41,7 +41,7 @@ function SuccessCard() {
       <CardDescription className='text-center w-8/10'>
         You have successfully changed your password!
       </CardDescription>
-      <CardContent className='flex items-center justify-center'>
+      <CardContent className='flex items-center justify-center gap-2 '>
         <Link to='/'>
           <Button variant={"default"}>
             Home

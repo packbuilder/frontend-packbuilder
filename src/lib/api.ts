@@ -124,9 +124,12 @@ export async function getUserById(userId: number) {
                 'Authorization': `Bearer ${token}`,
             },
         });
-       
-        const data = userSchema.parse(response.data);
-        return data;
+
+        if(!response.data) {
+            return null;
+        }
+        
+        return userSchema.parse(response.data);
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);

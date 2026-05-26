@@ -48,7 +48,7 @@ export default function NavUser({
                 <AvatarImage src={user.imageType === ImageType.Stock ? `/profileAvatars/${user.imageValue}` : user.imageValue} alt={"user profile picture"} />
                 <AvatarFallback className="rounded-lg">{user.name.slice(0, 1)}</AvatarFallback>
               </Avatar>
-              <AvatarBadge className={`bg-yellow-500 ring-0 p-1 ${user.emailVerified ? "hidden" : ""}`}>
+              <AvatarBadge className={`bg-yellow-500 ring-0 p-1 cursor-pointer ${user.emailVerified ? "hidden" : ""}`}>
                 <AlertTriangle className="size-3 text-black" />
               </AvatarBadge>
             </div>

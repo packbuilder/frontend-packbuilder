@@ -345,7 +345,7 @@ export default function ProfileView() {
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img className='size-40 border-white/30 border-1' src={user.imageType === ImageType.Stock ? `/profileAvatars/${user.imageValue}` : user.imageValue} alt={"user profile picture"} />
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3">
-                        <h1 className="font-bold line-clamp-1">{user.name}</h1>
+                        <h1 className="font-bold line-clamp-1 leading-normal">{user.name}</h1>
                         {curUser?.id === user.id && <div className="flex items-center justify-center gap-2">
                             <EditProfileDialog />
                             <ChangeEmailDialog />
