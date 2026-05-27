@@ -29,7 +29,6 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
-import InfoPill from "@/components/info-pill";
 import { toast } from "sonner";
 
 const dataDisplaySchema = z.object({

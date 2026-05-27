@@ -53,7 +53,7 @@ function RouteComponent() {
     return () => clearInterval(interval);
   }, [cooldown]);
 
-  return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
+  return <section className="flex flex-col items-center w-9/10 justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
       <Card className='max-w-9/10 w-full min-md:max-w-3/5'>
       <CardHeader className='flex flex-col items-center justify-center'>
         <MailSearch className="size-10" />

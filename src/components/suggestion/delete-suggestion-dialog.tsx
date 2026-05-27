@@ -44,16 +44,18 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
         <DialogTrigger asChild>
             <Button variant={"destructive"}>Delete suggestion<Trash2 /></Button>
         </DialogTrigger>
-        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">
+        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4 w-96 max-w-9/10 min-md:max-w-3/4">
             <DialogHeader className="mt-4 flex justify-center items-center">
                 <DialogTitle className="font-bold text-left">Are you sure you want do delete this suggestion?</DialogTitle>
                 <DialogDescription className="text-left">Doing so is irriversable and will delete all data related to your suggestion.</DialogDescription>
             </DialogHeader>
-            <DialogFooter className="w-full flex-col justify-center items-start">
-                <Button variant={"default"} onClick={() => mutation.mutate()}>Delete suggestion <Check /></Button>
-                <DialogClose asChild>
-                    <Button variant={"destructive"}>Cancel <X/></Button>
-                </DialogClose>
+            <DialogFooter className="w-full">
+                <div className="flex flex-row items-center justify-start w-full gap-2">
+                    <Button variant={"default"} onClick={() => mutation.mutate()}>Delete suggestion <Check /></Button>
+                    <DialogClose asChild>
+                        <Button variant={"destructive"}>Cancel <X/></Button>
+                    </DialogClose>
+                </div>
             </DialogFooter>
         </DialogContent>
     </Dialog>

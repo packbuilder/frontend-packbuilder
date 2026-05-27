@@ -42,7 +42,7 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
                     <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{suggestion.memo}</p>
                 </header>
                 <div className="flex items-center justify-between w-full max-h-fit text-sm col-span-2 min-md:col-start-2 min-md:row-start-3">
-                    <div className="flex items-center w-full justify-start gap-1">
+                    <div className="flex flex-wrap items-center w-full justify-start gap-1 gap-y-2">
                         <InfoPill>
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?
@@ -89,7 +89,7 @@ export function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
     
     return <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.username, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}} className="w-full group bg-[var(--surface-1)]">
-            <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)] group-hover:bg-white/5 transition duration-200">
+            <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)] group-hover:bg-white/5 transition duration-200">
                 <div className="flex items-center justify-center min-md:row-span-3">
                     <DisplayImage src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt="logo" />
                 </div>
@@ -111,7 +111,7 @@ export function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
                     <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{suggestion.memo}</p>
                 </header>
                 <div className="flex items-center justify-between w-full max-h-fit text-sm col-span-2 min-md:col-start-2 min-md:row-start-3">
-                    <div className="flex items-center w-full justify-start gap-1">
+                    <div className="flex flex-wrap items-center w-full justify-start gap-1 gap-y-2">
                         <InfoPill>
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?

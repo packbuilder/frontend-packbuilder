@@ -111,7 +111,7 @@ function EditProfileDialog() {
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
             <DialogHeader className="w-full px-2">
-                <DialogTitle>
+                <DialogTitle className=''>
                     Update your profile
                 </DialogTitle>
                 <DialogDescription>
@@ -153,8 +153,6 @@ function EditProfileDialog() {
 
 function ChangeEmailDialog() {
   const [isOpen, setOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
   const formRef = useRef(null);
@@ -193,8 +191,7 @@ function ChangeEmailDialog() {
             await handleLogout();
         },
         onError: (error) => {
-            setSuccessMessage(null);
-            setErrorMessage(error.message);
+            toast.error(error.message)
             console.error(error)
         }
     });
@@ -222,9 +219,7 @@ function ChangeEmailDialog() {
             </DialogHeader>
               <form ref={formRef} onSubmit={handleSubmit} className='w-full flex flex-col items-start justify-center gap-2 mb-4' id={"profile-edit"} method="post">
                   <div className="flex flex-col justify-center items-center gap-4 w-full">
-                      <h2 className='text-red-500'>{errorMessage}</h2>
-                      <h2 className='text-green-500'>{successMessage}</h2>
-                      <div className='w-full'>
+                      <div className='flex flex-col items-center justify-center gap-4 w-full'>
                           <Label className="self-start"><h2 className="font-bold text-lg">New Email</h2></Label>
                           <Input 
                               className="w-full"
@@ -340,13 +335,13 @@ export default function ProfileView() {
         setSuggestionFilter(newValue);
     }
     
-    return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
-        <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
-            <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
+    return <section className="flex flex-col items-center max-w-9/10 justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
+        <header className="flex flex-col justify-between items-center max-w-full gap-3 min-md:flex-row min-md:gap-6">
+            <div className="flex flex-col max-w-full items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img className='size-40 border-white/30 border-1' src={user.imageType === ImageType.Stock ? `/profileAvatars/${user.imageValue}` : user.imageValue} alt={"user profile picture"} />
-                <div className="flex flex-col min-md:items-start items-center justify-center gap-3">
+                <div className="flex flex-col max-w-full min-md:items-start items-center justify-center gap-3">
                         <h1 className="font-bold line-clamp-1 leading-normal">{user.name}</h1>
-                        {curUser?.id === user.id && <div className="flex items-center justify-center gap-2">
+                        {curUser?.id === user.id && <div className="flex items-center max-w-full flex-wrap justify-center gap-2">
                             <EditProfileDialog />
                             <ChangeEmailDialog />
                             <Button variant={"default"} onClick={() => navigate({to: "/login/forgot-password"})}>
@@ -355,7 +350,6 @@ export default function ProfileView() {
                         </div>}
                 </div>
             </div>
-
         </header>
 
         <Separator className="my-4"/>
