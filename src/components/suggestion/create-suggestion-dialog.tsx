@@ -86,10 +86,10 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
             </DialogHeader>
             <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
-                    <h2 className="font-bold text-lg">Memo</h2>
-                    <Input id="memo" type="text" name="memo" placeholder="Your message..."/>
+                    <h3>Memo</h3>
+                    <Input id="memo" type="text" name="memo" className="text-sm" placeholder="Your message..."/>
                 </div>
-                <h2 className="font-bold text-lg">Game Version & Mod Loader</h2>
+                <h3>Game Version & Mod Loader</h3>
                 <div className={`flex items-center justify-center gap-2`}>
                     <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
                         <SelectTrigger>

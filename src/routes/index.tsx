@@ -281,6 +281,7 @@ function Home() {
     const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
     const {data: bookmarks} = useSuspenseQuery(appQueries.userBookmarks(curUser));
 
+    console.log(bookmarks, modpacks);
     return <section className="flex flex-col justify-between items-center w-full mx-auto h-full pb-10">
         <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
             <div className="flex flex-col justify-around items-center mb-4">
@@ -296,7 +297,7 @@ function Home() {
                     </AlertButton>}
                 </div>
             </div>
-            {modpacks && 
+            {modpacks && modpacks.length > 0 && 
                 <div className='flex flex-col items-center justify-center max-w-3/5 min-md:max-w-115 w-fit'>
                     <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
                         <CarouselContent className='py-6 px-2'>
@@ -310,23 +311,15 @@ function Home() {
                         </CarouselContent>
                         <CarouselPrevious />
                         <CarouselNext />
-                        {
-                            !modpacks || modpacks.length === 0 && 
-                            <GlassCard className='size-45 flex items-center justify-center'>
-                                <h2 className='text-lg text-center'>
-                                    You have no modpacks
-                                </h2>
-                            </GlassCard>  
-                        }
                     </Carousel>
                 </div>
             }
 
             {
-                !modpacks && 
+                (!modpacks || modpacks.length <= 0) && 
                 <GlassCard className='size-45 flex items-center justify-center'>
                     <h2 className='text-lg text-center'>
-                        Log in to create modpacks!
+                        {!curUser ? "You must be logged in to create modpacks" : "You have no modpacks!"}
                     </h2>
                 </GlassCard>  
             }
@@ -336,7 +329,7 @@ function Home() {
             <div className="flex flex-col justify-around items-center mb-4">
                 <h1 className="text-3xl font-bold p-2">Your Bookmarks</h1>
             </div>
-            {bookmarks && 
+            {bookmarks && bookmarks.length > 0 && 
                 <div className='flex flex-col items-center justify-center max-w-3/5 min-md:max-w-115 w-fit'>
                     <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
                         <CarouselContent className='py-6 px-2'>
@@ -350,23 +343,15 @@ function Home() {
                         </CarouselContent>
                         <CarouselPrevious />
                         <CarouselNext />
-                        {
-                            !bookmarks || bookmarks.length === 0 && 
-                            <GlassCard className='size-45 flex items-center justify-center'>
-                                <h2 className='text-lg text-center'>
-                                    You have no bookmarks
-                                </h2>
-                            </GlassCard>  
-                        }
                     </Carousel>
                 </div>
             }
 
             {
-                !bookmarks && 
+                (!bookmarks || bookmarks.length <= 0)  &&
                 <GlassCard className='size-45 flex items-center justify-center'>
                     <h2 className='text-lg text-center'>
-                        Log in to bookmark modpacks!
+                        {!curUser ? "You must be logged in to bookmark modpacks" : "You have no bookmarks!"}
                     </h2>
                 </GlassCard>  
             }

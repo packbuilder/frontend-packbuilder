@@ -13,7 +13,7 @@ export function ModpackCardLarge({modpack} : {modpack: Modpack}) {
             <img className="rounded w-40 h-45" src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt={"user profile picture"} />
             <div className="flex flex-col text-center items-center justify-center w-3/4">
                 <h2 className="font-bold text-lg text-center w-full truncate">{modpack.name}</h2>
-                <p className="text-center text-md w-full truncate">By {modpack.user!.name}</p>
+                <h3 className="text-center text-md w-full truncate">By {modpack.user!.name}</h3>
             </div>
         </GlassCard>
     </Link>

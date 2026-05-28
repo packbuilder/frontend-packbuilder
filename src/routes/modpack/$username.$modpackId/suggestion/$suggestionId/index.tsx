@@ -29,6 +29,7 @@ import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
 import { useSuggestionSubscription } from "@/hooks/useSuggestionSubscription";
 import { toast } from "sonner";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 const addModSearchSchema = z.object({
     page: fallback(z.number(), 0).default(0),
@@ -145,18 +146,20 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
             </Button>   
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
-            <DialogHeader className="w-full px-2">
+            <DialogHeader className="w-full px-2 text-left">
                 <DialogTitle>
                     Update suggestion
                 </DialogTitle>
                 <DialogDescription>
-                    Update your suggestion details!
+                    Update your suggestions message or the game version/mod loader you want used for the modpack!
                 </DialogDescription>
             </DialogHeader>
             <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
                 <div className="flex flex-col justify-center items-start gap-2">
-                    <h2 className="font-bold text-lg">Memo</h2>
-                    <Input id="memo" type="text" name="memo" defaultValue={suggestion.memo} placeholder="Your message..."/>
+                    <Field>
+                        <FieldLabel className="font-bold text-lg">Memo</FieldLabel>
+                        <Input id="memo" type="text" name="memo" defaultValue={suggestion.memo} placeholder="Your message..."/>
+                    </Field>
                 </div>
                 <h2 className="font-bold text-lg">Game Version & Mod Loader</h2>
                 <div className={`flex items-center justify-center gap-2`}>
@@ -263,10 +266,10 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
             <Button variant="green">Add mods</Button>
             </DialogTrigger>
             <DialogContent className="flex-col items-center justify-center">
-                <DialogHeader className="mt-4 flex justify-center items-center">
-                    <DialogTitle className="font-bold">Add mods</DialogTitle>
-                    <DialogDescription>Suggest mods to add by browsing curseforge mods!</DialogDescription>
-                    <form className="w-full" method="post" id="addMods" onSubmit={handleSubmit}>
+                <DialogHeader className="mt-4 text-center flex items-center justify-center">
+                    <DialogTitle>Add mods</DialogTitle>
+                    <DialogDescription className="max-w-9/10">Search for mods that are on curseforge to add for your suggestion!</DialogDescription>
+                    <form className="w-full mt-4" method="post" id="addMods" onSubmit={handleSubmit}>
                         <div className="flex items-center justify-center gap-2 flex-wrap w-full">
                             <div className="flex items-center justify-center gap-2 w-full">
                                 <div className="relative w-full">
@@ -288,8 +291,6 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                                     </SelectContent>
                                 </Select>
                             </div>
-                            {/* TODO: put error message here */}
-                            <div>{}</div>
                         </div>
                     </form>
                 </DialogHeader>
@@ -345,7 +346,7 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion,
             <DialogContent className="flex-col items-center justify-center">
                 <DialogHeader className="mt-4 flex justify-center items-center">
                     <DialogTitle className="text-3xl font-bold">Remove mods</DialogTitle>
-                    <DialogDescription>Suggest mods to remove from the modpack!</DialogDescription>
+                    <DialogDescription className="max-w-9/10">Suggest mods to remove from the modpack. This list only contains mods that are in the latest version of the modpack this suggestion is tied to.</DialogDescription>
                 </DialogHeader>
                   <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
                     <div className="flex items-center justify-start w-full gap-1">
@@ -543,7 +544,7 @@ export default function SuggestionView() {
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between min-w-0">
                 <img src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-w-0">
-                    <h1 className="font-bold truncate w-full leading-normal">{suggestion.username}'s suggestion</h1>
+                    <h1 className="font-bold truncate w-full text-center leading-normal">{suggestion.username}'s suggestion</h1>
                     <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3"> {suggestion.memo}</h3> 
                     <InfoPill>     
                         {

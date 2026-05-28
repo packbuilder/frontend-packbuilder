@@ -25,9 +25,9 @@ export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: 
                         {curseforgeMod.name}
                     </h2>
                     <Separator orientation="vertical" />
-                    <p className="text-md truncate min-w-0 flex-1 max-w-fit text-[var(--text-secondary)] min-md:text-lg">
+                    <h3 className="truncate min-w-0 flex-1 max-w-fit text-[var(--text-secondary)]">
                         by {curseforgeMod.authors[0].name}
-                    </p>
+                    </h3>
                 </div>  
                 <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{curseforgeMod.summary}</p>
             </header>
@@ -35,10 +35,10 @@ export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: 
                 <div className="flex items-center justify-center flex-wrap gap-2">
                     <div className="flex items-center flex-wrap justify-center gap-2 text-md text-[var(--text-secondary)]">
                         <span className="flex items-center justify-center w-fit gap-1 text-center">
-                            <Download className="size-4" /> {formattedDownloadCount}
+                            <Download className="size-4" /> <p>{formattedDownloadCount}</p>
                         </span>
                         <span className="flex items-center justify-center w-fit gap-1 text-center">
-                            <RefreshCcw className="size-4" /> {timeSinceCurDate(curseforgeMod.dateModified)}
+                            <RefreshCcw className="size-4" /> <p>{timeSinceCurDate(curseforgeMod.dateModified)}</p>
                         </span>
                     </div>
                     <div className="flex items-center justify-center gap-2 min-md:col-start-3 min-md:row-start-1">
@@ -46,17 +46,17 @@ export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: 
                             {
                                 versionMod.conflictState === ConflictState.MissingDependencies ? 
                                 <div className="flex items-center justify-center items-center gap-1">
-                                    <h3 className="text-xs text-nowrap">Missing dependencies</h3> 
+                                    <p className="text-xs text-nowrap">Missing dependencies</p> 
                                     <TriangleAlert className="text-yellow-500 size-4" />
                                 </div>
                                 : versionMod.conflictState === ConflictState.Conflicting ? 
                                 <div className="flex items-center justify-center items-center gap-1">
-                                    <h3 className="text-xs text-nowrap">Conflicting</h3> 
+                                    <p className="text-xs text-nowrap">Conflicting</p> 
                                     <TriangleAlert className="text-red-500 size-4" />
                                 </div>
                                 :
                                 <div className="flex items-center justify-center items-center gap-1">
-                                    <h3 className="text-xs text-nowrap">No conflicts</h3> 
+                                    <p className="text-xs text-nowrap">No conflicts</p> 
                                     <CircleCheck className="text-green-500 size-4" />
                                 </div>
                             }

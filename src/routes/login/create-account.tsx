@@ -61,7 +61,7 @@ function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: For
                 placeholder="m@example.com"
                 required
               />
-              <FieldDescription>
+              <FieldDescription className='text-xs'>
                 Your email will be used to contact you for changing your account details and for verification.
               </FieldDescription>
             </Field>

@@ -47,26 +47,26 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?
                                 <div className="flex items-center justify-center gap-1">
-                                    <CloudAlert className="text-red-500 size-4"/> <h3 className="text-xs text-nowrap">Unverified</h3>
+                                    <CloudAlert className="text-red-500 size-4"/> <p>Unverified</p>
                                 </div>
                                 : suggestion.state.toString() === SuggestionState.VerificationPending ?
                                 <div className="flex items-center justify-center gap-1">
-                                    <CloudCog className="text-white size-4"/> <h3 className="text-xs text-nowrap">Verification pending</h3>
+                                    <CloudCog className="text-white size-4"/> <p>Verification pending</p>
                                 </div>
                                 :
                                 <div className="flex items-center justify-center gap-1">
-                                    <CloudCheck className="text-green-500 size-4"/> <h3 className="text-xs text-nowrap">Verified</h3>
+                                    <CloudCheck className="text-green-500 size-4"/> <p>Verified</p>
                                 </div>
                             }
                         </InfoPill>
                         <InfoPill>
                             <div className="flex items-center justify-center gap-1">
-                                <PackageOpen className="text-orange-100 size-4"/> <h3 className="text-xs text-nowrap">{enumNameFromValue(ModLoader, suggestion.modLoader.toString())}</h3>
+                                <PackageOpen className="text-orange-100 size-4"/> <p>{enumNameFromValue(ModLoader, suggestion.modLoader.toString())}</p>
                             </div>
                         </InfoPill>
                         <InfoPill>
                             <div className="flex items-center justify-center gap-1">
-                                <Tag className="text-green-100 size-4"/> <h3 className="text-xs text-nowrap">Minecraft {suggestion.gameVersion}</h3>
+                                <Tag className="text-green-100 size-4"/> <p>Minecraft {suggestion.gameVersion}</p>
                             </div>
                         </InfoPill>
                     </div>
@@ -116,26 +116,26 @@ export function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
                             {
                                 suggestion.state.toString() === SuggestionState.Unverified ?
                                 <div className="flex items-center justify-center gap-1">
-                                    <CloudAlert className="text-red-500 size-4"/> <h3 className="text-xs text-nowrap">Unverified</h3>
+                                    <CloudAlert className="text-red-500 size-4"/> <p>Unverified</p>
                                 </div>
                                 : suggestion.state.toString() === SuggestionState.VerificationPending ?
                                 <div className="flex items-center justify-center gap-1">
-                                    <CloudCog className="text-white size-4"/> <h3 className="text-xs text-nowrap">Verification pending</h3>
+                                    <CloudCog className="text-white size-4"/> <p>Verification pending</p>
                                 </div>
                                 :
                                 <div className="flex items-center justify-center gap-1">
-                                    <CloudCheck className="text-green-500 size-4"/> <h3 className="text-xs text-nowrap">Verified</h3>
+                                    <CloudCheck className="text-green-500 size-4"/> <p>Verified</p>
                                 </div>
                             }
                         </InfoPill>
                         <InfoPill>
                             <div className="flex items-center justify-center gap-1">
-                                <PackageOpen className="text-orange-100 size-4"/> <h3 className="text-xs text-nowrap">{enumNameFromValue(ModLoader, suggestion.modLoader.toString())}</h3>
+                                <PackageOpen className="text-orange-100 size-4"/> <p>{enumNameFromValue(ModLoader, suggestion.modLoader.toString())}</p>
                             </div>
                         </InfoPill>
                         <InfoPill>
                             <div className="flex items-center justify-center gap-1">
-                                <Tag className="text-green-100 size-4"/> <h3 className="text-xs text-nowrap">Minecraft {suggestion.gameVersion}</h3>
+                                <Tag className="text-green-100 size-4"/> <p>Minecraft {suggestion.gameVersion}</p>
                             </div>
                         </InfoPill>
                     </div>

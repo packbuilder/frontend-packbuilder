@@ -26,15 +26,19 @@ body {
 }
 
 h1 {
-  @apply text-3xl min-md:text-4xl min-lg:text-5xl font-bold;
+  @apply text-3xl min-md:text-4xl min-lg:text-5xl font-bold leading-normal;
 }
 
 h2 {
-  @apply text-base min-md:text-lg min-lg:text-2xl font-semibold ;
+  @apply text-base min-md:text-lg min-lg:text-2xl font-semibold leading-normal;
+}
+
+h3 {
+  @apply text-sm min-md:text-base min-lg:text-lg leading-normal;
 }
 
 p {
-  @apply text-sm min-md:text-base min-lg:text-lg;
+  @apply text-xs min-md:text-sm leading-tight;
 }
 
 @theme inline {

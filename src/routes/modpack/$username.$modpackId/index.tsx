@@ -30,6 +30,7 @@ import ClearableCommandInput from "@/components/clearable-command-input";
 import DisplayContainer from "@/components/display-container";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 import { toast } from "sonner";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -74,10 +75,16 @@ function RenameModpackDialog({curName} : {curName: string}) {
     const {modpackId} = Route.useParams();
     const [isOpen, setIsOpen] = useState(false);
     const inputRef = useRef<null | HTMLInputElement>(null);
+    const formRef = useRef(null);
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const newName = formData.get("newName") as string;
+
+            if(newName.length > 20) {
+                throw new Error("Your chosen modpack name is too long, must be 20 characters or less.");
+            }
+
             const status = await updateModpack(modpackId, {name: newName});
 
             if(!status || status < 200 || status > 299) {
@@ -103,6 +110,12 @@ function RenameModpackDialog({curName} : {curName: string}) {
         }
     });
 
+    const submitForm = () => {
+        setIsOpen(false);
+        const form = formRef.current as unknown as HTMLFormElement;
+        form.requestSubmit();
+    }
+
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -111,23 +124,32 @@ function RenameModpackDialog({curName} : {curName: string}) {
     
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger className="cursor-pointer">
-                <h3 className="text-left text-sm flex items-center justify-center gap-2 font-normal"><Edit/> Rename modpack</h3>
+            <DialogTrigger className="cursor-pointer size-full">
+                <DropdownMenuItem className="cursor-pointer" onSelect={e => e.preventDefault()}>
+                    <p className="flex gap-2"><Edit/> Rename modpack</p>
+                </DropdownMenuItem>
             </DialogTrigger>
-            <DialogContent className="p-4 bg-popover rounded-md z-100" onOpenAutoFocus={(e) => {
-                e.preventDefault()
-                inputRef.current?.focus()
-            }}>
-                <DialogHeader className="w-full px-2">
-                    <DialogTitle className="text-xl">Rename modpack</DialogTitle>
-                    <Separator />
+            <DialogContent className="p-4 bg-popover rounded-md z-100">
+                <DialogHeader className="w-full items-start">
+                    <DialogTitle>Rename modpack</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">There is a 20 character limit on modpack names.</DialogDescription>
                 </DialogHeader>
                 <div className="w-fit flex flex-col gap-2">
-                    <form onSubmit={handleSubmit} className="flex justify-center items-center gap-2">
-                        <Input ref={inputRef} type="text" name="newName" id="newName" defaultValue={curName}/>
-                        <Button type="submit" variant={"default"}>Save <Save/></Button>
+                    <form onSubmit={handleSubmit} ref={formRef} className="flex-col justify-center items-center gap-2">
+                        <Field>
+                            <FieldLabel htmlFor={"newName"}>New name</FieldLabel>
+                            <Input ref={inputRef} type="text" name="newName" id="newName" className="text-sm" defaultValue={curName}/>
+                        </Field>
                     </form>
                 </div>
+                <DialogFooter>
+                    <div className="w-full items-center flex gap-2 justify-start ">
+                        <Button variant={"default"} onClick={submitForm}>Save change <Check /></Button>
+                        <DialogClose asChild>
+                            <Button variant={"destructive"} className="w-fit">Cancel <X/></Button>
+                        </DialogClose>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )
@@ -171,7 +193,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
 
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <Button variant={"default"}><h3 className="min-md:flex">Download</h3> <Download /></Button>
+            <Button variant={"default"}>Download <Download /></Button>
         </DialogTrigger>
         <DialogContent aria-describedby="" showCloseButton={false} className="flex flex-col justify-center items-center">
             {downloadUrl && (
@@ -187,7 +209,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
             </DialogHeader>
              <div className="flex items-center flex-col justify-center text-md">
                 <div className="flex flex-col items-start justify-center">
-                    <div className="rounded-md px-4 py-2 gap-4 text-left flex border flex-col justify-start items-start w-full flex flex-col h-96 w-96 overflow-y-auto w-[80%]">
+                    <div className="rounded-md px-4 py-2 gap-4 text-left flex border flex-col justify-start items-start w-full flex flex-col h-fit w-96 overflow-y-auto w-[80%]">
                         <p>1. Launch the CurseForge app and make sure the Minecraft profile is selected.</p>
                         <p>2. Click “Minecraft” in the top menu and switch to the “Modpacks” section.</p>
                         <p>3. On the right side, look for “Add Modpack” or “Import Modpack” (wording may vary depending on version) and then select “Import from ZIP”.</p>
@@ -243,14 +265,16 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
     });
 
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-            <h3 className="text-left text-sm flex items-center justify-center gap-2 font-normal"><Trash2 /> Delete modpack</h3>
+        <DialogTrigger asChild className="size-full">
+            <DropdownMenuItem className="cursor-pointer" onSelect={e => e.preventDefault()}>
+                <p className="flex gap-2"><Trash2/> Delete modpack</p>
+            </DropdownMenuItem>
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">
             <DialogHeader className="flex justify-center items-center text-left">
                 <DialogTitle className="text-xl font-bold">Are you sure you want do delete this modpack?</DialogTitle>
                 <Separator />
-                <DialogDescription>Doing so is irriversable and will delete all data related to this modpack including any suggestions made for this modpack.</DialogDescription>
+                <DialogDescription className="text-muted-foreground">Doing so is irriversable and will delete all data related to this modpack including any suggestions made for this modpack.</DialogDescription>
             </DialogHeader>
             <DialogFooter className="w-full items-start flex-row">
                 <Button variant={"default"} onClick={() => mutation.mutate()}>Delete modpack <Check /></Button>
@@ -271,7 +295,7 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
               </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 w-fit rounded-lg bg-[var(--surface-1)]"
+            className="w-(--radix-dropdown-menu-trigger-width) w-fit rounded-lg bg-[var(--surface-1)]"
             side={"bottom"}
             align="end"
             sideOffset={4}
@@ -279,24 +303,16 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm cursor-default">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage className="size-full rounded-lg border-white/30 aspect-square border-1" src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-                </Avatar>
                 <div className="text-left text-md font-bold flex items-center">
-                  <span className="truncate">{modpack.name} settings</span>
+                  <h2 className="truncate">{modpack.name} settings</h2>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
                 <RenameModpackDialog curName={modpack.name}/>
-              </DropdownMenuItem>
               <DropdownMenuSeparator/>
-              <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
                 <DeleteModpackDialog modpackId={modpack.id.toString()} />
-              </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
