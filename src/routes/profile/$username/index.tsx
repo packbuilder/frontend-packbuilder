@@ -110,8 +110,8 @@ function EditProfileDialog() {
             </Button>   
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
-            <DialogHeader className="w-full px-2">
-                <DialogTitle className=''>
+            <DialogHeader className="w-full text-left">
+                <DialogTitle>
                     Update your profile
                 </DialogTitle>
                 <DialogDescription>
@@ -121,20 +121,20 @@ function EditProfileDialog() {
               <form ref={formRef} onSubmit={handleSubmit} className='w-full flex flex-col items-start justify-center gap-2 mb-4' id={"profile-edit"} method="post">
                 <FieldGroup>
                     <Field>
-                        <FieldLabel htmlFor='avatar' className='text-lg font-bold'>Change profile picture</FieldLabel>
+                        <FieldLabel htmlFor='avatar' className='font-bold'>Change profile picture</FieldLabel>
                         <div className='flex items-center justify-start gap-2'>
                             <div className='size-fit'>
-                            <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
-                                <AvatarImage src={`/profileAvatars/${avatar}`} alt="Profile Picture" />
-                                <AvatarFallback>ER</AvatarFallback>
-                            </Avatar>
+                                <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
+                                    <AvatarImage src={`/profileAvatars/${avatar}`} alt="Profile Picture" />
+                                    <AvatarFallback>ER</AvatarFallback>
+                                </Avatar>
                             </div>
                             <Input id='avatar' name='imageValue' value={avatar} readOnly hidden/>
                             <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} avatarType={"profileAvatars"} />
                         </div>
                     </Field>
                     <Field>
-                        <FieldLabel htmlFor="username" className='text-lg font-bold'>Change your username</FieldLabel>
+                        <FieldLabel htmlFor="username" className='font-bold'>Change your username</FieldLabel>
                         <Input id="username" name='username' type="text" placeholder="Your username..." defaultValue={curUser?.name} required />
                     </Field>
                 </FieldGroup>

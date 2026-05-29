@@ -268,7 +268,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
             <DialogContent className="flex-col items-center justify-center">
                 <DialogHeader className="mt-4 text-center flex items-center justify-center">
                     <DialogTitle>Add mods</DialogTitle>
-                    <DialogDescription className="max-w-9/10">Search for mods that are on curseforge to add for your suggestion!</DialogDescription>
+                    <DialogDescription className="max-w-9/10 text-center">Search for mods that are on curseforge to add for your suggestion!</DialogDescription>
                     <form className="w-full mt-4" method="post" id="addMods" onSubmit={handleSubmit}>
                         <div className="flex items-center justify-center gap-2 flex-wrap w-full">
                             <div className="flex items-center justify-center gap-2 w-full">
@@ -544,30 +544,30 @@ export default function SuggestionView() {
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between min-w-0">
                 <img src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-w-0">
-                    <h1 className="font-bold truncate w-full text-center leading-normal">{suggestion.username}'s suggestion</h1>
+                    <h1 className="font-bold truncate w-full max-md:text-center leading-normal">{suggestion.username}'s suggestion</h1>
                     <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3"> {suggestion.memo}</h3> 
                     <InfoPill>     
                         {
                             suggestion.state.toString() === SuggestionState.Unverified ?     
                             <div className="flex items-center justify-center gap-2 text-sm">
                                 <CloudAlert className="text-red-500 size-4 min-md:size-6"/>
-                                <h3>This suggestion has not been verified.</h3>
+                                <p>This suggestion has not been verified.</p>
                             </div>
                             : suggestion.state.toString() === SuggestionState.VerificationPending ?
                             <div className="flex items-center justify-center gap-2 text-sm">
                                 <CloudCog className="size-4 min-md:size-6 text-white"/>
-                                <h3>This suggestion is undergoing verification.</h3>
+                                <p>This suggestion is undergoing verification.</p>
                             </div>
                             : 
                             suggestion.state.toString() === SuggestionState.MergePending ?
                             <div className="flex items-center justify-center gap-2 text-sm">
                                 <Merge className="size-4 min-md:size-6 text-white"/>
-                                <h3>This suggestion is being merged.</h3>
+                                <p>This suggestion is being merged.</p>
                             </div>
                             :
                             <div className="flex items-center justify-center gap-2 text-sm">
                                 <CloudCheck className="size-4 min-md:size-6 text-green-500"/>
-                                <h3>This suggestion has been verified.</h3>
+                                <p>This suggestion has been verified.</p>
                             </div>
                         }
                     </InfoPill>

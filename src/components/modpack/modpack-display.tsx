@@ -17,14 +17,14 @@ export default function ModpackDisplay({modpack} : {modpack: Modpack}) {
                         {modpack.name}
                     </h2>
                     <Separator orientation="vertical" />
-                    <p className="text-md truncate min-w-0 flex-1 max-w-fit text-[var(--text-secondary)] min-md:text-lg">
+                    <h3 className="text-md truncate min-w-0 flex-1 max-w-fit text-[var(--text-secondary)] min-md:text-lg">
                         by {modpack.user.name}
-                    </p>
+                    </h3>
                 </div>  
                 <div className="flex items-center justify-center gap-2 text-md text-[var(--text-secondary)]">
-                    <span className="flex items-start justify-center w-fit gap-1 text-center">
+                    <p className="flex items-start justify-center w-fit gap-1 text-center">
                         <History className="size-4" /> Version {modpack.versions[0].iterations}
-                    </span>
+                    </p>
                 </div>
             </header>
         </div>
