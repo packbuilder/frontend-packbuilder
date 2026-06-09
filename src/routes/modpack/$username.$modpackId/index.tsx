@@ -1,4 +1,4 @@
-import { AlertCircle, Bookmark, Check, Download, Edit, Gamepad, Save, Settings, Trash2, X } from "lucide-react";
+import { Bookmark, Check, Download, Edit, Gamepad, Settings, Trash2, X } from "lucide-react";
 import { createBookmark, deleteBookmark, deleteModpack, getBookmark, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import { DialogHeader, Dialog, DialogContent, DialogTitle, DialogTrigger, Dialog
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
 import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
 import { VersionModDisplay } from "@/components/modpack/mod-display";

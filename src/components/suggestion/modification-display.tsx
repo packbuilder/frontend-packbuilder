@@ -1,7 +1,7 @@
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import type { Modification } from "@/types/modification";
-import { Link, Route } from "@tanstack/react-router";
-import { CircleAlert, CircleCheck, CircleMinus, CirclePlus, ExternalLink, TriangleAlert, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { CircleCheck, CircleMinus, CirclePlus, ExternalLink, TriangleAlert, X } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { ConflictState, ModAction, ModPlatform } from "@/types/enums";
 import InfoPill from "../info-pill";

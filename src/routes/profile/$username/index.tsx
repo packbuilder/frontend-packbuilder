@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from "@/components/ui/button";
-import { Edit, Link, Lock, Save, X } from "lucide-react";
+import { Edit, Lock, Save, X } from "lucide-react";
 import Cookies from "js-cookie";
 import { updateProfileDtoSchema } from "@/types/dtos/updateProfileDto";
 import { Input } from "@/components/ui/input";

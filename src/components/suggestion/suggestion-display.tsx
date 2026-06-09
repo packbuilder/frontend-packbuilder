@@ -1,5 +1,5 @@
 import type { Suggestion } from "@/types/suggestion";
-import { CloudAlert, CloudCheck, CloudCog, CirclePlus, CircleMinus, PackageOpen, Tag, Check, Trash2, X } from "lucide-react";
+import { CloudAlert, CloudCheck, CloudCog, CirclePlus, CircleMinus, PackageOpen, Tag, Check, X } from "lucide-react";
 import { ImageType, ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import { Separator } from "../ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
@@ -12,7 +12,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { Button } from "../ui/button";
 import DisplayImage from "../display-image";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function SuggestionInteractive({suggestion, modpack, curUser} : {suggestion: Suggestion, modpack: Modpack, curUser: User | null}) {

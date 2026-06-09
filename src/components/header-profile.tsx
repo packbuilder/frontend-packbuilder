@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { User } from "@/types/user"
-import avatarImage from "@/Seed-Avatar.jpg"
 import Cookies from "js-cookie"
 import { Link, useNavigate, useRouter } from "@tanstack/react-router"
 import InfoPill from "./info-pill"
@@ -73,7 +72,7 @@ export default function NavUser({
               <div className={`px-1 py-1.5 ${user.emailVerified && "hidden"}`}>
                 <InfoPill className={`gap-1 items-start`}>
                   <AlertTriangle className="text-yellow-500 size-4"/>
-                  <h3 className="text-xs">Your email is not verified</h3>
+                  <p className="text-xs">Your email is not verified</p>
                 </InfoPill>
               </div>
             </DropdownMenuLabel>

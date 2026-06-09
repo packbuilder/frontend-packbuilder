@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FieldGroup, Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
+import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { login } from '@/lib/api';
 import { useMutation } from '@tanstack/react-query';

@@ -8,7 +8,7 @@ import { enumNameFromValue } from "@/lib/utils";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import { ModLoader } from "@/types/enums";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem } from "../ui/select"
-import { Group, Plus, Save, UserRoundPlus, Users, X } from "lucide-react";
+import { Save, UserRoundPlus, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { User } from "@/types/user";
