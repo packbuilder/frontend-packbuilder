@@ -1,7 +1,8 @@
+import { getUserToken } from "@/lib/api";
 import * as signalR from "@microsoft/signalr"
-console.log(import.meta.env);
-console.log(`${import.meta.env.VITE_APIURL}/hubs/modpacks`);
+
+const VITE_APIURL = import.meta.env.VITE_APIURL ? import.meta.env.VITE_APIURL : "/api";
 export const connection = new signalR.HubConnectionBuilder()
-    .withUrl(`${import.meta.env.VITE_APIURL}/hubs/modpacks`)
+    .withUrl(`${VITE_APIURL}/hubs/modpacks`, {accessTokenFactory: () => getUserToken() || ""})
     .withAutomaticReconnect([0, 2000, 5000, 10000])
     .build();
