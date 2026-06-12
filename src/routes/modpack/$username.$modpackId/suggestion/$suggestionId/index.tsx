@@ -104,8 +104,13 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const memo = formData.get("memo") as string;
-            const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
-            const status = await updateSuggestion(modpackId, body, parseInt(suggestionId));
+            const result = createSuggestionDtoSchema.safeParse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
+
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
+
+            const status = await updateSuggestion(modpackId, result.data, parseInt(suggestionId));
 
             if(!status || status < 200 || status > 299) {
                 throw new Error("There was a problem with updating this suggestion");
@@ -201,7 +206,7 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
             </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
-                    <Button variant={"default"} onClick={submitForm} type="submit">Update Suggestion <Save/></Button>
+                    <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Update Suggestion <Save/></Button>
                     <DialogClose asChild>
                         <Button variant={"destructive"}>Cancel <X/></Button>
                     </DialogClose>
@@ -460,7 +465,7 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
                 </div>
                 <DialogFooter className="w-full px-2">
                     <div className="w-full flex flex-row justify-start items-center gap-2">
-                        <Button variant={"default"} onClick={() => mutation.mutate()} type="submit">Begin Verification <Save/></Button>
+                        <Button variant={"default"} onClick={() => mutation.mutate()} disabled={mutation.isPending} type="submit">Begin Verification <Save/></Button>
                         <DialogClose asChild>
                             <Button variant={"destructive"}>Cancel <X/></Button>
                         </DialogClose>

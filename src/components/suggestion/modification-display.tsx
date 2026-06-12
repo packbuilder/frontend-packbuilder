@@ -119,7 +119,7 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
                 <div className="flex items-center justify-start w-full h-fit gap-2 col-span-2 min-md:col-start-3 min-md:justify-center min-md:h-full min-md:row-span-3 min-md:row-start-1">
                     <form method="delete" id="deleteModification" onSubmit={handleSubmit}>
                         <Input type="hidden" name="modificationId" value={modification.id} />
-                        <Button type="submit" variant={"destructive"}><X className="text-[var(--text-primary)]"/></Button>
+                        <Button type="submit" variant={"destructive"} disabled={mutation.isPending}><X className="text-[var(--text-primary)]"/></Button>
                     </form>
                     <Button variant={"default"}>
                         <Link to={curseforgeMod.websiteLink} target="_blank" rel="noopener noreferrer">
@@ -144,9 +144,13 @@ export function CreateModificationDisplay(
             const modReferenceId = formData.get("modReferenceId") as string;
             const modAction = formData.get("modAction") as ModAction;
             const modPlatform = formData.get("modPlatform") as ModPlatform;
-            const createModificationDto = createModificationDtoSchema.parse({modAction, modReferenceId, modPlatform});
+            const result = createModificationDtoSchema.safeParse({modAction, modReferenceId, modPlatform});
 
-            const status = await createModification(modpack.id.toString(), suggestion.id.toString(), createModificationDto);
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
+
+            const status = await createModification(modpack.id.toString(), suggestion.id.toString(), result.data);
 
             if(!status || status < 200 || status > 299) {
                 throw new Error(`There was a problem with adding a modification for ${curseforgeMod.name} to your suggestion.`);
@@ -203,11 +207,11 @@ export function CreateModificationDisplay(
                             <Input type="hidden" name="modReferenceId" value={curseforgeMod.referenceId}/>
                             <Input type="hidden" name="modAction" value={modAction === ModAction.Added ? ModAction.Added : ModAction.Removed} />
                             {modAction === ModAction.Added ? 
-                                <Button type="submit" variant={"default"} className="w-fit">
+                                <Button type="submit" disabled={mutation.isPending} variant={"default"} className="w-fit">
                                     <h3>Add Mod</h3>
                                 </Button> 
                                 : 
-                                <Button type="submit" variant={"destructive"} className="w-fit">
+                                <Button type="submit" disabled={mutation.isPending} variant={"destructive"} className="w-fit">
                                     <h3>Remove Mod</h3>
                                 </Button>
                             }

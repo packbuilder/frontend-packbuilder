@@ -1,12 +1,15 @@
 import z from "zod";
 import { ImageType } from "../enums";
+import { nameSchema } from "../propertySchemas/nameSchema";
+import { passwordSchema } from "../propertySchemas/passwordSchema";
+import { imageValueSchema } from "../propertySchemas/imageValueSchema";
 
 export const createUserDtoSchema = z.object({
-    name: z.string(),
-    password: z.string(),
-    email: z.string(),
+    name: nameSchema,
+    password: passwordSchema,
+    email: z.email("Please enter a valid email").nonempty("Email is required"),
     imageType: z.enum(ImageType).transform(Number),
-    imageValue: z.string()
+    imageValue: imageValueSchema
 });
 
 export type CreateUserDto = z.infer<typeof createUserDtoSchema>

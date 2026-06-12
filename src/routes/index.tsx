@@ -16,6 +16,7 @@ import type { Bookmark } from '@/types/bookmark';
 import { createModpackDtoSchema } from '@/types/dtos/createModpackDto';
 import { ImageType, ModLoader } from '@/types/enums';
 import type { Modpack } from '@/types/modpack';
+import { imageValueSchema } from '@/types/propertySchemas/imageValueSchema';
 import type { User } from '@/types/user';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, useRouter } from '@tanstack/react-router'
@@ -50,8 +51,13 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
         mutationFn: async (formData: FormData) => {
             const modpackName = formData.get("name") as string;
             const imageValue = formData.get("stockAvatar") as string;
-            const body = createModpackDtoSchema.parse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion, imageValue, imageType: ImageType.Stock})
-            const status = await createModpack(body);
+            const result = createModpackDtoSchema.safeParse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion, imageValue, imageType: ImageType.Stock});
+
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
+
+            const status = await createModpack(result.data);
 
             if(!status || status < 200 || status > 299) {
                 throw new Error("There was a problem with creating this modpack.");
@@ -162,7 +168,7 @@ function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, mine
             </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
-                    <Button variant={"default"} onClick={submitForm} type="submit">Create Modpack <Save/></Button>
+                    <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Create Modpack <Save/></Button>
                     <DialogClose asChild>
                         <Button variant={"destructive"}>Cancel <X/></Button>
                     </DialogClose>
@@ -184,6 +190,12 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
             const payload = new FormData();
             const file = formData.get("file") as File | null;
             const imageValue = formData.get("stockAvatar") as string;
+
+            const result = imageValueSchema.safeParse(imageValue);
+
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
 
             if(!file) {
                 throw new Error("You must upload a manifest.json file.");
@@ -264,7 +276,7 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
             <DialogFooter className="w-full px-2">
                 <div className='w-full flex flex-col items-center gap-2'>
                     <div className="w-full flex flex-row justify-start items-center gap-2">
-                        <Button variant={"default"} onClick={submitForm} type="submit">Import Modpack <Save/></Button>
+                        <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Import Modpack <Save/></Button>
                         <DialogClose asChild>
                             <Button variant={"destructive"}>Cancel <X/></Button>
                         </DialogClose>
@@ -281,7 +293,6 @@ function Home() {
     const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
     const {data: bookmarks} = useSuspenseQuery(appQueries.userBookmarks(curUser));
 
-    console.log(bookmarks, modpacks);
     return <section className="flex flex-col justify-between items-center w-full mx-auto h-full pb-10">
         <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
             <div className="flex flex-col justify-around items-center mb-4">

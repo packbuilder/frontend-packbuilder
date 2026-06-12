@@ -194,7 +194,7 @@ function MergeSuggestionDialog({modpack, suggestion, curUser} : {modpack: Modpac
                 <DialogDescription>Doing so will create a new version for your modpack that implements the changes suggested by the user.</DialogDescription>
             </DialogHeader>
             <DialogFooter className="w-full items-start flex-row">
-                <Button variant={"default"} onClick={handleClick}>Merge suggestion <Check /></Button>
+                <Button variant={"default"} disabled={mutation.isPending} onClick={handleClick}>Merge suggestion <Check /></Button>
                 <DialogClose asChild>
                     <Button variant={"destructive"} className="w-fit">Cancel <X/></Button>
                 </DialogClose>

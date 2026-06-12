@@ -30,6 +30,7 @@ import DisplayContainer from "@/components/display-container";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 import { toast } from "sonner";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { nameSchema } from "@/types/propertySchemas/nameSchema";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -84,7 +85,13 @@ function RenameModpackDialog({curName} : {curName: string}) {
                 throw new Error("Your chosen modpack name is too long, must be 20 characters or less.");
             }
 
-            const status = await updateModpack(modpackId, {name: newName});
+            const result = nameSchema.safeParse(newName);
+
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
+
+            const status = await updateModpack(modpackId, {name: result.data});
 
             if(!status || status < 200 || status > 299) {
                 throw new Error("Problem with updating modpack name");
@@ -143,7 +150,7 @@ function RenameModpackDialog({curName} : {curName: string}) {
                 </div>
                 <DialogFooter>
                     <div className="w-full items-center flex gap-2 justify-start ">
-                        <Button variant={"default"} onClick={submitForm}>Save change <Check /></Button>
+                        <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending}>Save change <Check /></Button>
                         <DialogClose asChild>
                             <Button variant={"destructive"} className="w-fit">Cancel <X/></Button>
                         </DialogClose>
@@ -219,7 +226,7 @@ function DownloadModpackManifestDialog({modpackId, versionIteration} : {modpackI
             </div>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex items-center gap-2">
-                    <Button variant={"default"} onClick={() => mutation.mutate()}>Start your download <Download /></Button>
+                    <Button variant={"default"} onClick={() => mutation.mutate()} disabled={mutation.isPending}>Start your download <Download /></Button>
                     <DialogClose asChild>
                         <Button variant={"destructive"}>Cancel <X/></Button>
                     </DialogClose>
@@ -276,7 +283,7 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
                 <DialogDescription className="text-muted-foreground">Doing so is irriversable and will delete all data related to this modpack including any suggestions made for this modpack.</DialogDescription>
             </DialogHeader>
             <DialogFooter className="w-full items-start flex-row">
-                <Button variant={"default"} onClick={() => mutation.mutate()}>Delete modpack <Check /></Button>
+                <Button variant={"default"} onClick={() => mutation.mutate()} disabled={mutation.isPending}>Delete modpack <Check /></Button>
                 <DialogClose asChild>
                     <Button variant={"destructive"} className="w-fit">Cancel <X/></Button>
                 </DialogClose>
@@ -370,7 +377,7 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
     });
 
     return (
-        <Button onClick={handleClick} variant={isBookmarked ? "default" : "outline"}>{isBookmarked ? <Bookmark className="fill-current" /> : <Bookmark />}</Button>
+        <Button onClick={handleClick} disabled={mutation.isPending} variant={isBookmarked ? "default" : "outline"}>{isBookmarked ? <Bookmark className="fill-current" /> : <Bookmark />}</Button>
     )
 }
 
@@ -500,7 +507,7 @@ export default function ModpackView() {
                 {curUser && curUser.emailVerified && <CreateSuggestionDialog modpack={modpack} curUser={curUser} /> }
                 <div className="flex items-center justify-center gap-2">
                     { curUser && <BookmarkModpackButton modpack={modpack} curUser={curUser} /> }
-                    <CopyButton text={"http:localhost:3000" + pathname} side="bottom"/>
+                    <CopyButton text={import.meta.env.VITE_FRONTENDURL ? import.meta.env.VITE_FRONTENDURL + pathname : "https://packbuilder.org" + pathname} side="bottom"/>
                     { curUser?.id === modpack.userId && curUser.emailVerified && <ModpackSettingsDropDown modpack={modpack} /> }
                 </div>
             </div>

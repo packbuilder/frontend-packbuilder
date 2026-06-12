@@ -48,7 +48,6 @@ function Login() {
     },
     onError: (error: Error) => {
       toast.error(error.message);
-      console.error(error.message);
     }
   })
 
@@ -95,7 +94,7 @@ function Login() {
                 <Input id="password" name='password' type="password" required />
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={mutation.isPending}>Login</Button>
                 <Button variant="disabled" type="button">
                   Login with Google
                 </Button>

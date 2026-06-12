@@ -51,7 +51,7 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
             </DialogHeader>
             <DialogFooter className="w-full">
                 <div className="flex flex-row items-center justify-start w-full gap-2">
-                    <Button variant={"default"} onClick={() => mutation.mutate()}>Delete suggestion <Check /></Button>
+                    <Button variant={"default"} onClick={() => mutation.mutate()} disabled={mutation.isPending}>Delete suggestion <Check /></Button>
                     <DialogClose asChild>
                         <Button variant={"destructive"}>Cancel <X/></Button>
                     </DialogClose>

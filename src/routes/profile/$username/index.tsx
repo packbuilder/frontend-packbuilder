@@ -75,15 +75,19 @@ function EditProfileDialog() {
         const imageValue = formData.get("imageValue") as string;
         const imageType = ImageType.Stock;
 
-        const updateUserDto = updateProfileDtoSchema.parse({name:newName, imageType, imageValue});
+        const result = updateProfileDtoSchema.safeParse({name:newName, imageType, imageValue});
 
-        const status = await updateProfile(curUser!.id, updateUserDto);
+        if (!result.success) {
+            throw new Error(result.error.issues[0].message);
+        }
+
+        const status = await updateProfile(curUser!.id, result.data);
 
         if(!status || status < 200 || status > 200) {
           throw new Error("There was a problem with updating your account details.");
         }
 
-        return newName
+        return newName;
       },
       onSuccess: async (newName: string) => {
         toast.success("Successfully updated your account details!");
@@ -141,7 +145,7 @@ function EditProfileDialog() {
               </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
-                    <Button variant={"default"} onClick={submitForm} type="submit">Update Profile <Save/></Button>
+                    <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Update Profile <Save/></Button>
                     <DialogClose asChild>
                         <Button variant={"destructive"}>Cancel <X/></Button>
                     </DialogClose>
@@ -173,9 +177,13 @@ function ChangeEmailDialog() {
             const newEmail = formData.get("newEmail") as string;
             const password = formData.get("password") as string;
 
-            const changeEmailDto = changeEmailDtoSchema.parse({ newEmail, password });
+            const result = changeEmailDtoSchema.safeParse({ newEmail, password });
 
-            const status = await changeEmail(changeEmailDto);
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
+
+            const status = await changeEmail(result.data);
 
             // TODO: Figure out how to send text through responses from backend for richer error details
 
@@ -183,7 +191,7 @@ function ChangeEmailDialog() {
                 throw new Error("There was a problem with updating your email.")
             }
 
-            return newEmail
+            return newEmail;
         },
         onSuccess: async (newEmail: string) => {
             toast.success(`Your email was successfully updated to ${newEmail}, You have been logged out of your account.`);
@@ -242,7 +250,7 @@ function ChangeEmailDialog() {
               </form>
             <DialogFooter className="w-full px-2">
                 <div className="w-full flex flex-row justify-start items-center gap-2">
-                    <Button variant={"default"} onClick={submitForm} type="submit">Change Email <Save/></Button>
+                    <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Change Email <Save/></Button>
                     <DialogClose asChild>
                         <Button variant={"destructive"}>Cancel <X/></Button>
                     </DialogClose>

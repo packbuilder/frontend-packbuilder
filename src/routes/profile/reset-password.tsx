@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { resetPassword } from '@/lib/api'
+import { passwordSchema } from '@/types/propertySchemas/passwordSchema'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { fallback, zodValidator } from '@tanstack/zod-adapter'
@@ -71,18 +72,20 @@ function RouteComponent() {
       const newPassword = formData.get("newPassword") as string;
       const confirmPassword = formData.get("confirmPassword") as string;
 
-      if(newPassword !== confirmPassword) {
-        throw new Error("Passwords do not match.");
+      const resultNew = passwordSchema.safeParse(newPassword);
+
+      if (!resultNew.success) {
+        throw new Error(resultNew.error.issues[0].message);
       }
 
-      if(newPassword.length < 8) {
-        throw new Error("Password must be at least 8 characters long.");
+      if(confirmPassword !== newPassword) {
+        throw new Error("Your confirm password does not match the new password you entered.")
       }
 
-      const status = await resetPassword(userId, newPassword, token);
+      const status = await resetPassword(userId, resultNew.data, token);
 
       if (!status || status < 200 || status > 299) {
-        throw new Error("Unable to reset password");
+        throw new Error("There was a problem with resetting your password");
       }
     },
     onSuccess: async () => {
@@ -130,7 +133,7 @@ function RouteComponent() {
               <h3 className='text-sm text-left'>Please confirm your password.</h3>
             </Field>
           </FieldGroup>
-          <Button variant={"default"} type='submit'>
+          <Button variant={"default"} type='submit' disabled={mutation.isPending}>
             Change password
           </Button>
         </form>

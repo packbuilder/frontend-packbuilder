@@ -34,8 +34,13 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const memo = formData.get("memo") as string;
-            const body = createSuggestionDtoSchema.parse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
-            const response = await createSuggestion(modpack.id.toString(), body);
+            const result = createSuggestionDtoSchema.safeParse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
+
+            if (!result.success) {
+                throw new Error(result.error.issues[0].message);
+            }
+
+            const response = await createSuggestion(modpack.id.toString(), result.data);
 
             if(!response || response.status < 200 || response.status > 200 || !response.suggestionId) {
                 throw new Error("There was a problem with creating your suggestion");
@@ -44,7 +49,9 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
             return response.suggestionId
         },
         onSuccess: async (suggestionId: number) => {
-            toast.success(`Successfully created a suggestion for ${modpack.name}!`)
+            toast.success(`Successfully created a suggestion for ${modpack.name}!`);
+
+            setOpen(false);
             
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
@@ -62,7 +69,6 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
     });
 
     const submitForm = () => {
-        setOpen(false);
         const form = formRef.current as unknown as HTMLFormElement;
         form.requestSubmit();
     }

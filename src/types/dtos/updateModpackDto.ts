@@ -1,9 +1,11 @@
 import z from "zod";
 import { ImageType } from "../enums";
+import { imageValueSchema } from "../propertySchemas/imageValueSchema";
+import { nameSchema } from "../propertySchemas/nameSchema";
 
 export const updateModpackDtoSchema = z.object({
-    name: z.string().optional(),
-    imageValue: z.string().optional(),
+    name: nameSchema,
+    imageValue: imageValueSchema.optional(),
     imageType: z.enum(ImageType).transform(Number).optional()
 });
 

@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { MailSearch } from 'lucide-react'
 import { useEffect, useState, type FormEvent} from 'react'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/login/create-account')({
   component: RouteComponent,
@@ -21,7 +22,7 @@ export const Route = createFileRoute('/login/create-account')({
   },
 })
 
-function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: FormEvent<HTMLFormElement>) => void} & React.ComponentProps<typeof Card>) {
+function CreateAccountForm({ handleSubmit, isMutationPending, ...props} : {handleSubmit: (event: FormEvent<HTMLFormElement>) => void, isMutationPending: boolean} & React.ComponentProps<typeof Card>) {
   const [avatar, setAvatar] = useState("profile_avatar_1.jpg");
 
   return (
@@ -81,7 +82,7 @@ function CreateAccountForm({ handleSubmit, ...props}: {handleSubmit: (event: For
             </Field>
             <FieldGroup>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={isMutationPending}>Create Account</Button>
                 <Button variant="disabled" type="button" disabled>
                   Sign up with Google
                 </Button>
@@ -107,16 +108,17 @@ function VerifyEmailCard({ email }: { email: string }) {
       const response = await sendVerificationEmail(email);
 
       if (!response || response.status < 200 || response.status > 299) {
-        throw new Error(response?.statusText || "Problem with creating account");
+        throw new Error(response?.statusText || "Problem with sending verification email");
       }
     },
     onSuccess: () => {
+      toast.success("Successfully sent verification email!")
       setOpen(true);
       setCooldown(60);
       navigate({to: "/login/create-account", replace: true});
     },
     onError: (error: Error) => {
-      console.error(error.message);
+      toast.error(error.message)
     },
   });
 
@@ -189,9 +191,13 @@ function RouteComponent() {
         throw new Error("Your password does not match your confirm password.")
       }
 
-      const createUserDto = createUserDtoSchema.parse({name: username, email, password, imageType:"0", imageValue: avatar})
+      const result = createUserDtoSchema.safeParse({name: username, email, password, imageType:"0", imageValue: avatar})
 
-      const response = await createAccount(createUserDto);
+      if (!result.success) {
+        throw new Error(result.error.issues[0].message);
+      }
+
+      const response = await createAccount(result.data);
 
       if(!response || response.status < 200 || response.status > 299) {
         throw new Error("Problem with creating account");
@@ -200,13 +206,12 @@ function RouteComponent() {
       return email;
     },
     onSuccess: async (email: string) => {
-      // TODO: On success get rid of form and pop up modal that shows user email verification info type beat
+      toast.success("Successfully created account.")
       setDisplayEmailVerification(true);
       setEmail(email);
     },
     onError: async (error: Error) => {
-      // TODO: Display errors properly. Perhaps make error component to catch errors?
-      console.error(error.message);
+      toast.error(error.message)
     }
   })
 
@@ -217,7 +222,7 @@ function RouteComponent() {
   }
 
   return <section className='w-full flex items-center justify-center mb-4'>
-    {!displayEmailVerification && <CreateAccountForm className='max-w-9/10 w-full min-md:max-w-3/5' handleSubmit={handleSubmit} />}
+    {!displayEmailVerification && <CreateAccountForm className='max-w-9/10 w-full min-md:max-w-3/5' handleSubmit={handleSubmit} isMutationPending={mutation.isPending} />}
     {displayEmailVerification && email && <VerifyEmailCard email={email} />}
   </section>
 }

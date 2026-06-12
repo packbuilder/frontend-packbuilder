@@ -7,6 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router'
 import { MailSearch } from 'lucide-react';
 import { useState, useEffect, type FormEvent } from 'react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/login/forgot-password')({
   component: RouteComponent,
@@ -29,10 +30,11 @@ function RouteComponent() {
       }
     },
     onSuccess: () => {
+      toast.success("Successfully sent password reset email!")
       setCooldown(30);
     },
     onError: (error: Error) => {
-      console.error(error.message);
+      toast.error(error.message);
     },
   });
 
