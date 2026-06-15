@@ -52,7 +52,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$
             throw redirect({to: "/"});
         }
 
-        const breadcrumbs = [{text: modpack.name, link: `/modpack/${modpack.user.name}/${modpack.id}`}, {text: `${suggestion.username}'s suggestion`, link: `/modpack/${modpack.user.name}/${modpack.id}/suggestion/${suggestion.id}`}]
+        const breadcrumbs = [{text: modpack.name, link: `/modpack/${modpack.user.name}/${modpack.id}`}, {text: `${suggestion.user?.name}'s suggestion`, link: `/modpack/${modpack.user.name}/${modpack.id}/suggestion/${suggestion.id}`}]
 
         return { curUser: user, suggestion, modpack, breadcrumbs };
     },
@@ -549,7 +549,7 @@ export default function SuggestionView() {
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between min-w-0">
                 <img src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-w-0">
-                    <h1 className="font-bold truncate w-full max-md:text-center leading-normal">{suggestion.username}'s suggestion</h1>
+                    <h1 className="font-bold truncate w-full max-md:text-center leading-normal">{suggestion.user?.name}'s suggestion</h1>
                     <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3"> {suggestion.memo}</h3> 
                     <InfoPill>     
                         {

@@ -137,25 +137,6 @@ export async function getUserById(userId: number) {
     }
 }
 
-export async function getUserByUsername(username: string) {
-    const token = getUserToken();
-
-    try {
-        const response = await api.get(`users/${username}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
-        });
-
-        const data = userSchema.parse(response.data);
-        return data;
-    } catch (error) {
-        const err = error as unknown as AxiosError
-        console.error(err.message);
-        return null;
-    }
-}
-
 export async function getUserModpacks(user: User) {
     const token = getUserToken();
 

@@ -18,16 +18,24 @@ import { toast } from "sonner";
 export default function SuggestionInteractive({suggestion, modpack, curUser} : {suggestion: Suggestion, modpack: Modpack, curUser: User | null}) {
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
+
+    if(!suggestion.user) {
+        return <div className="w-full bg-[var(--surface-1)]">
+            <div className="w-full max-w-full h-fit flex items-center min-h-30 gap-x-3 gap-y-3 p-2 bg-[var(--surface-1)]">
+                <h2>Unable to load suggestion information</h2>
+            </div>
+        </div>
+    }
     
     return <div className="w-full bg-[var(--surface-1)]">
             <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)]">
                 <div className="flex items-center justify-center min-md:row-span-3">
-                    <DisplayImage src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt="logo" />
+                    <DisplayImage src={suggestion.user.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user.imageValue}` : suggestion.user.imageValue} alt="logo" />
                 </div>
                 <header className="flex flex-col gap-2 w-full justify-center min-md:col-start-2 min-md:row-span-2">
                     <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
                         <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)]">
-                            {suggestion.username}'s suggestion
+                            {suggestion.user?.name}'s suggestion
                         </h2>
                         <Separator orientation="vertical" />
                         <div className="flex items-center flex-wrap justify-center gap-2 text-md text-[var(--text-secondary)]">
@@ -72,7 +80,7 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
                     </div>
                 </div>
                 <div className="flex items-center justify-start w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">
-                    <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.username, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}}>
+                    <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.user.name, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}}>
                         <Button variant={"default"}>
                             <h3>View</h3>
                         </Button>
@@ -87,16 +95,24 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
 export function SuggestionDisplay({suggestion} : {suggestion: Suggestion}) {
     const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
     const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
+
+    if(!suggestion.user) {
+        return <div className="w-full bg-[var(--surface-1)]">
+            <div className="w-full max-w-full h-fit flex items-center min-h-30 gap-x-3 gap-y-3 p-2 bg-[var(--surface-1)]">
+                <h2>Unable to load suggestion information</h2>
+            </div>
+        </div>
+    }
     
-    return <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.username, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}} className="w-full group bg-[var(--surface-1)]">
+    return <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.user.name, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}} className="w-full group bg-[var(--surface-1)]">
             <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)] group-hover:bg-white/5 transition duration-200">
                 <div className="flex items-center justify-center min-md:row-span-3">
-                    <DisplayImage src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt="logo" />
+                    <DisplayImage src={suggestion.user.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user.imageValue}` : suggestion.user?.imageValue} alt="logo" />
                 </div>
                 <header className="flex flex-col gap-2 w-full justify-center min-md:col-start-2 min-md:row-span-2">
                     <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
                         <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)] group-hover:underline">
-                            {suggestion.username}'s suggestion
+                            {suggestion.user?.name}'s suggestion
                         </h2>
                         <Separator orientation="vertical" />
                         <div className="flex items-center flex-wrap justify-center gap-2 text-md text-[var(--text-secondary)]">
@@ -158,11 +174,11 @@ function MergeSuggestionDialog({modpack, suggestion, curUser} : {modpack: Modpac
             const status = await createModpackVersion(modpackIdStr, suggestionIdStr);
         
             if(!status || status < 200 || status > 299) {
-                throw new Error(`There was a problem with merging ${suggestion.username}'s suggestion into modpack ${modpack.name}.`);
+                throw new Error(`There was a problem with merging ${suggestion.user?.name}'s suggestion into modpack ${modpack.name}.`);
             }
         },
         onSuccess: async () => {
-            toast.success(`Successfully merged ${suggestion.username}'s suggestion into modpack ${modpack.name}.`);
+            toast.success(`Successfully merged ${suggestion.user?.name}'s suggestion into modpack ${modpack.name}.`);
             setIsOpen(false);
             await queryClient.invalidateQueries({queryKey: ["modpack", modpackIdStr], exact: true});
             await queryClient.invalidateQueries({queryKey: ["suggestion", suggestionIdStr], exact: true});

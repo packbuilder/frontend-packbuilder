@@ -9,7 +9,6 @@ export const suggestionSchema = z.object({
     user: userSchema.nullable(),
     modpack: modpackSchema.nullable(),
     
-    username: z.string(),
     userId: z.number(),
     state: z.coerce.string().pipe(z.enum(SuggestionState)),
     gameVersion: z.string(),

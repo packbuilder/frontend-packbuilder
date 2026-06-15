@@ -1,4 +1,4 @@
-import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getUserByUsername, getMinecraftVersions, getUserBookmarks } from "@/lib/api";
+import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getMinecraftVersions, getUserBookmarks, getUserById } from "@/lib/api";
 import type { ModLoader } from "@/types/enums";
 import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
@@ -14,9 +14,9 @@ export const appQueries = {
         queryFn: () => getModpack(modpackId),
     }),
 
-    userData: (username: string) => queryOptions({
-        queryKey: ["userProfile", username],
-        queryFn: () => getUserByUsername(username),
+    userData: (userId: number) => queryOptions({
+        queryKey: ["userProfile", userId.toString()],
+        queryFn: () => getUserById(userId),
     }),
     
     userModpacks: (user: User | null) => queryOptions({

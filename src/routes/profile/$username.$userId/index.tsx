@@ -32,32 +32,52 @@ const dataDisplaySchema = z.object({
     display: fallback(z.enum(["modpacks", "suggestions"]), "modpacks").default("modpacks"),
 });
 
-export const Route = createFileRoute('/profile/$username/')({
-  validateSearch: zodValidator(dataDisplaySchema),
+export const Route = createFileRoute('/profile/$username/$userId/')({
+    validateSearch: zodValidator(dataDisplaySchema),
+    params: {
+        parse: (raw) => ({
+            username: raw.username,
+            userId: Number(raw.userId),
+        }),
+    },
     loaderDeps: ({search: {display}}) => ({
         display
     }),
-  loader: async ({context, params}) => {
-    const {user: curUser, queryClient} = context;
-    const {username} = params;
-    const userData = await queryClient.ensureQueryData(appQueries.userData(username));
-    
-    if(!userData) {
-      throw redirect({to:"/"});
-    }
+    loader: async ({context, params}) => {
+        if (!Number.isInteger(params.userId)) {
+            throw redirect({ to: "/" });
+        }
 
-    const userModpacks = await queryClient.ensureQueryData(appQueries.userModpacks(userData));
-    const userSuggestions = await queryClient.ensureQueryData(appQueries.userSuggestions(userData));
-    const breadcrumbs = [{text: `${userData.name}'s profile`}];
+        const {user: curUser, queryClient} = context;
+        const {username, userId} = params;
+        const userData = await queryClient.ensureQueryData(appQueries.userData(userId));
 
-    return {curUser, userData, userModpacks, userSuggestions, queryClient, breadcrumbs}
-  },
-  component: ProfileView,
+        if(!userData) {
+            throw redirect({to: "/"});
+        }
+        
+        if (username !== userData.name) {
+            throw redirect({
+                to: "/profile/$username/$userId",
+                params: {
+                    username: userData.name,
+                    userId: userData.id,
+                },
+            });
+        }
+
+        const userModpacks = await queryClient.ensureQueryData(appQueries.userModpacks(userData));
+        const userSuggestions = await queryClient.ensureQueryData(appQueries.userSuggestions(userData));
+        const breadcrumbs = [{text: `${userData.name}'s profile`}];
+
+        return {curUser, userData, userModpacks, userSuggestions, queryClient, breadcrumbs}
+    },
+    component: ProfileView,
 });
 
 function EditProfileDialog() {
   const {curUser} = Route.useLoaderData();
-  const {username} = Route.useParams();
+  const {userId} = Route.useParams();
   const [isOpen, setOpen] = useState(false);
   const [avatar, setAvatar] = useState(curUser?.imageValue || "profile_avatar_1.jpg");
   const formRef = useRef(null);
@@ -92,8 +112,8 @@ function EditProfileDialog() {
       onSuccess: async (newName: string) => {
         toast.success("Successfully updated your account details!");
         setOpen(false);
-        queryClient.invalidateQueries({queryKey: appQueries.userData(username).queryKey, refetchType: "all"});
-        navigate({to: "/profile/$username", params: {username: newName}, replace: true});
+        queryClient.invalidateQueries({queryKey: appQueries.userData(userId).queryKey, refetchType: "all"});
+        navigate({to: "/profile/$username/$userId", params: {username: newName, userId: userId}, replace: true});
     },
       onError: (error) => {
         toast.error(error.message);
@@ -300,8 +320,8 @@ function SelectDisplayRadioGroup() {
 }
 
 export default function ProfileView() {
-    const {username} = Route.useParams();
-    const {data: user} = useSuspenseQuery(appQueries.userData(username));
+    const {userId} = Route.useParams();
+    const {data: user} = useSuspenseQuery(appQueries.userData(userId));
     const {data: userModpacks, isPending: pendingModpackData} = useSuspenseQuery(appQueries.userModpacks(user));
     const {data: userSuggestions, isPending: pendingSuggestionData} = useSuspenseQuery(appQueries.userSuggestions(user))
     const { curUser } = Route.useLoaderData();
@@ -428,7 +448,7 @@ export default function ProfileView() {
                                     )
                                     :
                                     filteredSuggestions && userSuggestions ? filteredSuggestions.map((suggestion, index) => {
-                                        return <CommandItem value={suggestion.username} key={index} className="size-full max-w-full p-0">
+                                        return <CommandItem value={suggestion.user?.name} key={index} className="size-full max-w-full p-0">
                                             <SuggestionDisplay suggestion={suggestion} />
                                         </CommandItem>
                                     })  

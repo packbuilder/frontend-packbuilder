@@ -16,7 +16,7 @@ import { Route as ProfileVerificationResultRouteImport } from './routes/profile/
 import { Route as ProfileResetPasswordRouteImport } from './routes/profile/reset-password'
 import { Route as LoginForgotPasswordRouteImport } from './routes/login/forgot-password'
 import { Route as LoginCreateAccountRouteImport } from './routes/login/create-account'
-import { Route as ProfileUsernameIndexRouteImport } from './routes/profile/$username/index'
+import { Route as ProfileUsernameUserIdIndexRouteImport } from './routes/profile/$username.$userId/index'
 import { Route as ModpackUsernameModpackIdIndexRouteImport } from './routes/modpack/$username.$modpackId/index'
 import { Route as ModpackUsernameModpackIdSuggestionSuggestionIdIndexRouteImport } from './routes/modpack/$username.$modpackId/suggestion/$suggestionId/index'
 
@@ -56,11 +56,12 @@ const LoginCreateAccountRoute = LoginCreateAccountRouteImport.update({
   path: '/login/create-account',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileUsernameIndexRoute = ProfileUsernameIndexRouteImport.update({
-  id: '/profile/$username/',
-  path: '/profile/$username/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ProfileUsernameUserIdIndexRoute =
+  ProfileUsernameUserIdIndexRouteImport.update({
+    id: '/profile/$username/$userId/',
+    path: '/profile/$username/$userId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ModpackUsernameModpackIdIndexRoute =
   ModpackUsernameModpackIdIndexRouteImport.update({
     id: '/modpack/$username/$modpackId/',
@@ -82,8 +83,8 @@ export interface FileRoutesByFullPath {
   '/profile/verification-result': typeof ProfileVerificationResultRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
-  '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
+  '/profile/$username/$userId': typeof ProfileUsernameUserIdIndexRoute
   '/modpack/$username/$modpackId/suggestion/$suggestionId': typeof ModpackUsernameModpackIdSuggestionSuggestionIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -94,8 +95,8 @@ export interface FileRoutesByTo {
   '/profile/verification-result': typeof ProfileVerificationResultRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login': typeof LoginIndexRoute
-  '/profile/$username': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId': typeof ModpackUsernameModpackIdIndexRoute
+  '/profile/$username/$userId': typeof ProfileUsernameUserIdIndexRoute
   '/modpack/$username/$modpackId/suggestion/$suggestionId': typeof ModpackUsernameModpackIdSuggestionSuggestionIdIndexRoute
 }
 export interface FileRoutesById {
@@ -107,8 +108,8 @@ export interface FileRoutesById {
   '/profile/verification-result': typeof ProfileVerificationResultRoute
   '/profile/verify-email': typeof ProfileVerifyEmailRoute
   '/login/': typeof LoginIndexRoute
-  '/profile/$username/': typeof ProfileUsernameIndexRoute
   '/modpack/$username/$modpackId/': typeof ModpackUsernameModpackIdIndexRoute
+  '/profile/$username/$userId/': typeof ProfileUsernameUserIdIndexRoute
   '/modpack/$username/$modpackId/suggestion/$suggestionId/': typeof ModpackUsernameModpackIdSuggestionSuggestionIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -121,8 +122,8 @@ export interface FileRouteTypes {
     | '/profile/verification-result'
     | '/profile/verify-email'
     | '/login'
-    | '/profile/$username'
     | '/modpack/$username/$modpackId'
+    | '/profile/$username/$userId'
     | '/modpack/$username/$modpackId/suggestion/$suggestionId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -133,8 +134,8 @@ export interface FileRouteTypes {
     | '/profile/verification-result'
     | '/profile/verify-email'
     | '/login'
-    | '/profile/$username'
     | '/modpack/$username/$modpackId'
+    | '/profile/$username/$userId'
     | '/modpack/$username/$modpackId/suggestion/$suggestionId'
   id:
     | '__root__'
@@ -145,8 +146,8 @@ export interface FileRouteTypes {
     | '/profile/verification-result'
     | '/profile/verify-email'
     | '/login/'
-    | '/profile/$username/'
     | '/modpack/$username/$modpackId/'
+    | '/profile/$username/$userId/'
     | '/modpack/$username/$modpackId/suggestion/$suggestionId/'
   fileRoutesById: FileRoutesById
 }
@@ -158,8 +159,8 @@ export interface RootRouteChildren {
   ProfileVerificationResultRoute: typeof ProfileVerificationResultRoute
   ProfileVerifyEmailRoute: typeof ProfileVerifyEmailRoute
   LoginIndexRoute: typeof LoginIndexRoute
-  ProfileUsernameIndexRoute: typeof ProfileUsernameIndexRoute
   ModpackUsernameModpackIdIndexRoute: typeof ModpackUsernameModpackIdIndexRoute
+  ProfileUsernameUserIdIndexRoute: typeof ProfileUsernameUserIdIndexRoute
   ModpackUsernameModpackIdSuggestionSuggestionIdIndexRoute: typeof ModpackUsernameModpackIdSuggestionSuggestionIdIndexRoute
 }
 
@@ -214,11 +215,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginCreateAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile/$username/': {
-      id: '/profile/$username/'
-      path: '/profile/$username'
-      fullPath: '/profile/$username'
-      preLoaderRoute: typeof ProfileUsernameIndexRouteImport
+    '/profile/$username/$userId/': {
+      id: '/profile/$username/$userId/'
+      path: '/profile/$username/$userId'
+      fullPath: '/profile/$username/$userId'
+      preLoaderRoute: typeof ProfileUsernameUserIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/modpack/$username/$modpackId/': {
@@ -246,8 +247,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileVerificationResultRoute: ProfileVerificationResultRoute,
   ProfileVerifyEmailRoute: ProfileVerifyEmailRoute,
   LoginIndexRoute: LoginIndexRoute,
-  ProfileUsernameIndexRoute: ProfileUsernameIndexRoute,
   ModpackUsernameModpackIdIndexRoute: ModpackUsernameModpackIdIndexRoute,
+  ProfileUsernameUserIdIndexRoute: ProfileUsernameUserIdIndexRoute,
   ModpackUsernameModpackIdSuggestionSuggestionIdIndexRoute:
     ModpackUsernameModpackIdSuggestionSuggestionIdIndexRoute,
 }

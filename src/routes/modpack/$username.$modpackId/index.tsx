@@ -489,7 +489,7 @@ export default function ModpackView() {
                 <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center min-md:max-w-3/4 w-full min-w-0">
                     <h1 className="font-bold w-full truncate leading-normal max-md:text-center">{modpack.name}</h1>
-                    <h3 className="leading-normal">Created by <Link to="/profile/$username" className="underline font-bold" params={{username: modpack.user.name}}>{modpack.user.name}</Link></h3>
+                    <h3 className="leading-normal">Created by <Link to="/profile/$username/$userId" className="underline font-bold" params={{username: modpack.user.name, userId:modpack.userId}}>{modpack.user.name}</Link></h3>
                     <div className="flex justify-center items-center text-lg gap-1 mt-2 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />
                         <h3 className="text-[var(--text-secondary)]">
@@ -610,7 +610,7 @@ export default function ModpackView() {
                                     )
                                     :
                                     filteredSuggestions && suggestions ? filteredSuggestions.map((suggestion, index) => {
-                                        return <CommandItem value={suggestion.username} key={index} className="size-full max-w-full p-0">
+                                        return <CommandItem value={suggestion.user?.name} key={index} className="size-full max-w-full p-0">
                                             <SuggestionInteractive suggestion={suggestion} modpack={modpack} curUser={curUser} />
                                         </CommandItem>
                                     })  

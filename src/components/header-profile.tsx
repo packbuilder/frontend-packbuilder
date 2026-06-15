@@ -79,7 +79,7 @@ export default function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer">
-                <Link to={"/profile/$username"} params={{username: user.name}} className="w-full">
+                <Link to={"/profile/$username/$userId"} params={{username: user.name, userId: user.id}} className="w-full">
                   <div className="flex items-center justify-start gap-2">
                     <User2 />
                     Profile
