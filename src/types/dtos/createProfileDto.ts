@@ -3,11 +3,12 @@ import { ImageType } from "../enums";
 import { nameSchema } from "../propertySchemas/nameSchema";
 import { passwordSchema } from "../propertySchemas/passwordSchema";
 import { imageValueSchema } from "../propertySchemas/imageValueSchema";
+import { emailSchema } from "../propertySchemas/emailSchema";
 
 export const createUserDtoSchema = z.object({
     name: nameSchema,
     password: passwordSchema,
-    email: z.email("Please enter a valid email").nonempty("Email is required"),
+    email: emailSchema,
     imageType: z.enum(ImageType).transform(Number),
     imageValue: imageValueSchema
 });

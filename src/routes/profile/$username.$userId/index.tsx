@@ -177,14 +177,14 @@ function EditProfileDialog() {
 
 function ChangeEmailDialog() {
   const [isOpen, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const router = useRouter();
   const formRef = useRef(null);
 
     const handleLogout = async () => {
       Cookies.remove("_packbuilder_jwt");
-      queryClient.invalidateQueries();
-      await router.invalidate();
+        await router.invalidate({sync: true});
+        navigate({to: "/login", reloadDocument: true});
     }
 
     const submitForm = () => {

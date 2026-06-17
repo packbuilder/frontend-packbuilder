@@ -1,8 +1,9 @@
 import z from "zod";
 import { passwordSchema } from "../propertySchemas/passwordSchema";
+import { emailSchema } from "../propertySchemas/emailSchema";
 
 export const changeEmailDtoSchema = z.object({
-    newEmail: z.email("Please enter a valid email address."),
+    newEmail: emailSchema,
     password: passwordSchema,
 });
 
