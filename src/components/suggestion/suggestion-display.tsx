@@ -79,7 +79,7 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
                         </InfoPill>
                     </div>
                 </div>
-                <div className="flex items-center justify-start w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">
+                <div className="flex items-center justify-start p-2 w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">
                     <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.user.name, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}}>
                         <Button variant={"default"}>
                             <h3>View</h3>

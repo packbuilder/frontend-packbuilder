@@ -25,7 +25,7 @@ function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
           <main className="min-h-dvh size-full bg-background flex flex-col items-center justify-start">
-            <Toaster position='top-center' theme='dark' richColors/>
+            <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
             <Header user={user} />
             <Outlet />
           </main>
@@ -43,7 +43,7 @@ function ErrorComponent({ error }: { error: Error }) {
     <SignalRProvider>
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
-          <Toaster position='top-center' theme='dark' richColors/>
+          <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
           <Header user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
@@ -63,7 +63,7 @@ function NotFoundComponent() {
     <SignalRProvider>
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
-          <Toaster position='top-center' theme='dark' richColors/>
+          <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
           <Header user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
