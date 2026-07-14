@@ -194,7 +194,7 @@ function RouteComponent() {
       const result = createUserDtoSchema.safeParse({name: username, email, password, imageType:"0", imageValue: avatar})
 
       if (!result.success) {
-        throw new Error(result.error.issues[0].message);
+          throw new Error(result.error.issues[0].message);
       }
 
       const response = await createAccount(result.data);
