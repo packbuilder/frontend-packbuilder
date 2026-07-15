@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const VITE_APIURL = import.meta.env.VITE_APIURL ? import.meta.env.VITE_APIURL : "/api";
+const VITE_APIURL = import.meta.env.VITE_APIURL;
 
 export function useApi() {
     return axios.create({
