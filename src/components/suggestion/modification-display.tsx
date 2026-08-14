@@ -80,17 +80,17 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
                             {
                                 modification.conflictState === ConflictState.MissingDependencies ? 
                                 <div className="flex items-center justify-center items-center gap-1">
-                                    <h3 className="text-xs text-nowrap">Missing dependencies</h3> 
+                                    <p className="text-xs text-nowrap">Missing dependencies</p> 
                                     <TriangleAlert className="text-yellow-500 size-4" />
                                 </div>
                                 : modification.conflictState === ConflictState.Conflicting ? 
                                 <div className="flex items-center justify-center items-center gap-1">
-                                    <h3 className="text-xs text-nowrap">Conflicting</h3> 
+                                    <p className="text-xs text-nowrap">Conflicting</p> 
                                     <TriangleAlert className="text-red-500 size-4" />
                                 </div>
                                 :
                                 <div className="flex items-center justify-center items-center gap-1">
-                                    <h3 className="text-xs text-nowrap">No conflicts</h3> 
+                                    <p className="text-xs text-nowrap">No conflicts</p> 
                                     <CircleCheck className="text-green-500 size-4" />
                                 </div>
                             }
@@ -100,12 +100,12 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
                                 {
                                     modification.modAction === ModAction.Added ? 
                                     <div className="flex items-center justify-center items-center gap-1">
-                                        <h3 className="text-xs text-nowrap">Added</h3> 
+                                        <p className="text-xs text-nowrap">Added</p> 
                                         <CirclePlus className="text-green-500 size-4" />
                                     </div>
                                     : 
                                     <div className="flex items-center justify-center items-center gap-1">
-                                        <h3 className="text-xs text-nowrap">Removed</h3> 
+                                        <p className="text-xs text-nowrap">Removed</p> 
                                         <CircleMinus className="text-red-500 size-4" />
                                     </div>
                                 }
