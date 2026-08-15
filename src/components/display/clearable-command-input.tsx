@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { CommandInput } from "./ui/command";
+import { CommandInput } from "../ui/command";
 import {Command as CommandPrimitive} from "cmdk"
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { X } from "lucide-react";
 
 export default function ClearableCommandInput({

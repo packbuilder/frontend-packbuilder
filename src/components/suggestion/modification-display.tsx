@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { CircleCheck, CircleMinus, CirclePlus, ExternalLink, TriangleAlert, X } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { ConflictState, ModAction, ModPlatform } from "@/types/enums";
-import InfoPill from "../info-pill";
+import InfoPill from "../display/info-pill";
 import type { Modpack } from "@/types/modpack";
 import type { Suggestion } from "@/types/suggestion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ import type { FormEvent } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import type { User } from "@/types/user";
-import DisplayImage from "../display-image";
+import DisplayImage from "../display/display-image";
 import { toast } from "sonner";
 
 export function ModificationDisplay({curseforgeMod, modification, modpack, suggestion, modificationReferenceIds, curUser} : {curseforgeMod: CurseForgeMod, modification: Modification, modpack: Modpack, suggestion: Suggestion, modificationReferenceIds: string[], curUser: User | null | undefined}) {
@@ -208,19 +208,19 @@ export function CreateModificationDisplay(
                             <Input type="hidden" name="modAction" value={modAction === ModAction.Added ? ModAction.Added : ModAction.Removed} />
                             {modAction === ModAction.Added ? 
                                 <Button type="submit" disabled={mutation.isPending} variant={"default"} className="w-fit">
-                                    <h3>Add Mod</h3>
+                                    <p>Add Mod</p>
                                 </Button> 
                                 : 
                                 <Button type="submit" disabled={mutation.isPending} variant={"destructive"} className="w-fit">
-                                    <h3>Remove Mod</h3>
+                                    <p>Remove Mod</p>
                                 </Button>
                             }
                         </form>
                         :
                         <Button variant={"outline"}>
-                            <h3>    
+                            <p>    
                                 {modAction === ModAction.Added ? "Add mod" : "Remove mod"}
-                            </h3>
+                            </p>
                         </Button>
                     }
                 </div>
@@ -231,7 +231,7 @@ export function CreateModificationDisplay(
                     <InfoPill>
                         <div className="flex items-center justify-center items-center gap-1">
                             <TriangleAlert className="text-red-500 size-4" />
-                            <h3 className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</h3> 
+                            <p className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</p> 
                         </div>
                     </InfoPill>
                 </div>

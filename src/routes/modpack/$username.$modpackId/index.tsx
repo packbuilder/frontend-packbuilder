@@ -1,8 +1,8 @@
-import { Bookmark, Check, Download, Edit, Gamepad, Settings, Trash2, X } from "lucide-react";
+import { Bookmark, Check, Download, Edit, Gamepad, Settings, SettingsIcon, Trash2, X } from "lucide-react";
 import { createBookmark, deleteBookmark, deleteModpack, getBookmark, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { CopyButton } from "@/components/copy-button";
+import { CopyButton } from "@/components/display/copy-button";
 import { Input } from "@/components/ui/input";
 import type { VersionMod } from "@/types/versionMod";
 import { createFileRoute, Link, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
@@ -25,12 +25,13 @@ import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import SuggestionInteractive from "@/components/suggestion/suggestion-display";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import ClearableCommandInput from "@/components/clearable-command-input";
-import DisplayContainer from "@/components/display-container";
+import ClearableCommandInput from "@/components/display/clearable-command-input";
+import DisplayContainer from "@/components/display/display-container";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 import { toast } from "sonner";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { nameSchema } from "@/types/propertySchemas/nameSchema";
+import type { Version } from "@/types/version";
 
 const dataDisplaySchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -309,8 +310,9 @@ function ModpackSettingsDropDown({modpack} : {modpack: Modpack}) {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm cursor-default">
-                <div className="text-left text-md font-bold flex items-center">
-                  <h2 className="truncate">{modpack.name} settings</h2>
+                <div className="text-left text-md font-bold flex items-center gap-1">
+                    <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-8 h-8 md:w-12 md:h-12 block m-auto rounded-none"/>
+                    <h3 className="truncate">{modpack.name} settings</h3>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -480,6 +482,24 @@ export default function ModpackView() {
     const handleFilterChange = (newValue: SuggestionFilter) => {
         setSuggestionFilter(newValue);
     }
+
+    // Display latest version if modpack versions is updated via a merge
+    useEffect(() => {
+        let curLatest: null | Version = null;
+
+        for (let i = 0; i < modpack.versions.length; i++) {
+            const version = modpack.versions[i];
+
+            if(!curLatest || version.iterations > curLatest.iterations) {
+                curLatest = version;
+            }
+        }
+
+        if(curLatest) {
+            setVersionIteration(curLatest.iterations.toString());
+        }
+        
+    }, [modpack.versions])
 
     useModpackSubscription(modpack.id)
 

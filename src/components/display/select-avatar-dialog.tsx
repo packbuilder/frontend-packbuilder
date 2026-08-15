@@ -1,8 +1,8 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { AvatarImage, AvatarFallback, Avatar } from "./ui/avatar";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { AvatarImage, AvatarFallback, Avatar } from "../ui/avatar";
 import { SquareUserRound, X } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 export default function SelectAvatarDialog({curAvatar, setAvatar, avatarType} : {curAvatar: string, setAvatar: Dispatch<SetStateAction<string>>, avatarType: "profileAvatars" | "modpackAvatars"}) {
   const [isOpen, setOpen] = useState(false);

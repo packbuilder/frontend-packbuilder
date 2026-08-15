@@ -1,9 +1,9 @@
 import modpackImage from "@/modpack.gif"
 import type { Modpack } from "@/types/modpack";
-import ToolbarTooltip from "../toolbar-tooltip";
+import ToolbarTooltip from "../display/toolbar-tooltip";
 import { Button } from "../ui/button";
 import { File } from "lucide-react";
-import { GlassCard } from "../glass-card";
+import { GlassCard } from "../display/glass-card";
 import { Link } from "@tanstack/react-router";
 import { ImageType } from "@/types/enums";
 

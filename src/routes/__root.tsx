@@ -1,7 +1,7 @@
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ThemeProvider } from '@/components/theme-provider'
-import Header from '@/components/header'
+import { ThemeProvider } from '@/components/display/theme-provider'
+import Navbar from '@/components/display/navbar'
 import { getUserById, getUserToken } from '@/lib/api'
 import { parseUserToken } from '@/lib/utils'
 import { type User } from '@/types/user'
@@ -26,7 +26,7 @@ function RootLayout() {
         <ThemeProvider defaultTheme="dark" storageKey="website-theme">
           <main className="min-h-dvh size-full bg-background flex flex-col items-center justify-start">
             <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
-            <Header user={user} />
+            <Navbar user={user} />
             <Outlet />
           </main>
         </ThemeProvider>
@@ -44,7 +44,7 @@ function ErrorComponent({ error }: { error: Error }) {
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
           <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
-          <Header user={user} />
+          <Navbar user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
               There was an error rendering this page :(
@@ -64,7 +64,7 @@ function NotFoundComponent() {
       <ThemeProvider defaultTheme="dark" storageKey="website-theme">
         <main className="min-h-dvh size-full bg-background">
           <Toaster position='top-center' theme='dark' closeButton={true} richColors/>
-          <Header user={user} />
+          <Navbar user={user} />
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center text-bold">
               This page does not exist :(

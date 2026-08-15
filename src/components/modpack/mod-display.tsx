@@ -5,8 +5,8 @@ import { CircleCheck, Download, RefreshCcw, TriangleAlert } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { ConflictState } from "@/types/enums";
 import { timeSinceCurDate } from "@/lib/utils";
-import InfoPill from "../info-pill";
-import DisplayImage from "../display-image";
+import InfoPill from "../display/info-pill";
+import DisplayImage from "../display/display-image";
 
 export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
     const formattedDownloadCount = new Intl.NumberFormat('en-US', {

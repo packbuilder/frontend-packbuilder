@@ -1,6 +1,6 @@
 import type { Modpack } from "@/types/modpack";
 import { History } from "lucide-react";
-import DisplayImage from "../display-image";
+import DisplayImage from "../display/display-image";
 import modpackImage from "@/modpack.gif"
 import { Separator } from "../ui/separator";
 import { Link } from "@tanstack/react-router";

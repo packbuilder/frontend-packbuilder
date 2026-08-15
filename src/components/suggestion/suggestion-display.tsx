@@ -3,14 +3,14 @@ import { CloudAlert, CloudCheck, CloudCog, CirclePlus, CircleMinus, PackageOpen,
 import { ImageType, ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import { Separator } from "../ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
-import InfoPill from "../info-pill";
+import InfoPill from "../display/info-pill";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createModpackVersion } from "@/lib/api";
 import type { User } from "@/types/user";
 import type { Modpack } from "@/types/modpack";
 import { Link, useRouter } from "@tanstack/react-router";
 import { Button } from "../ui/button";
-import DisplayImage from "../display-image";
+import DisplayImage from "../display/display-image";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -82,7 +82,7 @@ export default function SuggestionInteractive({suggestion, modpack, curUser} : {
                 <div className="flex items-center justify-start p-2 w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">
                     <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.user.name, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}}>
                         <Button variant={"default"}>
-                            <h3>View</h3>
+                            <p>View</p>
                         </Button>
                     </Link>
                     <MergeSuggestionDialog modpack={modpack} curUser={curUser} suggestion={suggestion} />
@@ -200,7 +200,7 @@ function MergeSuggestionDialog({modpack, suggestion, curUser} : {modpack: Modpac
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
             <Button variant={canMerge ? "default" : "disabled"} disabled={!canMerge}>
-                <h3>Merge</h3>
+                <p>Merge</p>
             </Button>
         </DialogTrigger>
         <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit gap-4">

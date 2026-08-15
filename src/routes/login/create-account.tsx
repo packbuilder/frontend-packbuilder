@@ -1,4 +1,4 @@
-import SelectAvatarDialog from '@/components/SelectAvatarDialog'
+import SelectAvatarDialog from '@/components/display/select-avatar-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
