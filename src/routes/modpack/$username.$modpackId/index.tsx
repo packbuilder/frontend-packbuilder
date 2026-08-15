@@ -1,4 +1,4 @@
-import { Bookmark, Check, Download, Edit, Gamepad, Settings, SettingsIcon, Trash2, X } from "lucide-react";
+import { Bookmark, Check, Download, Edit, Gamepad, Settings, Trash2, X } from "lucide-react";
 import { createBookmark, deleteBookmark, deleteModpack, getBookmark, getModpackVersionManifest, updateModpack } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
