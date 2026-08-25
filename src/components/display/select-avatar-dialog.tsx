@@ -30,8 +30,8 @@ export default function SelectAvatarDialog({curAvatar, setAvatar, avatarType} : 
               {
                 avatars.map((value: string, index: number) => {
                   return <Avatar className={`${curAvatar === value ? "outline-white outline-3  " : ""} size-15 cursor-pointer`} key={index} onClick={() => setAvatar(value)}>
-                    <AvatarImage src={`/${avatarType}/${value}`} alt={`Image ${index}`}/>
-                    <AvatarFallback>ER</AvatarFallback>
+                    <AvatarImage src={`/${avatarType}/${value}`}/>
+                    <AvatarFallback><img src={"/packbuilder-placeholder"}/></AvatarFallback>
                   </Avatar>
                 })
               }

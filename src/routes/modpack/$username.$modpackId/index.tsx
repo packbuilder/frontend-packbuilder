@@ -39,8 +39,9 @@ const dataDisplaySchema = z.object({
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
     validateSearch: zodValidator(dataDisplaySchema),
-    loaderDeps: ({search: {display}}) => ({
-        display
+    loaderDeps: ({search: {display, page}}) => ({
+        display,
+        page
     }),
   loader: async ({context, params}) => {
     const {user, queryClient} = context;
@@ -422,15 +423,21 @@ function SelectDisplayRadioGroup() {
   )
 }
 
+//TODO: Create pagination buttons for the versionMods.
+function PaginationButtons() {
+    return;
+}
+
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
     const {modpackId} = Route.useParams();
     const navigate = useNavigate();
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
-    const {display} = Route.useSearch({
+    const {display, page} = Route.useSearch({
         select: (search) => ({
-            display: search.display
+            display: search.display,
+            page: search.page
         })
     });
 
@@ -442,11 +449,14 @@ export default function ModpackView() {
     const {data: suggestions, isPending: pendingSuggestionData} = useSuspenseQuery(appQueries.modpackSuggestions(modpack.id.toString()));
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
-    const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All)
+    const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All);
+    const {data: paginatedModIds, isPending: pendingModIds} = useSuspenseQuery(appQueries.versionMods(modpack.id.toString(), versionIteration, page, 50));
 
     const modIds = useMemo(
-        () => modpack.versions.find(version => version.iterations.toString() === versionIteration)!.versionMods.map((versionMod: VersionMod) => versionMod.modId),
-        [modpack.versions, versionIteration]
+        () => paginatedModIds?.items.map(versionMod => {
+            return versionMod.modId;
+        }),
+        [paginatedModIds?.items]
     );
 
     const filteredSuggestions = useMemo(() => {
@@ -477,6 +487,8 @@ export default function ModpackView() {
         }
         setVersionIteration(newValue);
         setDisplayedVersion(newVersion);
+        
+        navigate({search: () => ({page: 1}), resetScroll: false, from: Route.fullPath});
     }
 
     const handleFilterChange = (newValue: SuggestionFilter) => {
@@ -497,11 +509,15 @@ export default function ModpackView() {
 
         if(curLatest) {
             setVersionIteration(curLatest.iterations.toString());
+            setDisplayedVersion(curLatest);
+            navigate({search: () => ({page: 1}), resetScroll: false, from: Route.fullPath});
         }
         
     }, [modpack.versions])
 
-    useModpackSubscription(modpack.id)
+    useModpackSubscription(modpack.id);
+
+    // TODO: Add pagination buttons to web page
 
     return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">

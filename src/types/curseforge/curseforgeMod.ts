@@ -6,7 +6,7 @@ export const curseForgeModSchema = z.object({
     referenceId: z.string(),
     name: z.string(),
     slug: z.string(),
-    logoUrl: z.string(),
+    logoUrl: z.string().nullable(),
     summary: z.string(),
     dateModified: z.string(),
     downloadCount: z.number(),
