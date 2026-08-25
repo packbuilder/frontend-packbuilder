@@ -1,4 +1,5 @@
 import z from "zod";
+import { versionModSchema } from "./versionMod";
 
 export const paginatedResponseSchema = <T extends z.ZodType>(
     itemSchema: T
