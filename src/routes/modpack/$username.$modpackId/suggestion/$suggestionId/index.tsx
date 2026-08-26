@@ -1,6 +1,6 @@
 import { updateSuggestion, verifySuggestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
+import { CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
 import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
@@ -15,33 +15,34 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { CreateModificationDisplay, ModificationDisplay } from "@/components/suggestion/modification-display";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
-import type { CurseForgePagination } from "@/types/curseforge/curseforgePagination";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { enumNameFromValue } from "@/lib/utils";
-import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import type { Suggestion } from "@/types/suggestion";
-import type { VersionMod } from "@/types/versionMod";
 import type { Modpack } from "@/types/modpack";
 import ClearableCommandInput from "@/components/display/clearable-command-input";
 import DisplayContainer from "@/components/display/display-container";
 import { useSuggestionSubscription } from "@/hooks/useSuggestionSubscription";
 import { toast } from "sonner";
 import { Field, FieldLabel } from "@/components/ui/field";
+import PaginationButtons, { CurseforgePaginationButtons } from "@/components/display/paginationButtons";
+import type { PaginatedResponse } from "@/types/paginatedResponse";
 
 const addModSearchSchema = z.object({
-    page: fallback(z.number(), 0).default(0),
+    curseforgePage: fallback(z.number(), 0).default(0),
+    modpackModsPage: fallback(z.number(), 0).default(1),
     sortMethod: fallback(z.enum(["0", "1", "2", "3"]), "0").default("0"),
     searchQuery: fallback(z.string(), "").default('')
 });
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$suggestionId/')({
     validateSearch: zodValidator(addModSearchSchema),
-    loaderDeps: ({search: {searchQuery, page, sortMethod}}) => ({
+    loaderDeps: ({search: {searchQuery, curseforgePage, sortMethod, modpackModsPage}}) => ({
         searchQuery,
-        page,
+        curseforgePage,
+        modpackModsPage,
         sortMethod
     }),
     loader: async ({context: {user, queryClient}, params: {suggestionId, modpackId}}) => {
@@ -58,38 +59,6 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$
     },
     component: SuggestionView,
 });
-
-function PaginationButtons({ paginationData, curPage } : { 
-    paginationData: CurseForgePagination | undefined, 
-    curPage: number, 
-}) {
-    const navigate = useNavigate({from: Route.fullPath});
-    
-    const nextPage = async () => {
-        if(!paginationData || paginationData.resultCount !== paginationData.pageSize) {
-            return;
-        }
-        navigate({search: (prev: {page: number, searchQuery: string, sortMethod: SortMethod}) => ({page: prev.page + 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
-    }
-
-    const previousPage = async () => {
-        if(curPage - 1 < 0) {
-            return;
-        }
-        navigate({search: (prev: {page: number, searchQuery: string, sortMethod: SortMethod}) => ({page: prev.page - 1, searchQuery: prev.searchQuery, sortMethod: prev.sortMethod})});
-    }
-
-
-    return <div className="flex justify-center items-center gap-2">
-        <Button className="rounded-full" variant={"outline"} onClick={previousPage}>
-            <ArrowLeft />
-        </Button>
-        <h2 className="font-bold">{curPage + 1}</h2>
-        <Button className="rounded-full" variant={"outline"} onClick={nextPage}>
-            <ArrowRight />
-        </Button>
-    </div>
-}
 
 function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
     const [isOpen, setOpen] = useState(false);
@@ -217,11 +186,12 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
 }
 
 function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestion, modpack} : {modpackReferenceIds: string[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
-    const {page, searchQuery, sortMethod} = Route.useSearch({
+    const {curseforgePage, searchQuery, sortMethod} = Route.useSearch({
         select: (search) => ({
-            page: search.page,
+            curseforgePage: search.curseforgePage,
             searchQuery: search.searchQuery,
             sortMethod: search.sortMethod,
+            ...search
         })
     });
     const [isOpen, setOpen] = useState(false);
@@ -230,7 +200,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
     const queryClient = useQueryClient();
     const submitButtonRef = useRef(null);
     const searchModsInputRef = useRef(null);
-    const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader));
+    const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, curseforgePage, sortMethod, suggestion.gameVersion, suggestion.modLoader));
 
     const modificationReferenceIdSet = useMemo(
         () => new Set(modificationReferenceIds.map((referenceId) => referenceId)),
@@ -248,10 +218,10 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
         const newSearchQuery = formData.get("searchQuery") as string;
 
         await queryClient.invalidateQueries({
-            queryKey: appQueries.curseForgeSearchResults(searchQuery, page, sortMethod, suggestion.gameVersion, suggestion.modLoader).queryKey,
+            queryKey: appQueries.curseForgeSearchResults(searchQuery, curseforgePage, sortMethod, suggestion.gameVersion, suggestion.modLoader).queryKey,
         });
 
-        navigate({search: () => ({page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
+        navigate({search: (prev) => ({...prev, page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
     }
 
     const handleSortChange = (newValue: CurseForgeSearchFilter) => {
@@ -264,6 +234,10 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
             submitButton.click();
         }
     }
+
+    const handlePageChange = (newPage: number) => {
+        navigate({search: (prev) => ({...prev, curseforgePage: newPage})});
+    }   
 
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
@@ -278,7 +252,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                         <div className="flex items-center justify-center gap-2 flex-wrap w-full">
                             <div className="flex items-center justify-center gap-2 w-full">
                                 <div className="relative w-full">
-                                    <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search..." defaultValue={searchQuery} required className="text-sm w-full" ref={searchModsInputRef}/>
+                                    <Input id="searchQuery" type="text" name="searchQuery" placeholder="Search for curseforge mods..." defaultValue={searchQuery} required className="text-sm w-full" ref={searchModsInputRef}/>
                                     <Button variant={"ghost"} type="submit" className="absolute right-0" ref={submitButtonRef}><Search/></Button>
                                 </div>
                                 <Select value={sort} onValueChange={handleSortChange}>
@@ -334,15 +308,21 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                     )}
                 </DisplayContainer>
                 <div>
-                    <PaginationButtons paginationData={modSearchResults?.pagination} curPage={page}/>
+                    <CurseforgePaginationButtons curseforgePaginationData={modSearchResults?.pagination} curPage={curseforgePage} onPageChange={handlePageChange}/>
                 </div>
             </DialogContent>
         </Dialog>
     )
 }
 
-function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion, modpack} : {modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
+function RemoveModsDialog<T>({paginatedResponse, pendingData, modpackModData, modificationReferenceIds, suggestion, modpack} : {paginatedResponse: PaginatedResponse<T> | null | undefined, pendingData: boolean, modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
     const [isOpen, setOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const handlePageChange = (newPage: number) => {
+        navigate({search: (prev) => ({...prev, modpackModsPage: newPage}), resetScroll: false, from: Route.fullPath});
+    }
+
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -355,42 +335,60 @@ function RemoveModsDialog({modpackModData, modificationReferenceIds, suggestion,
                 </DialogHeader>
                   <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
                     <div className="flex items-center justify-start w-full gap-1">
-                        <ClearableCommandInput placeholder="Search..." />
+                        <ClearableCommandInput placeholder="Search current page..." />
                     </div>
                     <CommandList className="max-h-fit w-full">
-                        <CommandEmpty>
-                            <DisplayContainer className="flex items-center justify-center h-[300px]">
-                                <h2>It's looking empty in here...</h2>
-                            </DisplayContainer>
-                        </CommandEmpty>
-                            <CommandGroup className={`${!modpackModData || modpackModData.length <= 0 ? "hidden" : ""}`}>
+                        {
+                            pendingData ? (
                                 <DisplayContainer>
-                                    {(modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
-                                        let isEnabled = true;
-                                        let disabledMessage = "";
-                                        modificationReferenceIds.forEach(referenceId => {
-                                            if(referenceId === mod.referenceId) {
-                                                isEnabled = false;
-                                                disabledMessage = "This mod is already in your list of changes."
-                                            }
-                                        });
-                                        return <CommandItem className="w-full p-0">     
-                                            <CreateModificationDisplay 
-                                                modificationReferenceIds={modificationReferenceIds} 
-                                                suggestion={suggestion} 
-                                                modpack={modpack} 
-                                                curseforgeMod={mod} 
-                                                key={index} 
-                                                modAction={ModAction.Removed} 
-                                                isEnabled={isEnabled} 
-                                                disabledMessage={disabledMessage}
-                                            />
-                                        </CommandItem>
-                                    })}
+                                    <div className="h-96 max-w-full flex items-center justify-center w-full">
+                                        <Spinner className="size-20" />
+                                    </div>
                                 </DisplayContainer>
-                            </CommandGroup>
+                            ) : (
+                                <>
+                                    <CommandEmpty>
+                                        <DisplayContainer className="flex items-center justify-center h-[300px]">
+                                            <h2>It's looking empty in here...</h2>
+                                        </DisplayContainer>
+                                    </CommandEmpty>
+                                    <CommandGroup className={`${!modpackModData || modpackModData.length <= 0 ? "hidden" : ""}`}>
+                                        <DisplayContainer>
+                                            {
+                                                (modpackModData && modpackModData.length > 0) && modpackModData.map((mod: CurseForgeMod, index: number) => {
+                                                    let isEnabled = true;
+                                                    let disabledMessage = "";
+                                                    modificationReferenceIds.forEach(referenceId => {
+                                                        if(referenceId === mod.referenceId) {
+                                                            isEnabled = false;
+                                                            disabledMessage = "This mod is already in your list of changes."
+                                                        }
+                                                    });
+                                                    return <CommandItem className="w-full p-0">     
+                                                        <CreateModificationDisplay 
+                                                            modificationReferenceIds={modificationReferenceIds} 
+                                                            suggestion={suggestion} 
+                                                            modpack={modpack} 
+                                                            curseforgeMod={mod} 
+                                                            key={index} 
+                                                            modAction={ModAction.Removed} 
+                                                            isEnabled={isEnabled} 
+                                                            disabledMessage={disabledMessage}
+                                                        />
+                                                    </CommandItem>
+                                                })
+                                            }
+                                        </DisplayContainer>
+                                    </CommandGroup>
+                                </>
+                            )
+
+                        }
                     </CommandList>
                 </Command>
+                <div>
+                    <PaginationButtons paginatedResponse={paginatedResponse} onPageChange={handlePageChange}/>
+                </div>
             </DialogContent>
         </Dialog>
     )
@@ -477,10 +475,17 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
 }
 
 export default function SuggestionView() {
+    const navigate = useNavigate();
     const {modpackId, suggestionId} = Route.useParams();
     const [modificationFilter, setModificationFilter] = useState<ModificationFilter>(ModificationFilter.All);
     const {modpack: initialModpackData, suggestion: initialSuggestionData, curUser} = Route.useLoaderData();
-    const navigate = useNavigate();
+
+    const {modpackModsPage} = Route.useSearch({
+        select: (search) => ({
+            modpackModsPage: search.modpackModsPage,
+        })
+    });
+
     const { data: modpack, isPending: modpackPending } = useQuery({
         queryFn: appQueries.modpack(modpackId).queryFn,
         queryKey: appQueries.modpack(modpackId).queryKey,
@@ -493,14 +498,21 @@ export default function SuggestionView() {
         initialData: initialSuggestionData,       
         refetchOnMount: true,        
     });
+
+    const versionIteration = useMemo(() => {
+        return modpack?.versions[0].iterations;
+    }, [modpack?.versions[0]]);
     
-    const modpackModIds = useMemo(
-        () => modpack?.versions[0].versionMods.map((versionMod: VersionMod) => versionMod.modId), 
-        [modpack?.versions[0].versionMods]
+    const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.versionMods(modpackId, versionIteration?.toString(), modpackModsPage, 50));
+
+    const modpackReferenceIds = useMemo(
+        () => paginatedVersionMods?.items.map(versionMod => {
+            return versionMod.mod.referenceId;
+        }),
+        [paginatedVersionMods?.items]
     );
 
-    const {data: modpackReferenceIds} = useQuery(appQueries.modReferenceIds(modpackModIds));
-    const {data: modpackModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
+    const {data: modpackModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
 
     const modificationReferenceIds = useMemo(
         () => suggestion?.modifications.map(modification => modification.mod.referenceId),
@@ -584,7 +596,7 @@ export default function SuggestionView() {
                     <UpdateSuggestionDialog suggestion={suggestion} />
                     <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
-                    <RemoveModsDialog modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
+                    <RemoveModsDialog paginatedResponse={paginatedVersionMods} pendingData={pendingVersionMods || pendingModData} modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
                     <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion} />
                 </div>
             }

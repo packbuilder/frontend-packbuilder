@@ -1,5 +1,4 @@
 import z from "zod";
-import { versionModSchema } from "./versionMod";
 
 export const paginatedResponseSchema = <T extends z.ZodType>(
     itemSchema: T
@@ -11,4 +10,10 @@ export const paginatedResponseSchema = <T extends z.ZodType>(
     totalItems: z.number() 
 });
 
-export type PaginatedResponse = z.infer<typeof paginatedResponseSchema>;
+export type PaginatedResponse<T> = {
+    items: T[],
+    page: number,
+    pageSize: number,
+    totalPages: number,
+    totalItems: number 
+}

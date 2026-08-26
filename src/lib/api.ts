@@ -17,8 +17,7 @@ import { bookmarkSchema } from "@/types/bookmark";
 import type { CreateUserDto } from "@/types/dtos/createProfileDto";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import type { ChangeEmailDto } from "@/types/dtos/changeEmailDto";
-import type { PaginatedResponse } from "@/types/paginatedResponse";
-import { versionModSchema, type PaginatedVersionModSchema } from "@/types/versionMod";
+import { type PaginatedVersionModSchema } from "@/types/versionMod";
 
 const api = useApi();
 
@@ -267,7 +266,7 @@ export async function getVersionMods(modpackId: string, versionIteration: string
     const token = getUserToken();
     
     try {
-        const response = await api.post(`/modpacks/${modpackId}/versions/${versionIteration}/mods?page=${page}&pageSize=${pageSize}`, {
+        const response = await api.get(`/modpacks/${modpackId}/versions/${versionIteration}/mods?page=${page}&pageSize=${pageSize}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },

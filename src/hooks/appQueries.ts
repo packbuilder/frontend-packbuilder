@@ -14,9 +14,10 @@ export const appQueries = {
         queryFn: () => getModpack(modpackId),
     }),
 
-    versionMods: (modpackId: string, versionIteration: string, page: number, pageSize: number) => queryOptions({
+    versionMods: (modpackId: string | null | undefined, versionIteration: string | null | undefined, page: number, pageSize: number) => queryOptions({
         queryKey: ["modpackVersionMods", Number(modpackId), Number(versionIteration), Number(page), Number(pageSize)],
-        queryFn: () => getVersionMods(modpackId, versionIteration, page, pageSize)
+        queryFn: () => getVersionMods(modpackId!, versionIteration!, page, pageSize),
+        enabled: !!modpackId && !!versionIteration
     }),
 
     userData: (userId: number) => queryOptions({
@@ -51,7 +52,7 @@ export const appQueries = {
     curseForgeModData: (referenceIds: string[] | null | undefined) => queryOptions({
         queryKey: ["modpackModData", referenceIds?.join(",") ?? "noReferenceIds"],
         queryFn: () => getCurseForgeModData(referenceIds!),
-        enabled: !!referenceIds
+        enabled: !!referenceIds,
     }),
 
     modpackSuggestions: (modpackId: string) => queryOptions({

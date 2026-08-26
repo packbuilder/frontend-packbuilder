@@ -32,13 +32,15 @@ import { toast } from "sonner";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { nameSchema } from "@/types/propertySchemas/nameSchema";
 import type { Version } from "@/types/version";
+import PaginationButtons from "@/components/display/paginationButtons";
 
-const dataDisplaySchema = z.object({
+const searchParamSchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
+    page: fallback(z.number(), 1)
 });
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
-    validateSearch: zodValidator(dataDisplaySchema),
+    validateSearch: zodValidator(searchParamSchema),
     loaderDeps: ({search: {display, page}}) => ({
         display,
         page
@@ -386,14 +388,15 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
 
 function SelectDisplayRadioGroup() {
     const navigate = useNavigate({from: Route.fullPath});
-    const {display} = Route.useSearch({
+    const {display, page} = Route.useSearch({
         select: (search) => ({
-            display: search.display
+            display: search.display,
+            page: search.page
         })
     });
 
     const handleValueChange = (newValue: string) => {
-        navigate({search: () => ({display: newValue}), resetScroll: false});
+        navigate({search: () => ({display: newValue, page}), resetScroll: false});
     }
 
     return (
@@ -423,11 +426,6 @@ function SelectDisplayRadioGroup() {
   )
 }
 
-//TODO: Create pagination buttons for the versionMods.
-function PaginationButtons() {
-    return;
-}
-
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
@@ -450,13 +448,13 @@ export default function ModpackView() {
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
     const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All);
-    const {data: paginatedModIds, isPending: pendingModIds} = useSuspenseQuery(appQueries.versionMods(modpack.id.toString(), versionIteration, page, 50));
+    const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.versionMods(modpack.id.toString(), versionIteration, page, 50));
 
-    const modIds = useMemo(
-        () => paginatedModIds?.items.map(versionMod => {
-            return versionMod.modId;
+    const referenceIds = useMemo(
+        () => paginatedVersionMods?.items.map(versionMod => {
+            return versionMod.mod.referenceId;
         }),
-        [paginatedModIds?.items]
+        [paginatedVersionMods?.items]
     );
 
     const filteredSuggestions = useMemo(() => {
@@ -476,7 +474,6 @@ export default function ModpackView() {
         }
     }, [suggestions, suggestionFilter]);
 
-    const {data: referenceIds} = useQuery(appQueries.modReferenceIds(modIds));
     const {data: versionModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(referenceIds));
 
     const handleValueChange = (newValue: string) => {
@@ -488,12 +485,16 @@ export default function ModpackView() {
         setVersionIteration(newValue);
         setDisplayedVersion(newVersion);
         
-        navigate({search: () => ({page: 1}), resetScroll: false, from: Route.fullPath});
+        navigate({search: () => ({page: 1, display: display}), resetScroll: false, from: Route.fullPath});
     }
 
     const handleFilterChange = (newValue: SuggestionFilter) => {
         setSuggestionFilter(newValue);
     }
+
+    const handlePageChange = (newPage: number) => {
+        navigate({search: () => ({display, page: newPage}), resetScroll: false, from: Route.fullPath});
+    } 
 
     // Display latest version if modpack versions is updated via a merge
     useEffect(() => {
@@ -510,16 +511,14 @@ export default function ModpackView() {
         if(curLatest) {
             setVersionIteration(curLatest.iterations.toString());
             setDisplayedVersion(curLatest);
-            navigate({search: () => ({page: 1}), resetScroll: false, from: Route.fullPath});
+            navigate({search: () => ({page: 1, display: display}), resetScroll: false, from: Route.fullPath});
         }
         
     }, [modpack.versions])
 
     useModpackSubscription(modpack.id);
 
-    // TODO: Add pagination buttons to web page
-
-    return <section className="flex flex-col items-center justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
+    return <section className="flex flex-col items-center justify-center p-2 w-full min-md:max-w-3/4 min-md:min-w-2/4">
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
@@ -554,11 +553,12 @@ export default function ModpackView() {
         <Separator className="my-4"/>
         
         <section className="flex items-center justify-center gap-4 flex-col w-19/20">
+
             <SelectDisplayRadioGroup />
 
             <Command className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
                 <div className="flex items-center justify-center w-full gap-1">
-                    <ClearableCommandInput  placeholder="Search..." />
+                    <ClearableCommandInput  placeholder="Search this page..." />
                     <div className="flex max-md:flex-col items-center justify-center">
                         <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
                             <div className="flex items-center justify-center gap-2">
@@ -605,27 +605,29 @@ export default function ModpackView() {
                     </div>
                 </div>
                 <CommandList className="w-full max-h-fit">
-                    <CommandEmpty className={display === "mods" && pendingModData || display === "suggestions" && pendingSuggestionData ? "hidden" : ""}>
-                        <DisplayContainer className="flex items-center justify-center h-96">
+                    <CommandEmpty className={display === "mods" && (pendingModData || pendingVersionMods) || display === "suggestions" && pendingSuggestionData ? "hidden" : ""}>
+                        <DisplayContainer className="flex items-center justify-center h-96 w-full">
                             <h2>It's looking empty in here...</h2>
                         </DisplayContainer>
                     </CommandEmpty>
                     {display === "mods" ? 
-                        <CommandGroup className="w-full">
-                            <DisplayContainer className={`${displayedVersion.versionMods.length === 0 ? "hidden" : ""}`}>
+                        <CommandGroup className={`${displayedVersion.versionMods.length === 0 ? "hidden" : ""} w-full`}>
+                            <DisplayContainer>
                                     {
-                                        pendingModData ? (
-                                            <div className="size-96 max-w-full flex items-center justify-center w-full">
+                                        pendingModData || pendingVersionMods ? (
+                                            <div className="h-96 max-w-full flex items-center justify-center w-full">
                                                 <Spinner className="size-20" />
                                             </div>
                                         )
                                         :
-                                        displayedVersion && versionModData ? displayedVersion.versionMods.map((versionMod, index) => {
+                                        (paginatedVersionMods && versionModData) ? paginatedVersionMods.items.map((versionMod, index) => {
                                             
-                                            const modData = versionModData.find(modData => versionMod.mod.referenceId === modData.referenceId);
+                                            const modData = versionModData.find(modData => {
+                                                return versionMod.mod.referenceId === modData.referenceId;
+                                            });
                                             
                                             if(!modData) {
-                                                return <div>Error fetching mod data for mod with id {versionMod.mod.referenceId}.</div>
+                                                return <h1>{versionMod.mod.referenceId}</h1>;
                                             }
 
                                             return <CommandItem value={modData.name} key={index} className="size-full p-0">
@@ -636,8 +638,8 @@ export default function ModpackView() {
                             </DisplayContainer>
                         </CommandGroup>
                         :
-                        <CommandGroup>
-                            <DisplayContainer className={`${filteredSuggestions.length === 0 ? "hidden" : ""}`}>
+                        <CommandGroup className={`${filteredSuggestions.length === 0 ? "hidden" : ""}`}>
+                            <DisplayContainer>
                                 {
                                     pendingSuggestionData ? (
                                         <div className="size-full flex items-center justify-center w-full">
@@ -657,6 +659,8 @@ export default function ModpackView() {
                     }
                 </CommandList>
             </Command>
+
+            {display === "mods" && <PaginationButtons paginatedResponse={paginatedVersionMods} onPageChange={handlePageChange} /> } 
         </section>
 
     </section>
