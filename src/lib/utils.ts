@@ -1,3 +1,4 @@
+import type { AxiosResponse } from "axios"
 import { clsx, type ClassValue } from "clsx"
 import { jwtDecode } from "jwt-decode"
 import { twMerge } from "tailwind-merge"
@@ -29,6 +30,14 @@ export function enumNameFromValue<T extends Record<string, string>>(
 ): keyof T | undefined {
   return (Object.keys(enumObj) as (keyof T)[])
     .find(k => enumObj[k] === value);
+}
+
+export function isResponseSuccess(response: AxiosResponse | null) {
+  if(!response || response.status < 200 || response.status > 299) {
+    return false;
+  } 
+
+  return true;
 }
 
 export function timeSinceCurDate(dateString: string) {

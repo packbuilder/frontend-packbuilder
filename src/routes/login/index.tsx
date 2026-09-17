@@ -3,9 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { login } from '@/lib/api';
+import { isResponseSuccess } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
-import Cookies from 'js-cookie';
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router';
 import { type FormEvent } from 'react';
 import { toast } from 'sonner';
 
@@ -30,19 +30,15 @@ function Login() {
     mutationFn: async (formData: FormData) => {
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
-      const token = await login(email, password);
+      const response = await login(email, password);
     
-      if (!token) {
-        throw new Error("Login unsuccessful, please try again.")
+      if(!isResponseSuccess(response)) {
+        throw new Error("Login failed, please try again.");
       }
     
-      return token;
+      return;
     },
-    onSuccess: (token: string) => {
-      Cookies.set("_packbuilder_jwt", token, {
-        secure: true,
-        expires: 7
-      });
+    onSuccess: () => {
       toast.success("Login successful!");
       navigate({to:"/"});
     },

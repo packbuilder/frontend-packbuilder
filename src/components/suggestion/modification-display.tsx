@@ -58,7 +58,7 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
     return <div className="w-full bg-[var(--surface-1)] transition duration-200">
         <div className="grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[auto_minmax(0,3fr)_1fr]">
             <div className="flex items-center justify-center min-md:row-span-3">
-                <img src={curseforgeMod.logoUrl} className="size-15 rounded-sm shrink-0 min-md:size-25" />
+                <img src={curseforgeMod.logoUrl || "/packbuilder-placeholder.png"} className="size-15 rounded-sm shrink-0 min-md:size-25" />
             </div>
             <header className="flex flex-col gap-2 w-full justify-center">
                 <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
@@ -185,7 +185,7 @@ export function CreateModificationDisplay(
     return <div className="w-full bg-[var(--surface-1)] transition duration-200">
         <div className="grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2">
             <div className="flex items-center justify-center">
-                <DisplayImage src={curseforgeMod.logoUrl} />
+                <DisplayImage src={curseforgeMod.logoUrl || "/packbuilder-placeholder.png"} />
             </div>
             <header className="flex flex-col gap-2 w-full justify-center">
                 <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">

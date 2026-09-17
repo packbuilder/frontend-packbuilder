@@ -36,7 +36,7 @@ import PaginationButtons from "@/components/display/paginationButtons";
 
 const searchParamSchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
-    page: fallback(z.number(), 1)
+    page: fallback(z.number(), 1).default(1)
 });
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({

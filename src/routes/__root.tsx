@@ -1,13 +1,11 @@
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ThemeProvider } from '@/components/display/theme-provider'
-import Navbar from '@/components/display/navbar'
-import { getUserById, getUserToken } from '@/lib/api'
-import { parseUserToken } from '@/lib/utils'
+import { ThemeProvider } from '@/components/display/theme-provider';
+import { getUserSession } from '@/lib/api'
 import { type User } from '@/types/user'
 import { SignalRProvider } from '@/components/signalr/signalr-provider'
-import { userTokenSchema } from '@/types/userToken'
 import { Toaster } from 'sonner'
+import Navbar from '@/components/display/navbar';
 
 interface MyRouterContext {
   queryClient: QueryClient,
@@ -79,21 +77,16 @@ function NotFoundComponent() {
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   beforeLoad: async () => {
-    const token = getUserToken();
-
-    if(!token) {
-      return;
-    }
-
     try {
-      const userToken = userTokenSchema.parse(parseUserToken(token));
-      const user = await getUserById(userToken.id);
+      
+      const user = await getUserSession();
       
       if(!user) {
         return;
       }
       
       return { user };
+
     } catch (error) {
       console.log(error);
     }

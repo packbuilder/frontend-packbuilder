@@ -6,6 +6,7 @@ import { FieldGroup, Field, FieldLabel, FieldDescription } from '@/components/ui
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { createAccount, sendVerificationEmail } from '@/lib/api'
+import { isResponseSuccess } from '@/lib/utils'
 import { createUserDtoSchema } from '@/types/dtos/createProfileDto'
 import { PopoverArrow } from '@radix-ui/react-popover'
 import { useMutation } from '@tanstack/react-query'
@@ -107,7 +108,7 @@ function VerifyEmailCard({ email }: { email: string }) {
     mutationFn: async () => {
       const response = await sendVerificationEmail(email);
 
-      if (!response || response.status < 200 || response.status > 299) {
+      if (!isResponseSuccess(response)) {
         throw new Error(response?.statusText || "Problem with sending verification email");
       }
     },
@@ -199,7 +200,7 @@ function RouteComponent() {
 
       const response = await createAccount(result.data);
 
-      if(!response || response.status < 200 || response.status > 299) {
+      if(!isResponseSuccess(response)) {
         throw new Error("Problem with creating account");
       }
 

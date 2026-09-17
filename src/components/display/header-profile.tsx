@@ -20,10 +20,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { User } from "@/types/user"
-import Cookies from "js-cookie"
 import { Link, useNavigate, useRouter } from "@tanstack/react-router"
 import InfoPill from "./info-pill"
 import { ImageType } from "@/types/enums"
+import { logout } from "@/lib/api"
+import { isResponseSuccess } from "@/lib/utils"
+import { toast } from "sonner"
 
 export default function NavUser({
   user,
@@ -34,9 +36,20 @@ export default function NavUser({
   const router = useRouter();
 
   const handleLogout = async () => {
-    Cookies.remove("_packbuilder_jwt");
-    await router.invalidate({sync: true});
-    navigate({to: "/login", reloadDocument: true});
+    try {
+      const response = await logout();
+
+      if(!isResponseSuccess(response)) {
+        throw new Error("There was a problem with logging out, please try again.")
+      }
+
+      await router.invalidate({sync: true});
+      navigate({to: "/login", reloadDocument: true});
+      
+    } catch(error) {
+      const err = error as unknown as Error 
+      toast.error(err.message);
+    }
   }
 
   return (
@@ -82,7 +95,7 @@ export default function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer">
                 <Link to={"/profile/$username/$userId"} params={{username: user.name, userId: user.id}} className="w-full">
-                  <div className="flex items-center justify-start gap-2">
+                  <div className="flex items-center justify-start gap-2 pointer-events-none">
                     <User2 />
                     Profile
                   </div>
