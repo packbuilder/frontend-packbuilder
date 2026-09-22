@@ -6,7 +6,7 @@ import { CopyButton } from "@/components/display/copy-button";
 import { Input } from "@/components/ui/input";
 import type { VersionMod } from "@/types/versionMod";
 import { createFileRoute, Link, redirect, useLocation, useNavigate, useRouter } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -432,6 +432,7 @@ export default function ModpackView() {
     const {modpackId} = Route.useParams();
     const navigate = useNavigate();
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(modpackId));
+    
     const {display, page} = Route.useSearch({
         select: (search) => ({
             display: search.display,
@@ -448,7 +449,12 @@ export default function ModpackView() {
     const [versionIteration, setVersionIteration] = useState(modpack.versions[0].iterations.toString());
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
     const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All);
-    const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.versionMods(modpack.id.toString(), versionIteration, page, 50));
+
+    const {data: paginatedVersionMods, isPending: pendingVersionMods } = useQuery({
+        queryKey: appQueries.versionMods(modpack.id.toString(), versionIteration, page, 50).queryKey,
+        queryFn: appQueries.versionMods(modpack.id.toString(), versionIteration, page, 50).queryFn,
+        placeholderData: keepPreviousData,
+    });
 
     const referenceIds = useMemo(
         () => paginatedVersionMods?.items.map(versionMod => {
@@ -548,7 +554,15 @@ export default function ModpackView() {
             </div>
         </header>
 
-        {!curUser?.emailVerified && <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">In order to create suggestions or edit this modpack, you must verify your email. <br /> <Link to="/profile/verify-email" className="underline">Click here to verify your email.</Link></h3>}
+        {curUser && curUser.emailVerified === false && <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">In order to create suggestions or edit this modpack, you must verify your email. <br /> <Link to="/profile/verify-email" className="underline">Click here to verify your email.</Link></h3>}
+
+        {
+            !curUser && <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">
+                In order to create suggestions or edit this modpack, you must be logged into a verified account.
+                <br />
+                <Link to="/login" className="underline">Click here to login</Link>
+            </h3>
+        }
 
         <Separator className="my-4"/>
         
@@ -660,7 +674,7 @@ export default function ModpackView() {
                 </CommandList>
             </Command>
 
-            {display === "mods" && <PaginationButtons paginatedResponse={paginatedVersionMods} onPageChange={handlePageChange} /> } 
+            {display === "mods" && paginatedVersionMods && <PaginationButtons curPage={page} totalPages={paginatedVersionMods.totalPages} onPageChange={handlePageChange} /> } 
         </section>
 
     </section>

@@ -315,7 +315,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
     )
 }
 
-function RemoveModsDialog<T>({paginatedResponse, pendingData, modpackModData, modificationReferenceIds, suggestion, modpack} : {paginatedResponse: PaginatedResponse<T> | null | undefined, pendingData: boolean, modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
+function RemoveModsDialog({curPage, totalPages, pendingData, modpackModData, modificationReferenceIds, suggestion, modpack} : {curPage: number, totalPages: number | undefined, pendingData: boolean, modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
     const [isOpen, setOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -387,7 +387,7 @@ function RemoveModsDialog<T>({paginatedResponse, pendingData, modpackModData, mo
                     </CommandList>
                 </Command>
                 <div>
-                    <PaginationButtons paginatedResponse={paginatedResponse} onPageChange={handlePageChange}/>
+                    {totalPages && <PaginationButtons curPage={curPage} totalPages={totalPages} onPageChange={handlePageChange}/> }
                 </div>
             </DialogContent>
         </Dialog>
@@ -596,7 +596,7 @@ export default function SuggestionView() {
                     <UpdateSuggestionDialog suggestion={suggestion} />
                     <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
-                    <RemoveModsDialog paginatedResponse={paginatedVersionMods} pendingData={pendingVersionMods || pendingModData} modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
+                    <RemoveModsDialog curPage={modpackModsPage} totalPages={paginatedVersionMods?.totalPages} pendingData={pendingVersionMods || pendingModData} modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
                     <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion} />
                 </div>
             }
