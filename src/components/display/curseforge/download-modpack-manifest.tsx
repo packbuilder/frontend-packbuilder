@@ -5,7 +5,7 @@ import { Download, X } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose, DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { useState, useRef, useEffect } from "react";
 
-export function DownloadCurseForgeManifestDialog({modpackId, versionIteration} : {modpackId: string, versionIteration: string}) {
+export function DownloadCurseForgeManifestDialog({modpackId, versionIteration} : {modpackId: number, versionIteration: string}) {
     const [isOpen, setIsOpen] = useState(false);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
     const downloadRef = useRef<HTMLAnchorElement | null>(null);

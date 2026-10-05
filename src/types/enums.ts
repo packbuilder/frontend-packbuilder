@@ -8,12 +8,11 @@ export enum ModAction {
     Removed = "1",
     Updated = "2"
 }
-// TODO: Remove this
-export enum ModificationFilter {
-    All = "0",
-    Added = "1",
-    Removed = "2",
-    Conflicting = "3"
+
+export enum ConflictState {
+    NoConflicts = "0",
+    Conflicting = "1",
+    MissingDependencies = "2"
 }
 
 export enum CurseForgeSearchFilter {
@@ -28,12 +27,6 @@ export enum SuggestionState {
     Verified = "1",
     VerificationPending = "2",
     MergePending = "3"
-}
-
-export enum ConflictState {
-    NoConflicts = "0",
-    Conflicting = "1",
-    MissingDependencies = "2"
 }
 
 export enum ModLoader {

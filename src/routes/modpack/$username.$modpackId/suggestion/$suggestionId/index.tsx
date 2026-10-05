@@ -1,35 +1,34 @@
-import { updateSuggestion, verifySuggestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
-import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tanstack/react-router'
-import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { CloudAlert, CloudCheck, CloudCog, Merge, Search } from "lucide-react";
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
-import { ConflictState, CurseForgeSearchFilter, ImageType, ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
+import { ConflictState, CurseForgeSearchFilter, ImageType, ModAction, SuggestionState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
 import InfoPill from "@/components/display/info-pill";
 import { Separator } from "@/components/ui/separator";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreateModificationDisplay, ModificationDisplay } from "@/components/suggestion/modification-display";
+import { CreateCurseForgeModificationDisplay, CurseForgeModificationDisplay } from "@/components/display/curseforge/modification-display";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { enumNameFromValue } from "@/lib/utils";
 import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
-import { createSuggestionDtoSchema } from "@/types/dtos/createSuggestionDto";
 import type { Suggestion } from "@/types/suggestion";
 import type { Modpack } from "@/types/modpack";
 import ClearableCommandInput from "@/components/display/clearable-command-input";
 import DisplayContainer from "@/components/display/display-container";
 import { useSuggestionSubscription } from "@/hooks/useSuggestionSubscription";
-import { toast } from "sonner";
-import { Field, FieldLabel } from "@/components/ui/field";
 import PaginationButtons, { CurseforgePaginationButtons } from "@/components/display/paginationButtons";
 import ResultFilterForm from "@/components/display/result-filter-form";
 import ResultsState from "@/components/display/result-state";
+import UpdateSuggestionDialog from "@/components/display/suggestion/update-suggestion-dialog";
+import VerifySuggestionDialog from "@/components/display/suggestion/verify-suggestion-dialog";
+import { ConflictStateFilterSelect, ModActionFilterSelect } from "@/components/display/modification/modification-filter-display";
+import ModificationResultDisplay from "@/components/display/modification/modification-results-display";
 
 const addModSearchSchema = z.object({
     curseforgePage: fallback(z.number(), 0).default(0),
@@ -51,7 +50,9 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$
         modActionFilter,
         conflictStateFilter
     }),
-    loader: async ({context: {user, queryClient}, params: {suggestionId, modpackId}}) => {
+    loader: async ({context: {user, queryClient}, params}) => {
+        const modpackId = parseInt(params.modpackId);
+        const suggestionId = parseInt(params.suggestionId);
         const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(modpackId, suggestionId));
         const modpack = await queryClient.ensureQueryData(appQueries.modpack(modpackId));
         
@@ -65,131 +66,6 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$
     },
     component: SuggestionView,
 });
-
-function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
-    const [isOpen, setOpen] = useState(false);
-    const queryClient = useQueryClient();
-    const {modpackId, suggestionId} = Route.useParams();
-    const router = useRouter();
-    const formRef = useRef(null);
-    const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
-    const [minecraftVersion, setMinecraftVersion] = useState(suggestion.gameVersion);
-    const [modLoader, setModLoader] = useState(suggestion.modLoader.toString());
-
-    const mutation = useMutation({
-        mutationFn: async (formData: FormData) => {
-            const memo = formData.get("memo") as string;
-            const result = createSuggestionDtoSchema.safeParse({memo, gameVersion: minecraftVersion, modLoader: modLoader});
-
-            if (!result.success) {
-                throw new Error(result.error.issues[0].message);
-            }
-
-            const status = await updateSuggestion(modpackId, result.data, parseInt(suggestionId));
-
-            if(!status || status < 200 || status > 299) {
-                throw new Error("There was a problem with updating this suggestion");
-            }
-        },
-        onSuccess: async () => {
-            toast.success("Successfully updated suggestion!");
-            setOpen(false);
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
-                refetchType: "all"
-            });
-
-            await router.invalidate({sync: true});
-        },
-        onError: (error) => {
-            toast.error(error.message)
-            console.error(error.message)
-        }
-    });
-
-    const submitForm = () => {
-        setOpen(false);
-        const form = formRef.current as unknown as HTMLFormElement;
-        form.requestSubmit();
-    }
-
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        mutation.mutate(formData);
-    }
-
-    return <Dialog open={isOpen} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-            <Button variant={"default"}>
-                Edit details <Edit />
-            </Button>   
-        </DialogTrigger>
-        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit">
-            <DialogHeader className="w-full px-2 text-left">
-                <DialogTitle>
-                    Update suggestion
-                </DialogTitle>
-                <DialogDescription>
-                    Update your suggestions message or the game version/mod loader you want used for the modpack!
-                </DialogDescription>
-            </DialogHeader>
-            <form method="post" ref={formRef} id="createSuggestion" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
-                <div className="flex flex-col justify-center items-start gap-2">
-                    <Field>
-                        <FieldLabel className="font-bold text-lg">Memo</FieldLabel>
-                        <Input id="memo" type="text" name="memo" defaultValue={suggestion.memo} placeholder="Your message..."/>
-                    </Field>
-                </div>
-                <h2 className="font-bold text-lg">Game Version & Mod Loader</h2>
-                <div className={`flex items-center justify-center gap-2`}>
-                    <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select game version..."/>
-                        </SelectTrigger> 
-                        <SelectContent side="bottom">
-                            <SelectGroup>     
-                                <SelectLabel>Select version</SelectLabel>
-                                {
-                                    minecraftVersions?.map((version, index) => {
-                                        return <SelectItem className="cursor-pointer" key={index} value={version}>
-                                            {version}
-                                        </SelectItem>
-                                    })
-                                }
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                    <Select value={modLoader.toString()} onValueChange={setModLoader}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select game version..."/>
-                        </SelectTrigger> 
-                        <SelectContent side="bottom">
-                            <SelectGroup>     
-                                <SelectLabel>Select mod loader</SelectLabel>
-                                {
-                                    Object.values(ModLoader).map((modLoader, index) => {
-                                        return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
-                                            {enumNameFromValue(ModLoader, modLoader)}
-                                        </SelectItem>
-                                    })
-                                }
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </form>
-            <DialogFooter className="w-full px-2">
-                <div className="w-full flex flex-row justify-start items-center gap-2">
-                    <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Update Suggestion <Save/></Button>
-                    <DialogClose asChild>
-                        <Button variant={"destructive"}>Cancel <X/></Button>
-                    </DialogClose>
-                </div>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-}
 
 function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestion, modpack} : {modpackReferenceIds: string[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
     const {curseforgePage, searchQuery, curseForgeSortMethod} = Route.useSearch({
@@ -295,7 +171,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
                         }
 
                         return (
-                            <CreateModificationDisplay
+                            <CreateCurseForgeModificationDisplay
                             key={mod.referenceId}
                             curseforgeMod={mod}
                             modpack={modpack}
@@ -321,6 +197,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
     )
 }
 
+// TODO: Update this components command display to the use backend pagination instead.
 function RemoveModsDialog({curPage, totalPages, pendingData, modpackModData, modificationReferenceIds, suggestion, modpack} : {curPage: number, totalPages: number | undefined, pendingData: boolean, modpackModData: CurseForgeMod[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
     const [isOpen, setOpen] = useState(false);
     const navigate = useNavigate();
@@ -371,7 +248,7 @@ function RemoveModsDialog({curPage, totalPages, pendingData, modpackModData, mod
                                                         }
                                                     });
                                                     return <CommandItem className="w-full p-0">     
-                                                        <CreateModificationDisplay 
+                                                        <CreateCurseForgeModificationDisplay 
                                                             modificationReferenceIds={modificationReferenceIds} 
                                                             suggestion={suggestion} 
                                                             modpack={modpack} 
@@ -400,93 +277,13 @@ function RemoveModsDialog({curPage, totalPages, pendingData, modpackModData, mod
     )
 }
 
-function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {suggestion: Suggestion, modificationReferenceIds: string[]}) {
-    const {modpackId, suggestionId} = Route.useParams();
-    const [isOpen, setOpen] = useState(false);
-    const queryClient = useQueryClient();
-    
-    const mutation = useMutation({
-        mutationFn: async () => {
-            const status = await verifySuggestion(suggestion.id, modpackId);
-
-            if(!status || status < 200 || status > 299 ) {
-                throw new Error("There was a problem with starting verification for your suggestion.");
-            }
-        },
-        onSuccess: async () => {
-            toast.success("Your suggestion is now undergoing verification!");
-            setOpen(false);
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
-                refetchType: "all",
-            });
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.modificationModData(suggestionId, modificationReferenceIds).queryKey,
-                refetchType: "all"
-            });
-        },
-        onError: (error) => {
-            toast.error(error.message);
-            console.error(error.message);
-        }
-    });
-
-    return (
-        <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant={"default"}>
-                    Verify suggestion <CloudCog />
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="flex-col items-center justify-center">
-                <DialogHeader className="mt-4 flex justify-center items-center">
-                    <DialogTitle className="text-3xl font-bold">Verifying your suggestion</DialogTitle>
-                    <DialogDescription>What to expect when verifying your suggestion?</DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col items-center justify-center">
-                    <div className="flex border flex-col justify-start items-start w-full flex flex-col h-96 w-96 overflow-y-auto w-[80%]">
-                        <div className="flex flex-col items-start justify-center">
-                            <h2 className="font-bold text-xl px-4 py-2">Things to know about verification.</h2>
-                            <Separator />
-                            <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
-                                <p> 1. Verification of your suggestion happens automatically but may take some time.</p>
-                                <p> 2. You cannot make changes to your suggestion while it's in a pending state.</p>
-                                <p> 3. Once your suggestion is verified, the modpack owner will be able to merge your suggestion into the modpack.</p>
-                                <p> 4. If you make changes to your suggestion after it has been verified, you will have to re-verify the suggestion again.</p>
-                            </div>
-                        </div>
-                        <Separator />
-                        <div className="flex flex-col items-start justify-center">
-                            <h2 className="font-bold text-xl px-4 py-2">What happens during verification.</h2>
-                            <Separator />
-                            <div className="rounded-md px-4 py-2 flex flex-col items-center justify-start gap-4 text-left">
-                                <p> 1. All missing required mod dependencies are resolved automatically by being added to your suggestion modification list.</p>
-                                <p> 2. Any incompatible mods that are already in the modpack will be added to your modifications list as mods to be removed.</p>
-                                <p> 3. Any conflicting modifications that are in your suggestion will automatically be deleted.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <DialogFooter className="w-full px-2">
-                    <div className="w-full flex flex-row justify-start items-center gap-2">
-                        <Button variant={"default"} onClick={() => mutation.mutate()} disabled={mutation.isPending} type="submit">Begin Verification <Save/></Button>
-                        <DialogClose asChild>
-                            <Button variant={"destructive"}>Cancel <X/></Button>
-                        </DialogClose>
-                    </div>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
 export default function SuggestionView() {
     const navigate = useNavigate();
-    const {modpackId, suggestionId} = Route.useParams();
-    const [modActionFilter, setModActionFilter] = useState<ModAction | null>(null);
-    const [conflictStateFilter, setConflictStateFilter] = useState<ConflictState | null>(null);
     const {modpack: initialModpackData, suggestion: initialSuggestionData, curUser} = Route.useLoaderData();
-
+    const params = Route.useParams();
+    const modpackId = parseInt(params.modpackId);
+    const suggestionId = parseInt(params.suggestionId);
+    
     const {modificationsPage, modpackModsPage, searchQuery, modActionFilter: modActionFilterParam, conflictStateFilter: conflictStateFilterParam} = Route.useSearch({
         select: (search) => ({
             modpackModsPage: search.modpackModsPage,
@@ -510,6 +307,9 @@ export default function SuggestionView() {
         initialData: initialSuggestionData,       
         refetchOnMount: true,        
     });
+
+    const [modActionFilter, setModActionFilter] = useState<ModAction | null>(modActionFilterParam);
+    const [conflictStateFilter, setConflictStateFilter] = useState<ConflictState | null>(conflictStateFilterParam);
 
     const versionIteration = useMemo(() => {
         return modpack?.versions[0].iterations;
@@ -539,14 +339,22 @@ export default function SuggestionView() {
 
     const {data: modpackModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
 
-    const {data: modificationModData, isPending: pendingModificationData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
+    const {data: modificationModData, isPending: pendingModificationModData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
-    const handleModActionFilterChange = (newValue: ModAction) => {
-        setModActionFilter(newValue);
+    const handleModActionFilterChange = (newValue: ModAction | "All") => {
+        setModActionFilter(newValue === "All" ? null : newValue);
     }
 
-    const handleConflictStateFilterChange = (newValue: ConflictState) => {
-        setConflictStateFilter(newValue);
+    const handleConflictStateFilterChange = (newValue: ConflictState | "All") => {
+        setConflictStateFilter(newValue === "All" ? null : newValue);
+    }
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const newSearchQuery = formData.get("searchQuery") as string;
+
+        navigate({search: () => ({page: 1, searchQuery: newSearchQuery, conflictStateFilter, modActionFilter}), resetScroll: false, from: Route.fullPath});
     }
 
     if(modpackPending || suggestionPending) {
@@ -597,8 +405,8 @@ export default function SuggestionView() {
             {
                 suggestion.userId === curUser?.id && curUser.emailVerified && 
                 <div className="flex justify-center items-center gap-2 flex-wrap max-w-60">
-                    <UpdateSuggestionDialog suggestion={suggestion} />
-                    <VerifySuggestionDialog modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
+                    <UpdateSuggestionDialog modpack={modpack} suggestion={suggestion} />
+                    <VerifySuggestionDialog modpack={modpack} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
                     <AddModsDialog modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
                     <RemoveModsDialog curPage={modpackModsPage} totalPages={paginatedVersionMods?.totalPages} pendingData={pendingVersionMods || pendingModData} modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
                     <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion} />
@@ -614,49 +422,14 @@ export default function SuggestionView() {
             <h1 className="min-md:self-start">Modifications</h1>
             <div className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
                 <div className="flex items-center justify-start w-full gap-2">
-                    <ResultFilterForm handleSubmit={}>
-                        <Select value={modificationFilter} onValueChange={handleSelectValueChange}>
-                            <SelectTrigger>
-                                <span className="text-sm">Filter:</span>
-                                <SelectValue placeholder="Filter modifications..."/>
-                                <Separator orientation="vertical"  className="h-full" />
-                            </SelectTrigger> 
-                            <SelectContent>
-                                <SelectGroup>     
-                                    <SelectLabel>Select filter</SelectLabel>
-                                    <SelectItem className="cursor-pointer" value={"0"}>All</SelectItem>
-                                    <SelectItem className="cursor-pointer" value={"1"}>Added</SelectItem>
-                                    <SelectItem className="cursor-pointer" value={"2"}>Removed</SelectItem>
-                                    <SelectItem className="cursor-pointer" value={"3"}>Conflicting</SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
+                    <ResultFilterForm handleSubmit={handleSubmit}>
+                        <ModActionFilterSelect modActionFilter={modActionFilter} handleModActionFilterChange={handleModActionFilterChange} />
+                        <ConflictStateFilterSelect conflictStateFilter={conflictStateFilter} handleConflictStateFilterChange={handleConflictStateFilterChange}/>
                     </ResultFilterForm>
                 </div>
                 <div className="max-h-fit w-full">
-                        <ResultsState isEmpty={} isLoading={}>
-                            <DisplayContainer>
-                                {
-                                    pendingModificationData ? (
-                                        <div className="size-96 max-w-full flex items-center justify-center">
-                                            <Spinner className="size-20" />
-                                        </div>
-                                    )
-                                    :
-                                    modificationModData && filteredModifications.map((modification) => {
-                                        
-                                        const modData = modificationModData.find(modData => modification.mod.referenceId === modData.referenceId);
-                                        
-                                        if(!modData) {
-                                            return <div>Error fetching mod data for mod with id {modification.mod.referenceId}.</div>
-                                        }
-
-                                        return <CommandItem value={modData.name} key={modification.id} className="size-full p-0">
-                                            <ModificationDisplay suggestion={suggestion} curUser={curUser} curseforgeMod={modData} modification={modification} modpack={modpack} modificationReferenceIds={modificationReferenceIds} />
-                                        </CommandItem>
-                                    })
-                                }
-                            </DisplayContainer>
+                        <ResultsState isEmpty={paginatedModifications?.items.length === 0 || modificationModData?.length === 0} isLoading={pendingModifications || pendingModificationModData}>
+                            <ModificationResultDisplay paginatedModifications={paginatedModifications} modificationModData={modificationModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} curUser={curUser} modpack={modpack} />
                         </ResultsState>
                 </div>
             </div>

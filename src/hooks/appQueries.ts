@@ -4,30 +4,30 @@ import type { User } from "@/types/user";
 import { queryOptions } from "@tanstack/react-query";
 
 export const appQueries = {
-    suggestion: (modpackId: string, suggestionId: string) => queryOptions({
-        queryKey: ["suggestion", Number(modpackId), Number(suggestionId)],
+    suggestion: (modpackId: number, suggestionId: number) => queryOptions({
+        queryKey: ["suggestion", modpackId, suggestionId],
         queryFn: () => getSuggestion(modpackId, suggestionId),
     }),
 
-    modpack: (modpackId: string) => queryOptions({
-        queryKey: ["modpack", Number(modpackId)],
+    modpack: (modpackId: number) => queryOptions({
+        queryKey: ["modpack", modpackId],
         queryFn: () => getModpack(modpackId),
     }),
 
-    versionMods: (modpackId: string | null | undefined, versionIteration: string | null | undefined, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
-        queryKey: ["modpackVersionMods", Number(modpackId), Number(versionIteration), Number(page), Number(pageSize), searchQuery],
+    versionMods: (modpackId: number | null | undefined, versionIteration: string | null | undefined, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
+        queryKey: ["modpackVersionMods", modpackId, Number(versionIteration), Number(page), Number(pageSize), searchQuery],
         queryFn: () => getVersionMods(modpackId!, versionIteration!, page, pageSize || 50, searchQuery || ""),
         enabled: !!modpackId && !!versionIteration
     }),
 
-    modpackSuggestions: (modpackId: string, page: number, searchQuery?: string, filter?: SuggestionState, pageSize?: number) => queryOptions({
-        queryKey: ["modpackSuggestions", Number(modpackId), Number(page), Number(pageSize), searchQuery, filter],
+    modpackSuggestions: (modpackId: number, page: number, searchQuery?: string, filter?: SuggestionState, pageSize?: number) => queryOptions({
+        queryKey: ["modpackSuggestions", modpackId, Number(page), Number(pageSize), searchQuery, filter],
         queryFn: () => getModpackSuggestions(modpackId, page, pageSize || 50, searchQuery || "", filter),
         enabled: !!modpackId
     }),  
 
-    suggestionModifications: (modpackId:string, suggestionId: string, page: number, searchQuery?: string, modActionFilter?: ModAction, conflictStateFilter?: ConflictState, pageSize?: number) =>  queryOptions({
-        queryKey: ["suggestionModifications", Number(modpackId), Number(suggestionId), Number(page), Number(pageSize), searchQuery, modActionFilter, conflictStateFilter],
+    suggestionModifications: (modpackId: number, suggestionId: number, page: number, searchQuery?: string, modActionFilter?: ModAction, conflictStateFilter?: ConflictState, pageSize?: number) =>  queryOptions({
+        queryKey: ["suggestionModifications", modpackId, Number(suggestionId), Number(page), Number(pageSize), searchQuery, modActionFilter, conflictStateFilter],
         queryFn: () => getSuggestionModifications(modpackId, suggestionId, page, searchQuery || "", modActionFilter, conflictStateFilter, pageSize),
         enabled: !!suggestionId && !!modpackId
     }),
@@ -67,7 +67,7 @@ export const appQueries = {
         enabled: !!referenceIds,
     }),
 
-    modificationModData: (suggestionId: string, modificationReferenceIds: string[] | null | undefined) => queryOptions({
+    modificationModData: (suggestionId: number, modificationReferenceIds: string[] | null | undefined) => queryOptions({
         queryKey: ["modificationModData", suggestionId, modificationReferenceIds?.join(",") ?? "NoModificationModData"],
         queryFn: () => getCurseForgeModData(modificationReferenceIds!),
         enabled: !!modificationReferenceIds

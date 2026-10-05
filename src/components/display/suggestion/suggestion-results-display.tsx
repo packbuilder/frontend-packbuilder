@@ -8,9 +8,9 @@ import type { SuggestionState } from "@/types/enums"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../../ui/select"
 import { Separator } from "../../ui/separator"
 
-export function SuggestionFilterSelect({suggestionFilter, handleFilterChange} : {suggestionFilter: SuggestionState | null, handleFilterChange: (newValue: SuggestionState | "all") => void}) {
+export function SuggestionFilterSelect({suggestionFilter, handleFilterChange} : {suggestionFilter: SuggestionState | null, handleFilterChange: (newValue: SuggestionState | "All") => void}) {
     return (
-        <Select name="suggestionFilter" value={suggestionFilter ?? "All"} onValueChange={handleFilterChange}>
+        <Select value={suggestionFilter ?? "All"} onValueChange={handleFilterChange}>
             <SelectTrigger>
                 <span className="text-sm">Filter:</span>
                 <SelectValue placeholder="Filter modifications..."/>
@@ -30,17 +30,11 @@ export function SuggestionFilterSelect({suggestionFilter, handleFilterChange} : 
     )
 }
 
-export function SuggestionResultsDisplay({pendingSuggestions, paginatedSuggestions, modpack, curUser} : {pendingSuggestions: boolean, paginatedSuggestions: PaginatedSuggestionSchema | null | undefined, modpack: Modpack, curUser: User | null}) {
+export function SuggestionResultsDisplay({paginatedSuggestions, modpack, curUser} : {pendingSuggestions: boolean, paginatedSuggestions: PaginatedSuggestionSchema | null | undefined, modpack: Modpack, curUser: User | null}) {
     return (
         <div className="w-full">
             <DisplayContainer>
                 {
-                    pendingSuggestions ? (
-                        <div className="size-full flex items-center justify-center w-full">
-                            <Spinner className="size-20" />
-                        </div>
-                    )
-                    :
                     paginatedSuggestions && paginatedSuggestions.items.map((suggestion, index) => {
                         return <div key={index} className="size-full max-w-full p-0">
                             <SuggestionInteractive suggestion={suggestion} modpack={modpack} curUser={curUser} />

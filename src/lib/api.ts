@@ -92,7 +92,7 @@ export async function resetPassword(userId: string, newPassword: string, resetTo
     }
 }
 
-export async function verifySuggestion(suggestionId: number, modpackId: string) {
+export async function verifySuggestion(suggestionId: number, modpackId: number) {
 
     try {
         const response = await api.post(`/modpacks/${modpackId}/suggestions/${suggestionId}/verify`);
@@ -162,7 +162,7 @@ export async function getUserSuggestions(userId: number) {
     }
 }
 
-export async function getModpack(modpackId: string) {
+export async function getModpack(modpackId: number) {
     
     try {
         const response = await api.get(`/modpacks/${modpackId}`);
@@ -189,7 +189,7 @@ export async function getUserBookmarks() {
     }
 }
 
-export async function getBookmark(modpackId: string) {
+export async function getBookmark(modpackId: number) {
     
     try {
         const response = await api.get(`/bookmarks/${modpackId}`);
@@ -202,7 +202,7 @@ export async function getBookmark(modpackId: string) {
     }
 }
 
-export async function getModpackVersionManifest(modpackId: string, versionIteration: string) {
+export async function getModpackVersionManifest(modpackId: number, versionIteration: string) {
     try {
         const response = await api.get(`/modpacks/${modpackId}/download/version/${versionIteration}`, {
             responseType: "blob"
@@ -229,7 +229,7 @@ export async function getModReferenceIds(modIds: number[]) {
     }
 }
 
-export async function getVersionMods(modpackId: string, versionIteration: string, page: number, pageSize: number, searchQuery: string) {
+export async function getVersionMods(modpackId: number, versionIteration: string, page: number, pageSize: number, searchQuery: string) {
     try {
         const response = await api.get(`/modpacks/${modpackId}/versions/${versionIteration}/mods`, {
             params: {
@@ -248,7 +248,7 @@ export async function getVersionMods(modpackId: string, versionIteration: string
     }
 }
 
-export async function getModpackSuggestions(modpackId: string, page: number, pageSize: number, searchQuery: string, filter?: SuggestionState) {
+export async function getModpackSuggestions(modpackId: number, page: number, pageSize: number, searchQuery: string, filter?: SuggestionState) {
     try {
         const response = await api.get(`/modpacks/${modpackId}/suggestions`, {
             params: {
@@ -268,7 +268,7 @@ export async function getModpackSuggestions(modpackId: string, page: number, pag
     }
 }
 
-export async function getSuggestionModifications(modpackId: string, suggestionId: string, page: number, searchQuery?: string, modActionFilter?: ModAction, conflictStateFilter?: ConflictState, pageSize?: number) {
+export async function getSuggestionModifications(modpackId: number, suggestionId: number, page: number, searchQuery?: string, modActionFilter?: ModAction, conflictStateFilter?: ConflictState, pageSize?: number) {
     try {
         const response = await api.get(`modpacks/${modpackId}/suggestions/${suggestionId}/modifications`, {
             params: {
@@ -303,7 +303,7 @@ export async function getCurseForgeModData(referenceIds: string[]) {
     }
 }
 
-export async function getSuggestion(modpackId: string, suggestionId: string) {
+export async function getSuggestion(modpackId: number, suggestionId: number) {
 
     try {
         const response = await api.get(`/modpacks/${modpackId}/suggestions/${suggestionId}`, );
@@ -358,7 +358,7 @@ export async function createModpack(body: CreateModpackDto) {
     }
 }
 
-export async function createBookmark(modpackId: string) {
+export async function createBookmark(modpackId: number) {
 
     try {
         const response = await api.post(`/bookmarks/${modpackId}`, {}, );
@@ -384,7 +384,7 @@ export async function importModpack(formData: FormData) {
     }
 }
 
-export async function createSuggestion(modpackId: string, body: CreateSuggestionDto) {
+export async function createSuggestion(modpackId: number, body: CreateSuggestionDto) {
     
     try {
         const response = await api.post(`/modpacks/${modpackId}/suggestions`, body, );
@@ -397,7 +397,7 @@ export async function createSuggestion(modpackId: string, body: CreateSuggestion
     }
 }
 
-export async function createModification(modpackId: string, suggestionId: string, body: CreateModificationDto) {
+export async function createModification(modpackId: number, suggestionId: number, body: CreateModificationDto) {
     
     try {
         const response = await api.post(`/modpacks/${modpackId}/suggestions/${suggestionId}/modifications`, body, );
@@ -410,7 +410,7 @@ export async function createModification(modpackId: string, suggestionId: string
     }
 }
 
-export async function createModpackVersion(modpackId: string, suggestionId: string) {
+export async function createModpackVersion(modpackId: number, suggestionId: number) {
     
     try {
         const response = await api.post(`/modpacks/${modpackId}/versions/create/${suggestionId}` );
@@ -423,7 +423,7 @@ export async function createModpackVersion(modpackId: string, suggestionId: stri
     }
 }
 
-export async function updateSuggestion(modpackId: string, body: CreateSuggestionDto, suggestionId: Number) {
+export async function updateSuggestion(modpackId: number, body: CreateSuggestionDto, suggestionId: Number) {
     
     try {
         const response = await api.put(`/modpacks/${modpackId}/suggestions/${suggestionId}`, body, );
@@ -462,7 +462,7 @@ export async function updateProfile(userId: number, body: UpdateUserDto) {
     }
 }
 
-export async function updateModpack(modpackId: string, body: UpdateModpackDto) {
+export async function updateModpack(modpackId: number, body: UpdateModpackDto) {
     
     try {
         const response = await api.put(`/modpacks/${modpackId}`, body, );
@@ -475,7 +475,7 @@ export async function updateModpack(modpackId: string, body: UpdateModpackDto) {
     }
 }
 
-export async function deleteModpack(modpackId: string) {
+export async function deleteModpack(modpackId: number) {
 
     try {
         const response = await api.delete(`/modpacks/${modpackId}`);
@@ -488,7 +488,7 @@ export async function deleteModpack(modpackId: string) {
     }
 }
 
-export async function deleteBookmark(modpackId: string) {
+export async function deleteBookmark(modpackId: number) {
 
     try {
         const response = await api.delete(`/bookmarks/${modpackId}`);
@@ -501,7 +501,7 @@ export async function deleteBookmark(modpackId: string) {
     }
 }
 
-export async function deleteSuggestion(modpackId: string, suggestionId: string) {
+export async function deleteSuggestion(modpackId: number, suggestionId: number) {
 
     try {
         const response = await api.delete(`/modpacks/${modpackId}/suggestions/${suggestionId}`);
@@ -514,7 +514,7 @@ export async function deleteSuggestion(modpackId: string, suggestionId: string) 
     }
 }
 
-export async function deleteModification(modpackId: string, modificationId: string, suggestionId: string) {
+export async function deleteModification(modpackId: number, modificationId: string, suggestionId: number) {
     
     try {
         const response = await api.delete(`/modpacks/${modpackId}/suggestions/${suggestionId}/modifications/${modificationId}`);
