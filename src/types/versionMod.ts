@@ -10,7 +10,4 @@ export const versionModSchema = z.object({
     mod: modSchema
 })
 
-export const paginatedVersionModSchema = paginatedResponseSchema(versionModSchema);
-
 export type VersionMod = z.infer<typeof versionModSchema>;
-export type PaginatedVersionModSchema = z.infer<typeof paginatedVersionModSchema>;

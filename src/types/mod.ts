@@ -6,6 +6,7 @@ export const modSchema = z.object({
     id: z.number(),
     
     referenceId: z.string(),
+    name: z.string().nullable(),
     platform: z.coerce.string().pipe(z.enum(ModPlatform)),
 });
 

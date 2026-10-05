@@ -8,18 +8,12 @@ export enum ModAction {
     Removed = "1",
     Updated = "2"
 }
-
+// TODO: Remove this
 export enum ModificationFilter {
     All = "0",
     Added = "1",
     Removed = "2",
     Conflicting = "3"
-}
-
-export enum SuggestionFilter {
-    All = "0",
-    Verified = "1",
-    Unverified = "2"
 }
 
 export enum CurseForgeSearchFilter {

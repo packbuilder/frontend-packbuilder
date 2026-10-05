@@ -1,6 +1,6 @@
 import { AlertButton } from '@/components/display/alert-button';
 import { GlassCard } from '@/components/display/glass-card';
-import {ModpackCardLarge} from '@/components/modpack/modpack-card';
+import {ModpackCardLarge} from '@/components/display/modpack/modpack-card';
 import SelectAvatarDialog from '@/components/display/select-avatar-dialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

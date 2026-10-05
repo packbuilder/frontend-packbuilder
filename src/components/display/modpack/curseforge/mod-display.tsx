@@ -2,13 +2,40 @@ import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import type { VersionMod } from "@/types/versionMod";
 import { Link } from "@tanstack/react-router";
 import { CircleCheck, Download, RefreshCcw, TriangleAlert } from "lucide-react";
-import { Separator } from "../ui/separator";
+import { Separator } from "../../../ui/separator";
 import { ConflictState } from "@/types/enums";
 import { timeSinceCurDate } from "@/lib/utils";
-import InfoPill from "../display/info-pill";
-import DisplayImage from "../display/display-image";
+import InfoPill from "../../info-pill";
+import DisplayImage from "../../display-image";
+import type { PaginatedVersionModSchema } from "@/types/paginatedResponse";
+import DisplayContainer from "../../display-container";
 
-export function VersionModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
+export function CurseForgeModResults({paginatedVersionMods, versionModData} : {paginatedVersionMods: PaginatedVersionModSchema | undefined | null, versionModData: CurseForgeMod[] | undefined | null}) {
+    return (
+        <div className="w-full">
+            <DisplayContainer>
+                {
+                    paginatedVersionMods && versionModData && paginatedVersionMods.items.map((versionMod, index) => {
+                        
+                        const modData = versionModData.find(modData => {
+                            return versionMod.mod.referenceId === modData.referenceId;
+                        });
+                        
+                        if(!modData) {
+                            return <h1>{versionMod.mod.referenceId}</h1>;
+                        }
+
+                        return <div key={index} className="size-full p-0">
+                            <CurseForgeModDisplay curseforgeMod={modData} versionMod={versionMod} />
+                        </div>
+                    })
+                }
+            </DisplayContainer>
+        </div> 
+    )
+}
+
+export function CurseForgeModDisplay({curseforgeMod, versionMod} : {curseforgeMod: CurseForgeMod, versionMod: VersionMod}) {
     const formattedDownloadCount = new Intl.NumberFormat('en-US', {
         notation: "compact"
     }).format(curseforgeMod.downloadCount);

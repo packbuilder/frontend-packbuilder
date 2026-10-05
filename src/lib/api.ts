@@ -7,7 +7,7 @@ import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
 import { AxiosError } from "axios";
 import type { CreateModificationDto } from "@/types/dtos/createModificationDto";
 import type { UpdateModpackDto } from "@/types/dtos/updateModpackDto";
-import type { ModLoader } from "@/types/enums";
+import type { ConflictState, ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import type { CreateSuggestionDto } from "@/types/dtos/createSuggestionDto";
 import z from "zod";
 import { curseForgeModListResponseSchema } from "@/types/curseforge/curseforgeModArrayResponse";
@@ -16,7 +16,7 @@ import { bookmarkSchema } from "@/types/bookmark";
 import type { CreateUserDto } from "@/types/dtos/createProfileDto";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import type { ChangeEmailDto } from "@/types/dtos/changeEmailDto";
-import { type PaginatedVersionModSchema } from "@/types/versionMod";
+import { type PaginatedModificationSchema, type PaginatedSuggestionSchema, type PaginatedVersionModSchema } from "@/types/paginatedResponse";
 
 const api = useApi();
 
@@ -229,11 +229,58 @@ export async function getModReferenceIds(modIds: number[]) {
     }
 }
 
-export async function getVersionMods(modpackId: string, versionIteration: string, page: number, pageSize: number) {
+export async function getVersionMods(modpackId: string, versionIteration: string, page: number, pageSize: number, searchQuery: string) {
     try {
-        const response = await api.get(`/modpacks/${modpackId}/versions/${versionIteration}/mods?page=${page}&pageSize=${pageSize}`);
+        const response = await api.get(`/modpacks/${modpackId}/versions/${versionIteration}/mods`, {
+            params: {
+                page,
+                pageSize,
+                searchQuery: searchQuery
+            }
+        });
 
         const data = response.data as PaginatedVersionModSchema;
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function getModpackSuggestions(modpackId: string, page: number, pageSize: number, searchQuery: string, filter?: SuggestionState) {
+    try {
+        const response = await api.get(`/modpacks/${modpackId}/suggestions`, {
+            params: {
+                page,
+                pageSize,
+                searchQuery: searchQuery,
+                filter
+            }
+        });
+
+        const data = response.data as PaginatedSuggestionSchema;
+        return data;
+    } catch (error) {
+        const err = error as unknown as AxiosError
+        console.error(err.message);
+        return null;
+    }
+}
+
+export async function getSuggestionModifications(modpackId: string, suggestionId: string, page: number, searchQuery?: string, modActionFilter?: ModAction, conflictStateFilter?: ConflictState, pageSize?: number) {
+    try {
+        const response = await api.get(`modpacks/${modpackId}/suggestions/${suggestionId}/modifications`, {
+            params: {
+                page,
+                pageSize,
+                searchQuery: searchQuery,
+                modActionFilter,
+                conflictStateFilter
+            }
+        });
+
+        const data = response.data as PaginatedModificationSchema;
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -249,20 +296,6 @@ export async function getCurseForgeModData(referenceIds: string[]) {
 
         const mods = z.array(curseForgeModSchema).parse(response.data); 
         return mods;
-    } catch (error) {
-        const err = error as unknown as AxiosError
-        console.error(err.message);
-        return null;
-    }
-}
-
-export async function getModpackSuggestions(modpackId: string) {
-    
-    try {
-        const response = await api.get(`/modpacks/${modpackId}/suggestions`, );
-
-        const data = z.array(suggestionSchema).parse(response.data);
-        return data;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);

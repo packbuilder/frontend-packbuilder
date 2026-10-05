@@ -2,7 +2,7 @@ import { updateSuggestion, verifySuggestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { CloudAlert, CloudCheck, CloudCog, Edit, Merge, Save, Search, X } from "lucide-react";
 import { createFileRoute, Link, redirect, useNavigate, useRouter } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
 import { ConflictState, CurseForgeSearchFilter, ImageType, ModAction, ModificationFilter, ModLoader, SuggestionState } from "@/types/enums";
@@ -28,22 +28,28 @@ import { useSuggestionSubscription } from "@/hooks/useSuggestionSubscription";
 import { toast } from "sonner";
 import { Field, FieldLabel } from "@/components/ui/field";
 import PaginationButtons, { CurseforgePaginationButtons } from "@/components/display/paginationButtons";
-import type { PaginatedResponse } from "@/types/paginatedResponse";
+import ResultFilterForm from "@/components/display/result-filter-form";
+import ResultsState from "@/components/display/result-state";
 
 const addModSearchSchema = z.object({
     curseforgePage: fallback(z.number(), 0).default(0),
     modpackModsPage: fallback(z.number(), 0).default(1),
-    sortMethod: fallback(z.enum(["0", "1", "2", "3"]), "0").default("0"),
+    modificationsPage: fallback(z.number(), 0).default(1),
+    curseForgeSortMethod: fallback(z.enum(["0", "1", "2", "3"]), "0").default("0"),
+    modActionFilter: fallback(z.enum(ModAction).nullable(), null).default(null),
+    conflictStateFilter: fallback(z.enum(ConflictState).nullable(), null).default(null),
     searchQuery: fallback(z.string(), "").default('')
 });
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/suggestion/$suggestionId/')({
     validateSearch: zodValidator(addModSearchSchema),
-    loaderDeps: ({search: {searchQuery, curseforgePage, sortMethod, modpackModsPage}}) => ({
+    loaderDeps: ({search: {searchQuery, curseforgePage, curseForgeSortMethod, modpackModsPage, modActionFilter, conflictStateFilter}}) => ({
         searchQuery,
         curseforgePage,
         modpackModsPage,
-        sortMethod
+        curseForgeSortMethod,
+        modActionFilter,
+        conflictStateFilter
     }),
     loader: async ({context: {user, queryClient}, params: {suggestionId, modpackId}}) => {
         const suggestion = await queryClient.ensureQueryData(appQueries.suggestion(modpackId, suggestionId));
@@ -186,11 +192,11 @@ function UpdateSuggestionDialog( {suggestion} :{suggestion: Suggestion}) {
 }
 
 function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestion, modpack} : {modpackReferenceIds: string[] | null | undefined, modificationReferenceIds: string[], suggestion: Suggestion, modpack: Modpack}) {
-    const {curseforgePage, searchQuery, sortMethod} = Route.useSearch({
+    const {curseforgePage, searchQuery, curseForgeSortMethod} = Route.useSearch({
         select: (search) => ({
             curseforgePage: search.curseforgePage,
             searchQuery: search.searchQuery,
-            sortMethod: search.sortMethod,
+            curseForgeSortMethod: search.curseForgeSortMethod,
             ...search
         })
     });
@@ -200,7 +206,7 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
     const queryClient = useQueryClient();
     const submitButtonRef = useRef(null);
     const searchModsInputRef = useRef(null);
-    const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, curseforgePage, sortMethod, suggestion.gameVersion, suggestion.modLoader));
+    const {data: modSearchResults, isPending: pendingSearchResults} = useQuery(appQueries.curseForgeSearchResults(searchQuery, curseforgePage, curseForgeSortMethod, suggestion.gameVersion, suggestion.modLoader));
 
     const modificationReferenceIdSet = useMemo(
         () => new Set(modificationReferenceIds.map((referenceId) => referenceId)),
@@ -218,10 +224,10 @@ function AddModsDialog({modpackReferenceIds, modificationReferenceIds, suggestio
         const newSearchQuery = formData.get("searchQuery") as string;
 
         await queryClient.invalidateQueries({
-            queryKey: appQueries.curseForgeSearchResults(searchQuery, curseforgePage, sortMethod, suggestion.gameVersion, suggestion.modLoader).queryKey,
+            queryKey: appQueries.curseForgeSearchResults(searchQuery, curseforgePage, curseForgeSortMethod, suggestion.gameVersion, suggestion.modLoader).queryKey,
         });
 
-        navigate({search: (prev) => ({...prev, page: 0, searchQuery: newSearchQuery, sortMethod: sort})})
+        navigate({search: (prev) => ({...prev, page: 0, searchQuery: newSearchQuery, curseForgeSortMethod: sort})})
     }
 
     const handleSortChange = (newValue: CurseForgeSearchFilter) => {
@@ -477,12 +483,17 @@ function VerifySuggestionDialog({suggestion, modificationReferenceIds} : {sugges
 export default function SuggestionView() {
     const navigate = useNavigate();
     const {modpackId, suggestionId} = Route.useParams();
-    const [modificationFilter, setModificationFilter] = useState<ModificationFilter>(ModificationFilter.All);
+    const [modActionFilter, setModActionFilter] = useState<ModAction | null>(null);
+    const [conflictStateFilter, setConflictStateFilter] = useState<ConflictState | null>(null);
     const {modpack: initialModpackData, suggestion: initialSuggestionData, curUser} = Route.useLoaderData();
 
-    const {modpackModsPage} = Route.useSearch({
+    const {modificationsPage, modpackModsPage, searchQuery, modActionFilter: modActionFilterParam, conflictStateFilter: conflictStateFilterParam} = Route.useSearch({
         select: (search) => ({
             modpackModsPage: search.modpackModsPage,
+            modActionFilter: search.modActionFilter,
+            conflictStateFilter: search.conflictStateFilter,
+            searchQuery: search.searchQuery,
+            modificationsPage: search.modificationsPage
         })
     });
 
@@ -492,6 +503,7 @@ export default function SuggestionView() {
         initialData: initialModpackData,       
         refetchOnMount: true,        
     });
+
     const { data: suggestion, isPending: suggestionPending } = useQuery({
         queryFn: appQueries.suggestion(modpackId, suggestionId).queryFn,
         queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
@@ -502,8 +514,16 @@ export default function SuggestionView() {
     const versionIteration = useMemo(() => {
         return modpack?.versions[0].iterations;
     }, [modpack?.versions[0]]);
+
+    const { data: paginatedModifications, isPending: pendingModifications } = useQuery({
+        queryFn: appQueries.suggestionModifications(modpackId, suggestionId, modificationsPage, searchQuery, modActionFilter ?? undefined, conflictStateFilter ?? undefined).queryFn,
+
+        queryKey: appQueries.suggestionModifications(modpackId, suggestionId, modificationsPage, searchQuery, modActionFilter ?? undefined, conflictStateFilter ?? undefined).queryKey,
+
+        placeholderData: keepPreviousData
+    });
     
-    const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.versionMods(modpackId, versionIteration?.toString(), modpackModsPage, 50));
+    const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.versionMods(modpackId, versionIteration?.toString(), modpackModsPage, searchQuery));
 
     const modpackReferenceIds = useMemo(
         () => paginatedVersionMods?.items.map(versionMod => {
@@ -512,38 +532,22 @@ export default function SuggestionView() {
         [paginatedVersionMods?.items]
     );
 
-    const {data: modpackModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
-
     const modificationReferenceIds = useMemo(
-        () => suggestion?.modifications.map(modification => modification.mod.referenceId),
+        () => paginatedModifications?.items.map(modification => modification.mod.referenceId),
         [suggestion?.modifications]
     );
+
+    const {data: modpackModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
+
     const {data: modificationModData, isPending: pendingModificationData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
-    const handleSelectValueChange = (newValue: ModificationFilter) => {
-        setModificationFilter(newValue);
+    const handleModActionFilterChange = (newValue: ModAction) => {
+        setModActionFilter(newValue);
     }
 
-    const filteredModifications = useMemo(() => {
-        if (!suggestion?.modifications) return [];
-
-        switch (modificationFilter) {
-            case ModificationFilter.Added:
-                return suggestion?.modifications.filter(
-                    modification => modification.modAction === ModAction.Added
-                );
-            case ModificationFilter.Removed:
-                return suggestion?.modifications.filter(
-                    modification => modification.modAction === ModAction.Removed
-                );
-            case ModificationFilter.Conflicting:
-                return suggestion?.modifications.filter(
-                    modification => modification.conflictState !== ConflictState.NoConflicts
-                );
-            default:
-                return suggestion?.modifications;
-        }
-    }, [suggestion?.modifications, modificationFilter]);
+    const handleConflictStateFilterChange = (newValue: ConflictState) => {
+        setConflictStateFilter(newValue);
+    }
 
     if(modpackPending || suggestionPending) {
         return <Spinner />
@@ -608,40 +612,30 @@ export default function SuggestionView() {
 
         <section className="flex items-center justify-center gap-4 flex-col w-9/10">
             <h1 className="min-md:self-start">Modifications</h1>
-            <Command className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
+            <div className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
                 <div className="flex items-center justify-start w-full gap-2">
-                    <ClearableCommandInput placeholder="Search..." />
-                    <div className="flex max-md:flex-col items-center justify-center">
-                        <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
-                            <div className="flex items-center justify-center gap-2">
-                                <Select value={modificationFilter} onValueChange={handleSelectValueChange}>
-                                    <SelectTrigger>
-                                        <span className="text-sm">Filter:</span>
-                                        <SelectValue placeholder="Filter modifications..."/>
-                                        <Separator orientation="vertical"  className="h-full" />
-                                    </SelectTrigger> 
-                                    <SelectContent>
-                                        <SelectGroup>     
-                                            <SelectLabel>Select filter</SelectLabel>
-                                            <SelectItem className="cursor-pointer" value={"0"}>All</SelectItem>
-                                            <SelectItem className="cursor-pointer" value={"1"}>Added</SelectItem>
-                                            <SelectItem className="cursor-pointer" value={"2"}>Removed</SelectItem>
-                                            <SelectItem className="cursor-pointer" value={"3"}>Conflicting</SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </div>
+                    <ResultFilterForm handleSubmit={}>
+                        <Select value={modificationFilter} onValueChange={handleSelectValueChange}>
+                            <SelectTrigger>
+                                <span className="text-sm">Filter:</span>
+                                <SelectValue placeholder="Filter modifications..."/>
+                                <Separator orientation="vertical"  className="h-full" />
+                            </SelectTrigger> 
+                            <SelectContent>
+                                <SelectGroup>     
+                                    <SelectLabel>Select filter</SelectLabel>
+                                    <SelectItem className="cursor-pointer" value={"0"}>All</SelectItem>
+                                    <SelectItem className="cursor-pointer" value={"1"}>Added</SelectItem>
+                                    <SelectItem className="cursor-pointer" value={"2"}>Removed</SelectItem>
+                                    <SelectItem className="cursor-pointer" value={"3"}>Conflicting</SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </ResultFilterForm>
                 </div>
-                <CommandList className="max-h-fit w-full">
-                    <CommandEmpty className={pendingModificationData ? "hidden" : ""}>
-                        <DisplayContainer className="flex items-center justify-center h-96">
-                            <h2>It's looking empty in here...</h2>
-                        </DisplayContainer>
-                    </CommandEmpty>
-                        <CommandGroup>
-                            <DisplayContainer className={`${filteredModifications.length === 0 ? "hidden" : ""}`}>
+                <div className="max-h-fit w-full">
+                        <ResultsState isEmpty={} isLoading={}>
+                            <DisplayContainer>
                                 {
                                     pendingModificationData ? (
                                         <div className="size-96 max-w-full flex items-center justify-center">
@@ -663,9 +657,9 @@ export default function SuggestionView() {
                                     })
                                 }
                             </DisplayContainer>
-                        </CommandGroup>
-                </CommandList>
-            </Command>
+                        </ResultsState>
+                </div>
+            </div>
         </section>
     </section>
 }
