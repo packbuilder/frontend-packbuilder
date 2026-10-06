@@ -5,7 +5,7 @@ export default function ResultsState({
     isLoading,
     isEmpty,
     children,
-}: {isLoading: boolean, isEmpty: boolean, children: React.ReactNode}) {
+}: {isLoading: boolean, isEmpty: boolean, children?: React.ReactNode}) {
     if (isLoading) {
         return (
             <DisplayContainer className="flex items-center justify-center h-96 w-full">
@@ -22,5 +22,9 @@ export default function ResultsState({
         );
     }
 
-    return children;
+    return <DisplayContainer className="flex items-center justify-center h-96 w-full">
+        {
+            children
+        }
+    </DisplayContainer>
 }

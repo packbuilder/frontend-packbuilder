@@ -13,7 +13,6 @@ import { SuggestionDisplay } from '@/components/suggestion/suggestion-display';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import ModpackDisplay from '@/components/display/modpack/modpack-display';
-import DisplayContainer from '@/components/display/display-container';
 import { fallback, zodValidator } from '@tanstack/zod-adapter';
 import z from 'zod';
 import { ImageType, SuggestionState } from '@/types/enums';
@@ -27,13 +26,19 @@ import SelectAvatarDialog from '@/components/display/select-avatar-dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import DisplayRadioGroup from '@/components/display/radio-display-buttons';
 
-const dataDisplaySchema = z.object({
+const searchParamsSchema = z.object({
     display: fallback(z.enum(["modpacks", "suggestions"]), "modpacks").default("modpacks"),
+    modpacksPage: fallback(z.number(), 1).default(1),
+    suggestionsPage: fallback(z.number(), 1).default(1),
+    modpacksQuery: fallback(z.string(), "").default(""),
+    suggestionsQuery: fallback(z.string(), "").default(""),
+    suggestionFilter: fallback(z.enum(SuggestionState).nullable(), null).default(null)
 });
 
 export const Route = createFileRoute('/profile/$username/$userId/')({
-    validateSearch: zodValidator(dataDisplaySchema),
+    validateSearch: zodValidator(searchParamsSchema),
     params: {
         parse: (raw) => ({
             username: raw.username,
@@ -205,8 +210,6 @@ function ChangeEmailDialog() {
 
             const status = await changeEmail(result.data);
 
-            // TODO: Figure out how to send text through responses from backend for richer error details
-
             if(!status || status < 200 || status > 200) {
                 throw new Error("There was a problem with updating your email.")
             }
@@ -282,6 +285,7 @@ function ChangeEmailDialog() {
 
 function SelectDisplayRadioGroup() {
     const navigate = useNavigate({from: Route.fullPath});
+
     const {display} = Route.useSearch({
         select: (search) => ({
             display: search.display
@@ -289,34 +293,19 @@ function SelectDisplayRadioGroup() {
     });
 
     const handleValueChange = (newValue: string) => {
-        navigate({search: () => ({display: newValue}), resetScroll: false});
+        navigate({search: (prev) => ({...prev, display: newValue}), resetScroll: false});
     }
 
     return (
-        <RadioGroup
-        defaultValue={display}
-        onValueChange={handleValueChange}
-        className="inline-flex rounded-full bg-muted p-1"
-        >
-            <label className="cursor-pointer">
-                <RadioGroupItem value="modpacks" className="peer sr-only" />
-                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
-                ${display === "modpacks" ? "bg-primary text-white" : ""}
-                text-muted-foreground`}>
-                Modpacks
-                </div>
-            </label>
-
-            <label className="cursor-pointer">
-                <RadioGroupItem value="suggestions" className="peer sr-only" />
-                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
-                ${display === "suggestions" ? "bg-primary text-white" : ""}
-                text-muted-foreground`}>
-                Suggestions
-                </div>
-            </label>
-        </RadioGroup>
-  )
+        <DisplayRadioGroup  
+            value={display} 
+            onValueChange={handleValueChange}
+            options={[
+                { value: "modpacks", label: "Modpacks" },
+                { value: "suggestions", label: "Suggestions" },
+            ]} 
+        />    
+    )
 }
 
 export default function ProfileView() {
@@ -341,23 +330,6 @@ export default function ProfileView() {
     }
 
     const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All);
-  
-    const filteredSuggestions = useMemo(() => {
-        if (!userSuggestions) return [];
-
-        switch (suggestionFilter) {
-            case SuggestionFilter.Verified:
-                return userSuggestions?.filter(
-                    suggestion => suggestion.state === SuggestionState.Unverified
-                );
-            case SuggestionFilter.Unverified:
-                return userSuggestions?.filter(
-                    suggestion => suggestion.state === SuggestionState.Verified
-                );
-            default:
-                return userSuggestions;
-        }
-    }, [userSuggestions, suggestionFilter]);
     
     const handleFilterChange = (newValue: SuggestionFilter) => {
         setSuggestionFilter(newValue);

@@ -16,7 +16,7 @@ import { bookmarkSchema } from "@/types/bookmark";
 import type { CreateUserDto } from "@/types/dtos/createProfileDto";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import type { ChangeEmailDto } from "@/types/dtos/changeEmailDto";
-import { type PaginatedModificationSchema, type PaginatedSuggestionSchema, type PaginatedVersionModSchema } from "@/types/paginatedResponse";
+import { paginatedModpackSchema, type PaginatedModificationSchema, type PaginatedModpackSchema, type PaginatedSuggestionSchema, type PaginatedVersionModSchema } from "@/types/paginatedResponse";
 
 const api = useApi();
 
@@ -135,12 +135,18 @@ export async function getUserById(userId: number) {
     }
 }
 
-export async function getUserModpacks(user: User) {
+export async function getUserModpacks(user: User, page: number, searchQuery?: string, pageSize?: string) {
 
     try {
-        const response = await api.get(`/user-modpacks/${user.id}`);
+        const response = await api.get(`/user-modpacks/${user.id}`, {
+            params: {
+                page,
+                searchQuery,
+                pageSize
+            }
+        });
         
-        const data = z.array(modpackSchema).parse(response.data);   
+        const data = response.data as PaginatedModpackSchema;   
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -149,11 +155,18 @@ export async function getUserModpacks(user: User) {
     }
 }
 
-export async function getUserSuggestions(userId: number) {
+export async function getUserSuggestions(userId: number, page: number, searchQuery?: string, pageSize?: string, filter?: SuggestionState) {
     
     try {
-        const response = await api.get(`user/${userId}/suggestions`);
-        const data = z.array(suggestionSchema).parse(response.data);
+        const response = await api.get(`user/${userId}/suggestions`, {
+            params: {
+                page,
+                searchQuery,
+                pageSize,
+                filter
+            }
+        });
+        const data = response.data as PaginatedSuggestionSchema;
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError

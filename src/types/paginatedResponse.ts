@@ -2,6 +2,7 @@ import z from "zod";
 import { versionModSchema } from "./versionMod";
 import { suggestionSchema } from "./suggestion";
 import { modificationSchema } from "./modification";
+import { modpackSchema } from "./modpack";
 
 export const paginatedResponseSchema = <T extends z.ZodType>(
     itemSchema: T
@@ -16,6 +17,7 @@ export const paginatedResponseSchema = <T extends z.ZodType>(
 export const paginatedVersionModSchema = paginatedResponseSchema(versionModSchema);
 export const paginatedSuggestionSchema = paginatedResponseSchema(suggestionSchema);
 export const paginatedModificationSchema = paginatedResponseSchema(modificationSchema);
+export const paginatedModpackSchema = paginatedResponseSchema(modpackSchema);
 
 export type PaginatedResponse<T> = {
     items: T[],
@@ -28,3 +30,4 @@ export type PaginatedResponse<T> = {
 export type PaginatedVersionModSchema = z.infer<typeof paginatedVersionModSchema>;
 export type PaginatedSuggestionSchema = z.infer<typeof paginatedSuggestionSchema>;
 export type PaginatedModificationSchema = z.infer<typeof paginatedModificationSchema>;
+export type PaginatedModpackSchema = z.infer<typeof paginatedModpackSchema>;

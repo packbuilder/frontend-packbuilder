@@ -7,30 +7,27 @@ import { ConflictState } from "@/types/enums";
 import { timeSinceCurDate } from "@/lib/utils";
 import InfoPill from "../info-pill";
 import type { PaginatedVersionModSchema } from "@/types/paginatedResponse";
-import DisplayContainer from "../display-container";
 
 export function CurseForgeModResults({paginatedVersionMods, versionModData} : {paginatedVersionMods: PaginatedVersionModSchema | undefined | null, versionModData: CurseForgeMod[] | undefined | null}) {
     return (
-        <div className="w-full">
-            <DisplayContainer>
-                {
-                    paginatedVersionMods && versionModData && paginatedVersionMods.items.map((versionMod, index) => {
-                        
-                        const modData = versionModData.find(modData => {
-                            return versionMod.mod.referenceId === modData.referenceId;
-                        });
-                        
-                        if(!modData) {
-                            return <h1>{versionMod.mod.referenceId}</h1>;
-                        }
+        <>
+            {
+                paginatedVersionMods && versionModData && paginatedVersionMods.items.map((versionMod, index) => {
+                    
+                    const modData = versionModData.find(modData => {
+                        return versionMod.mod.referenceId === modData.referenceId;
+                    });
+                    
+                    if(!modData) {
+                        return <h1>{versionMod.mod.referenceId}</h1>;
+                    }
 
-                        return <div key={index} className="size-full p-0">
-                            <CurseForgeModDisplay curseForgeMod={modData} versionMod={versionMod} />
-                        </div>
-                    })
-                }
-            </DisplayContainer>
-        </div> 
+                    return <div key={index} className="size-full p-0">
+                        <CurseForgeModDisplay curseForgeMod={modData} versionMod={versionMod} />
+                    </div>
+                })
+            }
+        </>
     )
 }
 

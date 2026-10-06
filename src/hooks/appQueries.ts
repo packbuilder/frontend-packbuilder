@@ -1,3 +1,4 @@
+import { SuggestionFilterSelect } from "@/components/display/suggestion/suggestion-results-display";
 import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getMinecraftVersions, getUserBookmarks, getUserById, getVersionMods, getSuggestionModifications } from "@/lib/api";
 import type { ConflictState, ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import type { User } from "@/types/user";
@@ -37,10 +38,20 @@ export const appQueries = {
         queryFn: () => getUserById(userId),
     }),
     
-    userModpacks: (user: User | null) => queryOptions({
-        queryKey: user ? ["modpacks", user.id] : ["modpacks", "no-user"],
-        queryFn: () => getUserModpacks(user!),
+    userModpacks: (user: User | null, page: number, searchQuery?: string, pageSize?: string) => queryOptions({
+        queryKey: user ? ["modpacks", user.id, page, searchQuery, pageSize] : ["modpacks", "no-user", page, searchQuery, pageSize],
+        queryFn: () => getUserModpacks(user!, page, searchQuery || "", pageSize),
         enabled: !!user,
+    }),
+
+    userSuggestions: (user: User | null, page: number, searchQuery?: string, pageSize?: string, filter?: SuggestionState) => queryOptions({
+        queryKey: user ? 
+        ["suggestions", user.id, page, searchQuery, pageSize, filter] 
+        : 
+        ["suggestions", "no-user", page, searchQuery, pageSize, filter],
+
+        queryFn: () => getUserSuggestions(user!.id, page, searchQuery, pageSize, filter),
+        enabled: !!user
     }),
 
     userBookmarks: (user: User | null) => queryOptions({
@@ -49,11 +60,6 @@ export const appQueries = {
         enabled: !!user,
     }),
 
-    userSuggestions: (user: User | null) => queryOptions({
-        queryKey: user ? ["suggestions", user.id] : ["suggestions", "no-user"],
-        queryFn: () => getUserSuggestions(user!.id),
-        enabled: !!user
-    }),
 
     modReferenceIds: (modIds: number[] | null | undefined) => queryOptions({
         queryKey: ["referenceIds", modIds?.join(",") ?? "noModIds"],

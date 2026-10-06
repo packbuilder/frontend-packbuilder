@@ -167,6 +167,18 @@ p {
   body {
     @apply bg-background text-foreground;
   }
+
+  .displayContainer {
+    @apply flex flex-col justify-start items-start min-w-[300px] border w-1/2 border-black dark:border-gray-400 bg-[var(--surface-1)] flex flex-col max-h-96 h-fit w-96 overflow-y-auto overflow-x-clip w-full
+  }
+
+  .displayImage {
+    @apply bg-[var(--surface-3)] border border-[var(--surface-2)] rounded-md size-15 rounded-sm shrink-0 min-md:size-25
+  }
+
+  .modGridDisplay {
+    @apply grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 group-hover:bg-white/5 min-md:grid-cols-[auto_minmax(0,3fr)_1fr]
+  }
 }
 
 html {

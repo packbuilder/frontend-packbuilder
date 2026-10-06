@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Search } from "lucide-react";
 
-export default function ResultFilterForm({handleSubmit, children} : {children: React.ReactNode, handleSubmit: (event: FormEvent<HTMLFormElement>) => void}) {
+export default function ResultFilterForm({handleSubmit, children} : {handleSubmit: (event: FormEvent<HTMLFormElement>) => void, children?: React.ReactNode}) {
     return (
         <form onSubmit={handleSubmit}  className="flex items-center justify-center w-full gap-1">
             <Input type="text" placeholder="Search this page..." name="searchQuery" id="searchQuery" />

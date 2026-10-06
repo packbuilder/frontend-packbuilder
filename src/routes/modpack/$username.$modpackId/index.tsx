@@ -14,32 +14,37 @@ import { ImageType, ModLoader, SuggestionState } from "@/types/enums";
 import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
 import { CurseForgeModResults } from "@/components/display/curseforge/mod-display";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 import type { Version } from "@/types/version";
 import PaginationButtons from "@/components/display/paginationButtons";
 import ResultsState from "@/components/display/result-state";
-import { SuggestionFilterSelect, SuggestionResultsDisplay } from "@/components/display/suggestion/suggestion-results-display";
+import { SuggestionFilterSelect } from "@/components/display/suggestion/suggestion-results-display";
 import { DownloadCurseForgeManifestDialog } from "@/components/display/curseforge/download-modpack-manifest";
 import { ModpackSettingsDropDown } from "@/components/display/modpack/modpack-settings-dropdown";
 import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-dialog";
 import ResultFilterForm from "@/components/display/result-filter-form";
+import SuggestionInteractive from "@/components/suggestion/suggestion-display";
+import DisplayRadioGroup from "@/components/display/radio-display-buttons";
 
 const searchParamSchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
-    page: fallback(z.number(), 1).default(1),
-    searchQuery: fallback(z.string(), "").default(""),
+    modsPage: fallback(z.number(), 1).default(1),
+    suggestionsPage: fallback(z.number(), 1).default(1),
+    modsQuery: fallback(z.string(), "").default(""),
+    suggestionsQuery: fallback(z.string(), "").default(""),
     suggestionFilter: fallback(z.enum(SuggestionState).nullable(), null).default(null)
 });
 
 export const Route = createFileRoute('/modpack/$username/$modpackId/')({
     validateSearch: zodValidator(searchParamSchema),
-    loaderDeps: ({search: {display, page, searchQuery, suggestionFilter}}) => ({
+    loaderDeps: ({search: {display, modsPage, suggestionsPage, modsQuery, suggestionsQuery, suggestionFilter}}) => ({
         display,
-        page,
-        searchQuery,
+        modsPage,
+        suggestionsPage,
+        modsQuery,
+        suggestionsQuery,
         suggestionFilter
     }),
   loader: async ({context, params}) => {
@@ -127,42 +132,26 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
 
 function SelectDisplayRadioGroup() {
     const navigate = useNavigate({from: Route.fullPath});
-    const {display, suggestionFilter} = Route.useSearch({
-        select: (search) => ({
-            display: search.display,
-            suggestionFilter: search.suggestionFilter
+    const {display} = Route.useSearch({
+        select: ({display}) => ({
+            display
         })
     });
 
     const handleValueChange = (newValue: string) => {
-        navigate({search: () => ({display: newValue, page: 1, searchQuery: "", suggestionFilter}), resetScroll: false});
+        navigate({search: (prev) => ({...prev, display: newValue}), resetScroll: false});
     }
 
     return (
-        <RadioGroup
-        defaultValue={display}
-        onValueChange={handleValueChange}
-        className="inline-flex rounded-full bg-muted p-1"
-        >
-            <label className="cursor-pointer">
-                <RadioGroupItem value="mods" className="peer sr-only" />
-                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
-                ${display === "mods" ? "bg-primary text-white" : ""}
-                text-muted-foreground`}>
-                Mods
-                </div>
-            </label>
-
-            <label className="cursor-pointer">
-                <RadioGroupItem value="suggestions" className="peer sr-only" />
-                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
-                ${display === "suggestions" ? "bg-primary text-white" : ""}
-                text-muted-foreground`}>
-                Suggestions
-                </div>
-            </label>
-        </RadioGroup>
-  )
+        <DisplayRadioGroup  
+            value={display} 
+            onValueChange={handleValueChange}
+            options={[
+                { value: "mods", label: "Mods" },
+                { value: "suggestions", label: "Suggestions" },
+            ]} 
+        /> 
+    )
 }
 
 function ModpackVersionSelect({modpack, versionIteration, handleValueChange} : {modpack: Modpack, versionIteration: string, handleValueChange: (newValue: string) => void}) {
@@ -196,12 +185,14 @@ export default function ModpackView() {
     const navigate = useNavigate();
     const {data: modpack} = useSuspenseQuery(appQueries.modpack(parseInt(modpackId)));
     
-    const {display, page, searchQuery, suggestionFilter: suggestionFilterParam} = Route.useSearch({
-        select: (search) => ({
-            display: search.display,
-            page: search.page,
-            searchQuery: search.searchQuery,
-            suggestionFilter: search.suggestionFilter
+    const {display, modsPage, suggestionsPage, modsQuery, suggestionsQuery, suggestionFilter: suggestionFilterParam} = Route.useSearch({
+        select: ({display, modsPage, suggestionsPage, suggestionFilter, modsQuery, suggestionsQuery}) => ({
+            display,
+            modsPage,
+            suggestionsPage,
+            suggestionFilter,
+            modsQuery,
+            suggestionsQuery
         })
     });
 
@@ -215,14 +206,14 @@ export default function ModpackView() {
     const [suggestionFilter, setSuggestionFilter] = useState<SuggestionState | null>(suggestionFilterParam);
     
     const {data: paginatedSuggestions, isPending: pendingSuggestions } = useQuery({
-        queryKey: appQueries.modpackSuggestions(modpack.id, page, searchQuery, suggestionFilter ?? undefined).queryKey,
-        queryFn: appQueries.modpackSuggestions(modpack.id, page, searchQuery, suggestionFilter ?? undefined).queryFn,
+        queryKey: appQueries.modpackSuggestions(modpack.id, suggestionsPage, suggestionsQuery, suggestionFilter ?? undefined).queryKey,
+        queryFn: appQueries.modpackSuggestions(modpack.id, suggestionsPage, suggestionsQuery, suggestionFilter ?? undefined).queryFn,
         placeholderData: keepPreviousData,
     });
 
     const {data: paginatedVersionMods, isPending: pendingVersionMods } = useQuery({
-        queryKey: appQueries.versionMods(modpack.id, versionIteration, page, searchQuery).queryKey,
-        queryFn: appQueries.versionMods(modpack.id, versionIteration, page, searchQuery).queryFn,
+        queryKey: appQueries.versionMods(modpack.id, versionIteration, modsPage, modsQuery).queryKey,
+        queryFn: appQueries.versionMods(modpack.id, versionIteration, modsPage, modsQuery).queryFn,
         placeholderData: keepPreviousData,
     });
 
@@ -239,7 +230,7 @@ export default function ModpackView() {
 
     const isEmpty = display === "mods" ? paginatedVersionMods?.items.length === 0 : paginatedSuggestions?.items.length === 0;
 
-    const handleValueChange = (newValue: string) => {
+    const handleVersionChange = (newValue: string) => {
         const newVersion = modpack.versions.find(version => version.iterations.toString() === newValue);
         if(!newVersion) {
             console.error("Problem with changing versions");
@@ -248,23 +239,31 @@ export default function ModpackView() {
         setVersionIteration(newValue);
         setDisplayedVersion(newVersion);
         
-        navigate({search: () => ({page: 1, display: display, searchQuery: "", suggestionFilter: null}), resetScroll: false, from: Route.fullPath});
+        navigate({search: (prev) => ({...prev, modsPage: 1}), resetScroll: false, from: Route.fullPath});
     }
 
     const handleFilterChange = (newValue: "All" | SuggestionState) => {
         setSuggestionFilter(newValue === "All" ? null : newValue)
     }
 
-    const handlePageChange = (newPage: number) => {
-        navigate({search: () => ({display, page: newPage}), resetScroll: false, from: Route.fullPath});
+    const handleModsPageChange = (newPage: number) => {
+        navigate({search: (prev) => ({...prev, modsPage: newPage}), resetScroll: false, from: Route.fullPath});
     } 
+
+    const handleSuggestionsPageChange = (newPage: number) => {
+        navigate({search: (prev) => ({...prev, suggestionsPage: newPage}), resetScroll: false, from: Route.fullPath});
+    }
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const newSearchQuery = formData.get("searchQuery") as string;
 
-        navigate({search: () => ({display, page: 1, searchQuery: newSearchQuery, suggestionFilter}), resetScroll: false, from: Route.fullPath});
+        if(display === "mods") {
+            navigate({search: (prev) => ({...prev, page: 1, modsQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
+        } else {
+            navigate({search: (prev) => ({...prev, page: 1, suggestionsQuery: newSearchQuery, suggestionFilter}), resetScroll: false, from: Route.fullPath});
+        }
     }
 
     // Display latest version if modpack versions is updated via a merge
@@ -357,7 +356,7 @@ export default function ModpackView() {
                     <ResultFilterForm handleSubmit={handleSubmit}>
                         {
                             display === "mods" ? 
-                            <ModpackVersionSelect modpack={modpack} versionIteration={versionIteration} handleValueChange={handleValueChange} />
+                            <ModpackVersionSelect modpack={modpack} versionIteration={versionIteration} handleValueChange={handleVersionChange} />
                             : 
                             <SuggestionFilterSelect suggestionFilter={suggestionFilter} handleFilterChange={handleFilterChange} />
                         }
@@ -369,7 +368,11 @@ export default function ModpackView() {
                             display === "mods" ? (
                                 <CurseForgeModResults versionModData={curseForgeModData}  paginatedVersionMods={paginatedVersionMods}/>
                             ) : (
-                                <SuggestionResultsDisplay pendingSuggestions={pendingSuggestions} paginatedSuggestions={paginatedSuggestions} modpack={modpack} curUser={curUser} />
+                                  paginatedSuggestions!.items.map((suggestion, index) => {
+                                    return <div key={index} className="size-full max-w-full p-0">
+                                        <SuggestionInteractive suggestion={suggestion} modpack={modpack} curUser={curUser} />
+                                    </div>
+                                })  
                             )
                         }
                     </ResultsState>
@@ -377,9 +380,14 @@ export default function ModpackView() {
             </div>
 
             {
-                display === "mods" && paginatedVersionMods && 
-                <PaginationButtons curPage={page} totalPages={paginatedVersionMods.totalPages} onPageChange={handlePageChange} /> 
+                display === "mods" && paginatedVersionMods &&
+                <PaginationButtons curPage={modsPage} totalPages={paginatedVersionMods.totalPages} onPageChange={handleModsPageChange} /> 
             } 
+
+            {
+                display === "suggestions" && paginatedSuggestions &&
+                <PaginationButtons curPage={suggestionsPage} totalPages={paginatedSuggestions.totalPages} onPageChange={handleSuggestionsPageChange} />
+            }
         </section>
 
     </section>
