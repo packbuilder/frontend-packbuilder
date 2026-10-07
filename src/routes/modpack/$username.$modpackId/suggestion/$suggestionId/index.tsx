@@ -6,7 +6,6 @@ import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
 import { ConflictState, CurseForgeSearchFilter, ImageType, ModAction, SuggestionState } from "@/types/enums";
 import DeleteSuggestionDialog from "@/components/suggestion/delete-suggestion-dialog";
-import InfoPill from "@/components/display/info-pill";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { CreateCurseForgeModificationDisplay, CurseForgeModificationDisplay } from "@/components/display/curseforge/modification-display";
@@ -286,12 +285,21 @@ export default function SuggestionView() {
         refetchOnMount: true,        
     });
 
+    if(modpackPending || suggestionPending) {
+        return <Spinner />
+    }
+
+    if(!suggestion || !modpack) {
+        navigate({to: "/"});
+        return;
+    }
+
     const [modActionFilter, setModActionFilter] = useState<ModAction | null>(modActionFilterParam);
     const [conflictStateFilter, setConflictStateFilter] = useState<ConflictState | null>(conflictStateFilterParam);
 
     const versionIteration = useMemo(() => {
-        return modpack?.versions[0].iterations;
-    }, [modpack?.versions[0]]);
+        return modpack.versions[0].iterations;
+    }, [modpack.versions[0]]);
 
     const { data: paginatedModifications, isPending: pendingModifications } = useQuery({
         queryFn: appQueries.suggestionModifications(modpackId, suggestionId, modificationsPage, modificationsQuery, modActionFilter ?? undefined, conflictStateFilter ?? undefined).queryFn,
@@ -301,21 +309,19 @@ export default function SuggestionView() {
         placeholderData: keepPreviousData
     });
     
-    const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.versionMods(modpackId, versionIteration?.toString(), modpackModsPage, modpackModsQuery));
+    const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.modpackVersionMods(modpackId, versionIteration.toString(), modpackModsPage, modpackModsQuery));
 
     const modpackReferenceIds = useMemo(
-        () => paginatedVersionMods?.items.map(versionMod => {
-            return versionMod.mod.referenceId;
-        }),
+        () => paginatedVersionMods?.items.map(versionMod => versionMod.mod.referenceId),
         [paginatedVersionMods?.items]
     );
 
     const modificationReferenceIds = useMemo(
         () => paginatedModifications?.items.map(modification => modification.mod.referenceId),
-        [suggestion?.modifications]
+        [paginatedModifications?.items]
     );
 
-    const {data: modpackModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(modpackReferenceIds));
+    const {data: modpackModData, isPending: pendingModData} = useQuery(appQueries.modpackModData(modpackReferenceIds));
 
     const {data: modificationModData, isPending: pendingModificationModData} = useQuery(appQueries.modificationModData(suggestionId, modificationReferenceIds));
 
@@ -339,15 +345,6 @@ export default function SuggestionView() {
         navigate({search: () => ({page: 1, searchQuery: newSearchQuery, conflictStateFilter, modActionFilter}), resetScroll: false, from: Route.fullPath});
     }
 
-    if(modpackPending || suggestionPending) {
-        return <Spinner />
-    }
-
-    if(!suggestion || !modpack || !modificationReferenceIds) {
-        navigate({to: "/"});
-        return;
-    }
-
     useSuggestionSubscription(suggestion.modpackId, suggestion.id);
 
     return <section className="flex flex-col items-center max-w-full justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
@@ -357,7 +354,7 @@ export default function SuggestionView() {
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-w-0">
                     <h1 className="font-bold truncate w-full max-md:text-center leading-normal">{suggestion.user?.name}'s suggestion</h1>
                     <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3"> {suggestion.memo}</h3> 
-                    <InfoPill>     
+                    <span className="infoPill">     
                         {
                             suggestion.state.toString() === SuggestionState.Unverified ?     
                             <div className="flex items-center justify-center gap-2 text-sm">
@@ -381,16 +378,21 @@ export default function SuggestionView() {
                                 <p>This suggestion has been verified.</p>
                             </div>
                         }
-                    </InfoPill>
+                    </span>
                 </div>
             </div>
             {
                 suggestion.userId === curUser?.id && curUser.emailVerified && 
                 <div className="flex justify-center items-center gap-2 flex-wrap max-w-60">
                     <UpdateSuggestionDialog modpack={modpack} suggestion={suggestion} />
-                    <VerifySuggestionDialog modpack={modpack} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
-                    <AddCurseForgeMods modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
-                    <RemoveModpackMods curPage={modpackModsPage} totalPages={paginatedVersionMods?.totalPages} pendingData={pendingVersionMods || pendingModData} modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
+                    {
+                        !pendingModifications && modificationReferenceIds &&
+                        <>
+                            <VerifySuggestionDialog modpack={modpack} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} />
+                            <AddCurseForgeMods modpackReferenceIds={modpackReferenceIds} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
+                            <RemoveModpackMods curPage={modpackModsPage} totalPages={paginatedVersionMods?.totalPages} pendingData={pendingVersionMods || pendingModData} modpackModData={modpackModData} modificationReferenceIds={modificationReferenceIds} suggestion={suggestion} modpack={modpack} />
+                        </>
+                    }
                     <DeleteSuggestionDialog modpack={modpack} suggestion={suggestion} />
                 </div>
             }
@@ -412,7 +414,7 @@ export default function SuggestionView() {
                 <div className="max-h-fit w-full">
                     <ResultsState isEmpty={paginatedModifications?.items.length === 0 || modificationModData?.length === 0} isLoading={pendingModifications || pendingModificationModData}>
                         {
-                            modificationModData && paginatedModifications?.items.map((modification) => {
+                            modificationModData && modificationReferenceIds && paginatedModifications?.items.map((modification) => {
                                 
                                 const modData = modificationModData.find(modData => modification.mod.referenceId === modData.referenceId);
                                 

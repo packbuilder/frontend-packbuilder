@@ -4,7 +4,6 @@ import { Link } from "@tanstack/react-router";
 import { CircleCheck, CircleMinus, CirclePlus, ExternalLink, TriangleAlert, X } from "lucide-react";
 import { Separator } from "../../ui/separator";
 import { ConflictState, ModAction, ModPlatform } from "@/types/enums";
-import InfoPill from "../info-pill";
 import type { Modpack } from "@/types/modpack";
 import type { Suggestion } from "@/types/suggestion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +17,26 @@ import type { User } from "@/types/user";
 import { toast } from "sonner";
 import { CurseForgeModHeader } from "./mod-display";
 
-export function CurseForgeModificationDisplay({curseforgeMod, modification, modpack, suggestion, modificationReferenceIds, curUser} : {curseforgeMod: CurseForgeMod, modification: Modification, modpack: Modpack, suggestion: Suggestion, modificationReferenceIds: string[], curUser: User | null | undefined}) {
+type ModificationDisplayProps = {
+    curseforgeMod: CurseForgeMod, 
+    modification: Modification, 
+    modpack: Modpack, 
+    suggestion: Suggestion, 
+    modificationReferenceIds: string[], 
+    curUser: User | null | undefined
+}
+
+type CreateModificationDisplayProps = {
+    curseforgeMod: CurseForgeMod, 
+    isEnabled: boolean, 
+    disabledMessage: string, 
+    modificationReferenceIds: string[], 
+    modpack: Modpack, 
+    suggestion: Suggestion, 
+    modAction: ModAction
+}
+
+export function CurseForgeModificationDisplay({curseforgeMod, modification, modpack, suggestion, modificationReferenceIds, curUser} : ModificationDisplayProps) {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
@@ -72,7 +90,7 @@ export function CurseForgeModificationDisplay({curseforgeMod, modification, modp
             <div className="flex items-center justify-between w-full h-fit col-span-2 min-md:row-start-2 min-md:col-start-2">
                 <div className="flex items-center justify-center flex-wrap gap-2">
                     <div className="flex items-center justify-center gap-2">
-                        <InfoPill>
+                        <span className="infoPill">
                             {
                                 modification.conflictState === ConflictState.MissingDependencies ? 
                                 <div className="flex items-center justify-center items-center gap-1">
@@ -90,8 +108,8 @@ export function CurseForgeModificationDisplay({curseforgeMod, modification, modp
                                     <CircleCheck className="text-green-500 size-4" />
                                 </div>
                             }
-                        </InfoPill>
-                        <InfoPill>
+                        </span>
+                        <span className="infoPill">
                             <div>
                                 {
                                     modification.modAction === ModAction.Added ? 
@@ -106,7 +124,7 @@ export function CurseForgeModificationDisplay({curseforgeMod, modification, modp
                                     </div>
                                 }
                             </div>
-                        </InfoPill>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -129,10 +147,7 @@ export function CurseForgeModificationDisplay({curseforgeMod, modification, modp
     </div>
 }
 
-export function CreateCurseForgeModificationDisplay(
-    {curseforgeMod, modAction, modpack, suggestion, isEnabled, disabledMessage, modificationReferenceIds} : 
-    {curseforgeMod: CurseForgeMod, isEnabled: boolean, disabledMessage: string, modificationReferenceIds: string[], modpack: Modpack, suggestion: Suggestion, modAction: ModAction}
-) {
+export function CreateCurseForgeModificationDisplay({curseforgeMod, modAction, modpack, suggestion, isEnabled, disabledMessage, modificationReferenceIds} : CreateModificationDisplayProps) {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
@@ -213,12 +228,12 @@ export function CreateCurseForgeModificationDisplay(
             {
                 !isEnabled && 
                 <div className="gap-2 row-start-2 col-span-3">
-                    <InfoPill>
+                    <span className="infoPill">
                         <div className="flex items-center justify-center items-center gap-1">
                             <TriangleAlert className="text-red-500 size-4" />
                             <p className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</p> 
                         </div>
-                    </InfoPill>
+                    </span>
                 </div>
             }
         </div>

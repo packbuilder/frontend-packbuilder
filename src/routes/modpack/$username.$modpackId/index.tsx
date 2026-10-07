@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/display/copy-button";
 import type { VersionMod } from "@/types/versionMod";
 import { createFileRoute, Link, redirect, useLocation, useNavigate } from '@tanstack/react-router'
-import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -20,12 +20,12 @@ import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 import type { Version } from "@/types/version";
 import PaginationButtons from "@/components/display/paginationButtons";
 import ResultsState from "@/components/display/result-state";
-import { SuggestionFilterSelect } from "@/components/display/suggestion/suggestion-results-display";
+import SuggestionFilterSelect from "@/components/display/suggestion/suggestion-filter-select";
 import { DownloadCurseForgeManifestDialog } from "@/components/display/curseforge/download-modpack-manifest";
 import { ModpackSettingsDropDown } from "@/components/display/modpack/modpack-settings-dropdown";
 import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-dialog";
 import ResultFilterForm from "@/components/display/result-filter-form";
-import SuggestionInteractive from "@/components/suggestion/suggestion-display";
+import SuggestionDisplay from "@/components/suggestion/suggestion-display";
 import DisplayRadioGroup from "@/components/display/radio-display-buttons";
 
 const searchParamSchema = z.object({
@@ -61,7 +61,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
     const suggestions = await queryClient.ensureQueryData(appQueries.modpackSuggestions(modpackId, 1));
     const modIds = modpack.versions[0]?.versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
-    const modData = await queryClient.ensureQueryData(appQueries.curseForgeModData(referenceIds));
+    const modData = await queryClient.ensureQueryData(appQueries.modpackModData(referenceIds));
     const userBookmarked = await queryClient.ensureQueryData({
         queryKey: ["bookmark", modpackId],
         queryFn: () => getBookmark(modpack.id)
@@ -111,12 +111,7 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
         },
         onSuccess: async () => {            
             await queryClient.invalidateQueries({
-                queryKey: ["bookmark", `${modpack.id} ${curUser.id}`],
-                refetchType: "all"
-            });
-
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.userBookmarks(curUser).queryKey,
+                queryKey: appQueries.userBookmarks(curUser.id).queryKey,
                 refetchType: "all"
             });
         },
@@ -205,17 +200,9 @@ export default function ModpackView() {
     const [displayedVersion, setDisplayedVersion] = useState(modpack.versions[0]);
     const [suggestionFilter, setSuggestionFilter] = useState<SuggestionState | null>(suggestionFilterParam);
     
-    const {data: paginatedSuggestions, isPending: pendingSuggestions } = useQuery({
-        queryKey: appQueries.modpackSuggestions(modpack.id, suggestionsPage, suggestionsQuery, suggestionFilter ?? undefined).queryKey,
-        queryFn: appQueries.modpackSuggestions(modpack.id, suggestionsPage, suggestionsQuery, suggestionFilter ?? undefined).queryFn,
-        placeholderData: keepPreviousData,
-    });
+    const {data: paginatedSuggestions, isPending: pendingSuggestions } = useQuery(appQueries.modpackSuggestions(modpack.id, suggestionsPage, suggestionsQuery, suggestionFilter ?? undefined));
 
-    const {data: paginatedVersionMods, isPending: pendingVersionMods } = useQuery({
-        queryKey: appQueries.versionMods(modpack.id, versionIteration, modsPage, modsQuery).queryKey,
-        queryFn: appQueries.versionMods(modpack.id, versionIteration, modsPage, modsQuery).queryFn,
-        placeholderData: keepPreviousData,
-    });
+    const {data: paginatedVersionMods, isPending: pendingVersionMods } = useQuery(appQueries.modpackVersionMods(modpack.id, versionIteration, modsPage, modsQuery));
 
     const referenceIds = useMemo(
         () => paginatedVersionMods?.items.map(versionMod => {
@@ -224,7 +211,7 @@ export default function ModpackView() {
         [paginatedVersionMods?.items]
     );
 
-    const {data: curseForgeModData, isPending: pendingModData} = useQuery(appQueries.curseForgeModData(referenceIds));
+    const {data: curseForgeModData, isPending: pendingModData} = useQuery(appQueries.modpackModData(referenceIds));
 
     const isLoading = display === "mods" ? pendingModData || pendingVersionMods : pendingSuggestions;
 
@@ -260,9 +247,9 @@ export default function ModpackView() {
         const newSearchQuery = formData.get("searchQuery") as string;
 
         if(display === "mods") {
-            navigate({search: (prev) => ({...prev, page: 1, modsQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
+            navigate({search: (prev) => ({...prev, modsPage: 1, modsQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
         } else {
-            navigate({search: (prev) => ({...prev, page: 1, suggestionsQuery: newSearchQuery, suggestionFilter}), resetScroll: false, from: Route.fullPath});
+            navigate({search: (prev) => ({...prev, suggestionsPage: 1, suggestionsQuery: newSearchQuery, suggestionFilter}), resetScroll: false, from: Route.fullPath});
         }
     }
 
@@ -322,7 +309,7 @@ export default function ModpackView() {
 
                     <CopyButton text={import.meta.env.VITE_FRONTENDURL ? import.meta.env.VITE_FRONTENDURL + pathname : "https://packbuilder.org" + pathname} side="bottom"/>
 
-                    { curUser?.id === modpack.userId && curUser.emailVerified && <ModpackSettingsDropDown modpack={modpack} curUser={curUser} /> }
+                    { curUser?.id === modpack.userId && curUser.emailVerified && <ModpackSettingsDropDown modpack={modpack} userData={curUser} /> }
                 </div>
             </div>
         </header>
@@ -370,7 +357,7 @@ export default function ModpackView() {
                             ) : (
                                   paginatedSuggestions!.items.map((suggestion, index) => {
                                     return <div key={index} className="size-full max-w-full p-0">
-                                        <SuggestionInteractive suggestion={suggestion} modpack={modpack} curUser={curUser} />
+                                        <SuggestionDisplay suggestion={suggestion} modpack={modpack} curUser={curUser} />
                                     </div>
                                 })  
                             )

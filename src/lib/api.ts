@@ -1,6 +1,6 @@
 import { useApi } from "@/hooks/useApi";
 import { modpackSchema } from "@/types/modpack";
-import { userSchema, type User } from "@/types/user";
+import { userSchema } from "@/types/user";
 import { curseForgeModSchema } from "@/types/curseforge/curseforgeMod";
 import { suggestionSchema } from "@/types/suggestion";
 import type { SortMethod } from "@/types/curseforge/curseForgeSortMethod";
@@ -16,7 +16,7 @@ import { bookmarkSchema } from "@/types/bookmark";
 import type { CreateUserDto } from "@/types/dtos/createProfileDto";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import type { ChangeEmailDto } from "@/types/dtos/changeEmailDto";
-import { paginatedModpackSchema, type PaginatedModificationSchema, type PaginatedModpackSchema, type PaginatedSuggestionSchema, type PaginatedVersionModSchema } from "@/types/paginatedResponse";
+import { type PaginatedModificationSchema, type PaginatedModpackSchema, type PaginatedSuggestionSchema, type PaginatedVersionModSchema } from "@/types/paginatedResponse";
 
 const api = useApi();
 
@@ -135,10 +135,10 @@ export async function getUserById(userId: number) {
     }
 }
 
-export async function getUserModpacks(user: User, page: number, searchQuery?: string, pageSize?: string) {
+export async function getUserModpacks(userId: number, page: number, searchQuery?: string, pageSize?: number) {
 
     try {
-        const response = await api.get(`/user-modpacks/${user.id}`, {
+        const response = await api.get(`/user-modpacks/${userId}`, {
             params: {
                 page,
                 searchQuery,
@@ -155,7 +155,7 @@ export async function getUserModpacks(user: User, page: number, searchQuery?: st
     }
 }
 
-export async function getUserSuggestions(userId: number, page: number, searchQuery?: string, pageSize?: string, filter?: SuggestionState) {
+export async function getUserSuggestions(userId: number, page: number, searchQuery?: string, pageSize?: number, filter?: SuggestionState) {
     
     try {
         const response = await api.get(`user/${userId}/suggestions`, {

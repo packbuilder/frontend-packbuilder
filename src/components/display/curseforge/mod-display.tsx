@@ -5,7 +5,6 @@ import { CircleCheck, Download, RefreshCcw, TriangleAlert } from "lucide-react";
 import { Separator } from "../../ui/separator";
 import { ConflictState } from "@/types/enums";
 import { timeSinceCurDate } from "@/lib/utils";
-import InfoPill from "../info-pill";
 import type { PaginatedVersionModSchema } from "@/types/paginatedResponse";
 
 export function CurseForgeModResults({paginatedVersionMods, versionModData} : {paginatedVersionMods: PaginatedVersionModSchema | undefined | null, versionModData: CurseForgeMod[] | undefined | null}) {
@@ -70,7 +69,7 @@ export function CurseForgeModDisplay({curseForgeMod, versionMod} : {curseForgeMo
                         </span>
                     </div>
                     <div className="flex items-center justify-center gap-2 min-md:col-start-3 min-md:row-start-1">
-                        <InfoPill>
+                        <span className="infoPill">
                             {
                                 versionMod.conflictState === ConflictState.MissingDependencies ? 
                                 <div className="flex items-center justify-center items-center gap-1">
@@ -88,7 +87,7 @@ export function CurseForgeModDisplay({curseForgeMod, versionMod} : {curseForgeMo
                                     <CircleCheck className="text-green-500 size-4" />
                                 </div>
                             }
-                        </InfoPill>
+                        </span>
                     </div>
                 </div>
             </div>

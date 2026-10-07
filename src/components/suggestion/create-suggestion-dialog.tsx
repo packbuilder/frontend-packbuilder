@@ -40,7 +40,7 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
                 throw new Error(result.error.issues[0].message);
             }
 
-            const response = await createSuggestion(modpack.id.toString(), result.data);
+            const response = await createSuggestion(modpack.id, result.data);
 
             if(!response || response.status < 200 || response.status > 200 || !response.suggestionId) {
                 throw new Error("There was a problem with creating your suggestion");
@@ -54,7 +54,7 @@ export default function CreateSuggestionDialog({modpack, curUser} : {modpack: Mo
             setOpen(false);
             
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
+                queryKey: appQueries.keys.modpackSuggestions(modpack.id),
                 refetchType: "all"
             });
             

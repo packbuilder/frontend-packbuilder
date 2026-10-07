@@ -10,7 +10,13 @@ import { CloudCog, Save, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function VerifySuggestionDialog({suggestion, modpack, modificationReferenceIds} : {suggestion: Suggestion, modpack: Modpack, modificationReferenceIds: string[]}) {
+type VerifySuggestionDialogProps = {
+    suggestion: Suggestion, 
+    modpack: Modpack, 
+    modificationReferenceIds: string[]
+}
+
+export default function VerifySuggestionDialog({suggestion, modpack, modificationReferenceIds} : VerifySuggestionDialogProps) {
     const [isOpen, setOpen] = useState(false);
     const queryClient = useQueryClient();
     

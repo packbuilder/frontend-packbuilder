@@ -1,5 +1,4 @@
 import { Spinner } from "../ui/spinner";
-import DisplayContainer from "./display-container";
 
 export default function ResultsState({
     isLoading,
@@ -8,23 +7,19 @@ export default function ResultsState({
 }: {isLoading: boolean, isEmpty: boolean, children?: React.ReactNode}) {
     if (isLoading) {
         return (
-            <DisplayContainer className="flex items-center justify-center h-96 w-full">
+            <div className="displayContainer flex items-center justify-center h-96 w-full">
                 <Spinner className="size-20" />
-            </DisplayContainer>
+            </div>
         );
     }
 
     if (isEmpty) {
         return (
-            <DisplayContainer className="flex items-center justify-center h-96 w-full">
+            <div className="displayContainer flex items-center justify-center h-96 w-full">
                 <h2>It's looking empty in here...</h2>
-            </DisplayContainer>
+            </div>
         );
     }
 
-    return <DisplayContainer className="flex items-center justify-center h-96 w-full">
-        {
-            children
-        }
-    </DisplayContainer>
+    return <div className="displayContainer flex items-center justify-center h-96 w-full">{children}</div>
 }

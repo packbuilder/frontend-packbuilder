@@ -2,11 +2,19 @@ import type { CurseForgePagination } from "@/types/curseforge/curseforgePaginati
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "../ui/button";
 
-export function CurseforgePaginationButtons({ curseforgePaginationData, curPage, onPageChange } : { 
+type PaginationButtonProps = {
+    curPage: number, 
+    totalPages: number, 
+    onPageChange: (newPage: number) => void
+}
+
+type CurseForgePaginationButtonProps = { 
     curseforgePaginationData: CurseForgePagination | undefined, 
     curPage: number, 
     onPageChange: (newPage: number) => void 
-}) {
+}
+
+export function CurseforgePaginationButtons({ curseforgePaginationData, curPage, onPageChange } : CurseForgePaginationButtonProps) {
     
     const nextPage = async () => {
         if(!curseforgePaginationData || curseforgePaginationData.resultCount !== curseforgePaginationData.pageSize) {
@@ -34,7 +42,7 @@ export function CurseforgePaginationButtons({ curseforgePaginationData, curPage,
     </div>
 }
 
-export default function PaginationButtons({curPage, totalPages, onPageChange} : {curPage: number, totalPages: number, onPageChange: (newPage: number) => void}) {
+export default function PaginationButtons({curPage, totalPages, onPageChange} : PaginationButtonProps) {
     
     const nextPage = () => {
         if(curPage >= totalPages) {

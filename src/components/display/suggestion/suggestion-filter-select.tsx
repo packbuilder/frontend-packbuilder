@@ -1,12 +1,8 @@
-import type { PaginatedSuggestionSchema } from "@/types/paginatedResponse"
-import type { Modpack } from "@/types/modpack"
-import type { User } from "@/types/user"
-import SuggestionInteractive from "../../suggestion/suggestion-display"
 import type { SuggestionState } from "@/types/enums"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../../ui/select"
 import { Separator } from "../../ui/separator"
 
-export function SuggestionFilterSelect({suggestionFilter, handleFilterChange} : {suggestionFilter: SuggestionState | null, handleFilterChange: (newValue: SuggestionState | "All") => void}) {
+export default function SuggestionFilterSelect({suggestionFilter, handleFilterChange} : {suggestionFilter: SuggestionState | null, handleFilterChange: (newValue: SuggestionState | "All") => void}) {
     return (
         <Select value={suggestionFilter ?? "All"} onValueChange={handleFilterChange}>
             <SelectTrigger>

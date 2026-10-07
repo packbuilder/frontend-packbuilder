@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { User } from "@/types/user"
 import { Link, useNavigate, useRouter } from "@tanstack/react-router"
-import InfoPill from "./info-pill"
 import { ImageType } from "@/types/enums"
 import { logout } from "@/lib/api"
 import { isResponseSuccess } from "@/lib/utils"
@@ -85,10 +84,10 @@ export default function NavUser({
                 </div>
               </div>
               <div className={`px-1 py-1.5 ${user.emailVerified && "hidden"}`}>
-                <InfoPill className={`gap-1 items-start`}>
+                <span className={`infoPill gap-1 items-start`}>
                   <AlertTriangle className="text-yellow-500 size-4"/>
                   <p className="text-xs">Your email is not verified</p>
-                </InfoPill>
+                </span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

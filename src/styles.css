@@ -179,6 +179,10 @@ p {
   .modGridDisplay {
     @apply grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto] gap-x-3 gap-y-3 p-2 group-hover:bg-white/5 min-md:grid-cols-[auto_minmax(0,3fr)_1fr]
   }
+
+  .infoPill {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full border border-[var(--text-secondary)] text-[var(--text-secondary)]
+  }
 }
 
 html {

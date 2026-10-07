@@ -16,7 +16,7 @@ import { Check, Edit, Settings, Trash2, X } from "lucide-react";
 import { useState, useRef, type FormEvent } from "react";
 import { toast } from "sonner";
 
-function RenameModpackDialog({curName, modpackId, curUser} : {curName: string, curUser: User | null, modpackId: string}) {
+function RenameModpackDialog({modpackData, userData} : {modpackData: Modpack, userData: User}) {
     const queryClient = useQueryClient();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
@@ -37,7 +37,7 @@ function RenameModpackDialog({curName, modpackId, curUser} : {curName: string, c
                 throw new Error(result.error.issues[0].message);
             }
 
-            const status = await updateModpack(modpackId, {name: result.data});
+            const status = await updateModpack(modpackData.id, {name: result.data});
 
             if(!status || status < 200 || status > 299) {
                 throw new Error("Problem with updating modpack name");
@@ -47,11 +47,11 @@ function RenameModpackDialog({curName, modpackId, curUser} : {curName: string, c
             toast.success("Successfully renamed your modpack!");
             setIsOpen(false)
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modpack(modpackId).queryKey,
+                queryKey: appQueries.modpack(modpackData.id).queryKey,
                 refetchType: "all"
             });
             await queryClient.invalidateQueries({
-                queryKey: appQueries.userModpacks(curUser).queryKey,
+                queryKey: appQueries.keys.userModpacks(userData.id),
                 refetchType: "all"
             });
             await router.invalidate({sync: true});
@@ -90,7 +90,7 @@ function RenameModpackDialog({curName, modpackId, curUser} : {curName: string, c
                     <form onSubmit={handleSubmit} ref={formRef} className="flex-col justify-center items-center gap-2">
                         <Field>
                             <FieldLabel htmlFor={"newName"}>New name</FieldLabel>
-                            <Input ref={inputRef} type="text" name="newName" id="newName" className="text-sm" defaultValue={curName}/>
+                            <Input ref={inputRef} type="text" name="newName" id="newName" className="text-sm" defaultValue={modpackData.name}/>
                         </Field>
                     </form>
                 </div>
@@ -107,7 +107,7 @@ function RenameModpackDialog({curName, modpackId, curUser} : {curName: string, c
     )
 }
 
-function DeleteModpackDialog({modpackId} : {modpackId: string}) {
+function DeleteModpackDialog({modpackId} : {modpackId: number}) {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -163,7 +163,7 @@ function DeleteModpackDialog({modpackId} : {modpackId: string}) {
     </Dialog>
 }
 
-export function ModpackSettingsDropDown({modpack, curUser} : {modpack: Modpack, curUser: User | null}) {
+export function ModpackSettingsDropDown({modpack, userData} : {modpack: Modpack, userData: User}) {
     return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -188,9 +188,9 @@ export function ModpackSettingsDropDown({modpack, curUser} : {modpack: Modpack, 
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-                <RenameModpackDialog curName={modpack.name} modpackId={modpack.id.toString()} curUser={curUser}/>
+                <RenameModpackDialog modpackData={modpack} userData={userData}/>
               <DropdownMenuSeparator/>
-                <DeleteModpackDialog modpackId={modpack.id.toString()} />
+                <DeleteModpackDialog modpackId={modpack.id} />
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
