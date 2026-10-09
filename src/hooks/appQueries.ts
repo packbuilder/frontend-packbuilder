@@ -10,9 +10,11 @@ export const appQueries = {
 
         modpackVersionMods: (modpackId: number, versionIteration: string) => ["modpackVersionMods", modpackId, versionIteration],
 
-        userModpacks: (userId: number) => ["userModpacks", userId],
+        userModpacks: (userId: number | null | undefined) => ["userModpacks", userId],
 
         userSuggestions: (userId: number) => ["userSuggestions", userId],
+
+        userBookmarks: (userId: number | null | undefined) => ["userBookmarks", userId],
 
         modificationModData: (suggestionId: number) => ["modificationModData", suggestionId]
     },
@@ -30,14 +32,12 @@ export const appQueries = {
     modpackVersionMods: (modpackId: number, versionIteration: string, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
         queryKey: [...appQueries.keys.modpackVersionMods(modpackId!, versionIteration!), page, pageSize, searchQuery],
         queryFn: () => getVersionMods(modpackId!, versionIteration!, page, pageSize || 50, searchQuery || ""),
-        enabled: !!modpackId && !!versionIteration,
         placeholderData: keepPreviousData
     }),
 
     modpackSuggestions: (modpackId: number, page: number, searchQuery?: string, filter?: SuggestionState, pageSize?: number) => queryOptions({
         queryKey: [...appQueries.keys.modpackSuggestions(modpackId), page, pageSize, searchQuery, filter],
         queryFn: () => getModpackSuggestions(modpackId, page, pageSize || 50, searchQuery || "", filter),
-        enabled: !!modpackId,
         placeholderData: keepPreviousData
     }),  
 
@@ -47,9 +47,15 @@ export const appQueries = {
         placeholderData: keepPreviousData
     }),
     
-    userModpacks: (userId: number, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
+    userModpacks: (userId: number | null | undefined, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
         queryKey: [...appQueries.keys.userModpacks(userId), page, searchQuery, pageSize],
-        queryFn: () => getUserModpacks(userId, page, searchQuery || "", pageSize),
+        queryFn: () => {
+            if(!userId) {
+                throw new Error("UserId is required to fetch user modpacks")
+            }
+
+            return getUserModpacks(userId, page, searchQuery || "", pageSize)
+        },
         placeholderData: keepPreviousData
     }),
 
@@ -59,9 +65,10 @@ export const appQueries = {
         placeholderData: keepPreviousData
     }),
 
-    userBookmarks: (userId: number) => queryOptions({
-        queryKey: ["userBookmarks", userId],
-        queryFn: () => getUserBookmarks(),
+    userBookmarks: (userId: number | null | undefined, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
+        queryKey: [...appQueries.keys.userBookmarks(userId), page, searchQuery, pageSize],
+        queryFn: () => getUserBookmarks(page, searchQuery, pageSize),
+        placeholderData: keepPreviousData
     }),
 
     userData: (userId: number) => queryOptions({

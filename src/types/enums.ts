@@ -3,6 +3,10 @@ export enum ModPlatform {
     CurseForge = "1"
 }
 
+export enum Game {
+    Minecraft = "0"
+}
+
 export enum ModAction {
     Added = "0",
     Removed = "1",

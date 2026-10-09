@@ -111,7 +111,7 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
         },
         onSuccess: async () => {            
             await queryClient.invalidateQueries({
-                queryKey: appQueries.userBookmarks(curUser.id).queryKey,
+                queryKey: appQueries.keys.userBookmarks(curUser.id),
                 refetchType: "all"
             });
         },

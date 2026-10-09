@@ -12,31 +12,39 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { appQueries } from '@/hooks/appQueries';
 import { createModpack, importModpack } from '@/lib/api';
 import { enumNameFromValue } from '@/lib/utils';
-import type { Bookmark } from '@/types/bookmark';
+import { type Bookmark } from '@/types/bookmark';
 import { createModpackDtoSchema } from '@/types/dtos/createModpackDto';
 import { ImageType, ModLoader } from '@/types/enums';
 import type { Modpack } from '@/types/modpack';
 import { imageValueSchema } from '@/types/propertySchemas/imageValueSchema';
 import type { User } from '@/types/user';
-import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { fallback, zodValidator } from '@tanstack/zod-adapter';
 import { Plus, Save, X } from 'lucide-react';
 import { useState, useRef, type FormEvent } from 'react';
 import { toast } from 'sonner';
+import z from "zod";
+
+const searchParamSchema = z.object({
+    display: fallback(z.enum(["modpacks", "bookmarks"]), "modpacks").default("modpacks"),
+    modpacksPage: fallback(z.number(), 1).default(1),
+    bookmarksPage: fallback(z.number(), 1).default(1),
+    modpacksQuery: fallback(z.string(), "").default(""),
+    bookmarksQuery: fallback(z.string(), "").default(""),
+});
 
 export const Route = createFileRoute("/")({
-    loader: async ({
-        context: { queryClient, user: curUser }
-    }) => {
-        const modpacks = await queryClient.ensureQueryData(appQueries.userModpacks(curUser));
-        const bookmarks = await queryClient.ensureQueryData(appQueries.userBookmarks(curUser));
-        const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
+    validateSearch: zodValidator(searchParamSchema),
+    loader: async ({context}) => {
+        const { user: curUser } = context;
 
-        return {curUser, modpacks, minecraftVersions, bookmarks};
+        return {curUser};
     },
     component: Home,
 });
 
+// TODO: Fix components. Update modpack dialog to include game selector field
 function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, minecraftVersions: string[]}) {
     const [isOpen, setOpen] = useState(false);
     const queryClient = useQueryClient();
@@ -288,11 +296,28 @@ function ImportModpackDialog({curUser} : {curUser: User}) {
 }
 
 function Home() {
-    const {curUser} = Route.useLoaderData();
-    const {data: modpacks} = useSuspenseQuery(appQueries.userModpacks(curUser));
-    const {data: minecraftVersions} = useSuspenseQuery(appQueries.minecraftVersions());
-    const {data: bookmarks} = useSuspenseQuery(appQueries.userBookmarks(curUser));
+    const { curUser } = Route.useLoaderData();
+    const {display, modpacksPage, modpacksQuery, bookmarksPage, bookmarksQuery} = Route.useSearch({
+        select: ({display, modpacksPage, bookmarksPage, modpacksQuery, bookmarksQuery}) => ({
+            display,
+            modpacksPage,
+            bookmarksPage,
+            modpacksQuery,
+            bookmarksQuery
+        })
+    });
 
+    const pageSize = 10;
+    
+    const {data: paginatedModpacks, isPending: pendingModpackData} = useQuery(appQueries.userModpacks(curUser?.id, modpacksPage, modpacksQuery, pageSize));
+    const {data: paginatedBookmarks, isPending: pendingBookmarkData} = useQuery(appQueries.userBookmarks(curUser?.id, bookmarksPage, bookmarksQuery, pageSize));
+
+    const userModpacks = paginatedModpacks?.items || [];
+    const userBookmarks = paginatedBookmarks?.items || [];
+    
+    const {data: minecraftVersions} = useQuery(appQueries.minecraftVersions());
+
+    // TODO: Re-style home page for new paginated data
     return <section className="flex flex-col justify-between items-center w-full mx-auto h-full pb-10">
         <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
             <div className="flex flex-col justify-around items-center mb-4">

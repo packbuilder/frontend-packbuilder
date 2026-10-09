@@ -1,7 +1,6 @@
 import z from "zod";
 import { ConflictState } from "./enums";
 import { modSchema } from "./mod";
-import { paginatedResponseSchema } from "./paginatedResponse";
 
 export const versionModSchema = z.object({
     modId: z.number(),

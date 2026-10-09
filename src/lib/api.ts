@@ -16,7 +16,7 @@ import { bookmarkSchema } from "@/types/bookmark";
 import type { CreateUserDto } from "@/types/dtos/createProfileDto";
 import type { UpdateUserDto } from "@/types/dtos/updateProfileDto";
 import type { ChangeEmailDto } from "@/types/dtos/changeEmailDto";
-import { type PaginatedModificationSchema, type PaginatedModpackSchema, type PaginatedSuggestionSchema, type PaginatedVersionModSchema } from "@/types/paginatedResponse";
+import { type PaginatedBookmarkSchema, type PaginatedModificationSchema, type PaginatedModpackSchema, type PaginatedSuggestionSchema, type PaginatedVersionModSchema } from "@/types/paginatedResponse";
 
 const api = useApi();
 
@@ -188,13 +188,19 @@ export async function getModpack(modpackId: number) {
     }
 }
 
-export async function getUserBookmarks() {
+export async function getUserBookmarks(page: number, searchQuery?: string, pageSize?: number) {
     
     try {
-        const response = await api.get(`/bookmarks`);
+        const response = await api.get(`/bookmarks`, {
+            params: {
+                page,
+                searchQuery,
+                pageSize
+            }
+        });
 
-        const data = z.array(bookmarkSchema).parse(response.data);
-        return data;
+        return response.data as PaginatedBookmarkSchema;
+        
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
