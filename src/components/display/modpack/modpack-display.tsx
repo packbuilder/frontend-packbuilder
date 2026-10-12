@@ -1,8 +1,10 @@
 import type { Modpack } from "@/types/modpack";
-import { History } from "lucide-react";
+import { Gamepad, History, Package } from "lucide-react";
 import modpackImage from "@/modpack.gif"
 import { Separator } from "../../ui/separator";
 import { Link } from "@tanstack/react-router";
+import { enumNameFromValue } from "@/lib/utils";
+import { Game } from "@/types/enums";
 
 export default function ModpackDisplay({modpack} : {modpack: Modpack}) {
     return <Link to="/modpack/$username/$modpackId" params={{username: modpack.user.name, modpackId: modpack.id.toString()}} className="w-full group bg-[var(--surface-1)] transition duration-200">
@@ -23,6 +25,12 @@ export default function ModpackDisplay({modpack} : {modpack: Modpack}) {
                 <div className="flex items-center justify-center gap-2 text-md text-[var(--text-secondary)]">
                     <p className="flex items-start justify-center w-fit gap-1 text-center">
                         <History className="size-4" /> Version {modpack.versions[0].iterations}
+                    </p>
+                    <p className="flex items-start justify-center w-fit gap-1 text-center">
+                        <Package className="size-4" /> {modpack.versions[0].versionMods.length} Mods
+                    </p>
+                    <p className="flex items-start justify-center w-fit gap-1 text-center">
+                        <Gamepad className="size-4" /> {enumNameFromValue(Game, modpack.game.toString())}
                     </p>
                 </div>
             </header>

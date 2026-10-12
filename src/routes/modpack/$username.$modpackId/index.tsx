@@ -1,5 +1,5 @@
 import { Bookmark, Gamepad } from "lucide-react";
-import { createBookmark, deleteBookmark, getBookmark } from "@/lib/api";
+import { createBookmark, deleteBookmark } from "@/lib/api";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/display/copy-button";
@@ -19,7 +19,7 @@ import z from "zod";
 import { useModpackSubscription } from "@/hooks/useModpackSubscribtion";
 import type { Version } from "@/types/version";
 import PaginationButtons from "@/components/display/paginationButtons";
-import ResultsState from "@/components/display/result-state";
+import ResultDisplay from "@/components/display/result-display";
 import SuggestionFilterSelect from "@/components/display/suggestion/suggestion-filter-select";
 import { DownloadCurseForgeManifestDialog } from "@/components/display/curseforge/download-modpack-manifest";
 import { ModpackSettingsDropDown } from "@/components/display/modpack/modpack-settings-dropdown";
@@ -58,39 +58,25 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
     }
     
     const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
-    const suggestions = await queryClient.ensureQueryData(appQueries.modpackSuggestions(modpackId, 1));
     const modIds = modpack.versions[0]?.versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
-    const modData = await queryClient.ensureQueryData(appQueries.modpackModData(referenceIds));
-    const userBookmarked = await queryClient.ensureQueryData({
-        queryKey: ["bookmark", modpackId],
-        queryFn: () => getBookmark(modpack.id)
-    })
+
+    await queryClient.ensureQueryData(appQueries.getCurrentUserBookmark(modpackId));
+    await queryClient.ensureQueryData(appQueries.modpackSuggestions(modpackId, 1));
+    await queryClient.ensureQueryData(appQueries.modpackModData(referenceIds));
 
     const breadcrumbs = [{text: modpack.name, link: `/modpack/${modpack.user.name}/${modpack.id}`}];
 
-    return {curUser: user, modpack, queryClient, modData, minecraftVersions, suggestions, userBookmarked, breadcrumbs}
+    return {curUser: user, modpack, queryClient, minecraftVersions, breadcrumbs}
   },
   component: ModpackView,
 })
 
 function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: User}) {
-    const {userBookmarked} = Route.useLoaderData();
-    const [isBookmarked, setIsBookmarked] = useState(userBookmarked ? true : false);
+    const userBookmark = useQuery(appQueries.getCurrentUserBookmark(modpack.id));
+    const [isBookmarked, setIsBookmarked] = useState(userBookmark ? true : false);
     const [isClicked, setIsClicked] = useState(false);
     const queryClient = useQueryClient();
-
-    const {data: bookmark} = useSuspenseQuery({
-        queryKey: ["bookmark", `${modpack.id} ${curUser.id}`],
-        queryFn: () => getBookmark(modpack.id)
-    });
-
-    useEffect(() => {
-        if(bookmark) {
-            setIsBookmarked(true);
-        }
-    }, [bookmark])
-
 
     const handleClick = () => {
         if(!isClicked) {
@@ -100,7 +86,7 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
     }
     const mutation = useMutation({
         mutationFn: async () => {
-            const status = isBookmarked ? await deleteBookmark(modpack.id) : await createBookmark(modpack.id)
+            const status = isBookmarked ? await deleteBookmark(modpack.id) : await createBookmark(modpack.id);
             setIsClicked(false);
             
             if(!status || status < 200 || status > 300) {
@@ -110,6 +96,11 @@ function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: 
             setIsBookmarked(!isBookmarked);
         },
         onSuccess: async () => {            
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.getCurrentUserBookmark(modpack.id).queryKey,
+                refetchType: "all"
+            });
+
             await queryClient.invalidateQueries({
                 queryKey: appQueries.keys.userBookmarks(curUser.id),
                 refetchType: "all"
@@ -140,13 +131,13 @@ function SelectDisplayRadioGroup() {
     return (
         <DisplayRadioGroup  
             value={display} 
-            onValueChange={handleValueChange}
+        onValueChange={handleValueChange}
             options={[
                 { value: "mods", label: "Mods" },
                 { value: "suggestions", label: "Suggestions" },
             ]} 
         /> 
-    )
+  )
 }
 
 function ModpackVersionSelect({modpack, versionIteration, handleValueChange} : {modpack: Modpack, versionIteration: string, handleValueChange: (newValue: string) => void}) {
@@ -176,9 +167,9 @@ function ModpackVersionSelect({modpack, versionIteration, handleValueChange} : {
 export default function ModpackView() {
     const { curUser } = Route.useLoaderData();
     const { pathname } = useLocation();
-    const {modpackId} = Route.useParams();
+    const params = Route.useParams();
     const navigate = useNavigate();
-    const {data: modpack} = useSuspenseQuery(appQueries.modpack(parseInt(modpackId)));
+    const {data: modpack} = useSuspenseQuery(appQueries.modpack(Number(params.modpackId)));
     
     const {display, modsPage, suggestionsPage, modsQuery, suggestionsQuery, suggestionFilter: suggestionFilterParam} = Route.useSearch({
         select: ({display, modsPage, suggestionsPage, suggestionFilter, modsQuery, suggestionsQuery}) => ({
@@ -239,7 +230,7 @@ export default function ModpackView() {
 
     const handleSuggestionsPageChange = (newPage: number) => {
         navigate({search: (prev) => ({...prev, suggestionsPage: newPage}), resetScroll: false, from: Route.fullPath});
-    }
+    } 
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -350,31 +341,31 @@ export default function ModpackView() {
                     </ResultFilterForm>
                 </div>
                 <div className="w-full max-h-fit">
-                    <ResultsState isEmpty={isEmpty} isLoading={isLoading}>
-                        {
-                            display === "mods" ? (
-                                <CurseForgeModResults versionModData={curseForgeModData}  paginatedVersionMods={paginatedVersionMods}/>
-                            ) : (
+                    <ResultDisplay isEmpty={isEmpty} isLoading={isLoading}>
+                            {
+                                display === "mods" ? (
+                                    <CurseForgeModResults versionModData={curseForgeModData}  paginatedVersionMods={paginatedVersionMods}/>
+                                ) : (
                                   paginatedSuggestions!.items.map((suggestion, index) => {
                                     return <div key={index} className="size-full max-w-full p-0">
                                         <SuggestionDisplay suggestion={suggestion} modpack={modpack} curUser={curUser} />
                                     </div>
                                 })  
-                            )
-                        }
-                    </ResultsState>
+                                )
+                            }
+                    </ResultDisplay>
                 </div>
             </div>
 
             {
-                display === "mods" && paginatedVersionMods &&
+                display === "mods" && paginatedVersionMods && 
                 <PaginationButtons curPage={modsPage} totalPages={paginatedVersionMods.totalPages} onPageChange={handleModsPageChange} /> 
             } 
 
             {
                 display === "suggestions" && paginatedSuggestions &&
                 <PaginationButtons curPage={suggestionsPage} totalPages={paginatedSuggestions.totalPages} onPageChange={handleSuggestionsPageChange} />
-            }
+            } 
         </section>
 
     </section>

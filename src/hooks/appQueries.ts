@@ -1,4 +1,4 @@
-import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getMinecraftVersions, getUserBookmarks, getUserById, getVersionMods, getSuggestionModifications } from "@/lib/api";
+import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getMinecraftVersions, getUserBookmarks, getUserById, getVersionMods, getSuggestionModifications, getBookmark } from "@/lib/api";
 import type { ConflictState, ModAction, ModLoader, SuggestionState } from "@/types/enums";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
@@ -69,6 +69,11 @@ export const appQueries = {
         queryKey: [...appQueries.keys.userBookmarks(userId), page, searchQuery, pageSize],
         queryFn: () => getUserBookmarks(page, searchQuery, pageSize),
         placeholderData: keepPreviousData
+    }),
+
+    getCurrentUserBookmark: (modpackId: number) => queryOptions({
+        queryKey: ["bookmark", modpackId],
+        queryFn: () => getBookmark(modpackId)
     }),
 
     userData: (userId: number) => queryOptions({

@@ -18,7 +18,7 @@ import type { Modpack } from "@/types/modpack";
 import { useSuggestionSubscription } from "@/hooks/useSuggestionSubscription";
 import PaginationButtons, { CurseforgePaginationButtons } from "@/components/display/paginationButtons";
 import ResultFilterForm from "@/components/display/result-filter-form";
-import ResultsState from "@/components/display/result-state";
+import ResultDisplay from "@/components/display/result-display";
 import UpdateSuggestionDialog from "@/components/display/suggestion/update-suggestion-dialog";
 import VerifySuggestionDialog from "@/components/display/suggestion/verify-suggestion-dialog";
 import { ConflictStateFilterSelect, ModActionFilterSelect } from "@/components/display/modification/modification-filter-display";
@@ -155,7 +155,7 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
 
                     <CurseForgeSearchForm handleSortChange={handleSortChange} handleSubmit={handleSubmit} searchQuery={searchQuery} sortMethod={sort} submitButtonRef={submitButtonRef} searchInputRef={searchModsInputRef} />
                 </DialogHeader>
-                <ResultsState isEmpty={!modSearchResults || modSearchResults.mods.length > 0} isLoading={pendingSearchResults}>
+                <ResultDisplay isEmpty={!modSearchResults || modSearchResults.mods.length > 0} isLoading={pendingSearchResults}>
                     {modSearchResults!.mods.map((mod: CurseForgeMod) => {
                         let disabledMessage = "";
 
@@ -178,7 +178,7 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
                             />
                         );
                     })}
-                </ResultsState>
+                </ResultDisplay>
                 <div>
                     <CurseforgePaginationButtons curseforgePaginationData={modSearchResults?.pagination} curPage={page} onPageChange={handlePageChange}/>
                 </div>
@@ -217,7 +217,7 @@ function RemoveModpackMods({curPage, totalPages, pendingData, modpackModData, mo
                     <div className="flex items-center justify-start w-full gap-1">
                         <ResultFilterForm handleSubmit={handleSubmit} />
                     </div>
-                    <ResultsState isEmpty={!modpackModData || modpackModData.length > 0} isLoading={pendingData}>
+                    <ResultDisplay isEmpty={!modpackModData || modpackModData.length > 0} isLoading={pendingData}>
                         {
                             modpackModData!.map((mod: CurseForgeMod, index: number) => {
                                 let isEnabled = true;
@@ -242,7 +242,7 @@ function RemoveModpackMods({curPage, totalPages, pendingData, modpackModData, mo
                                 </div>
                             })
                         }
-                    </ResultsState>      
+                    </ResultDisplay>      
                 </div>
                 <div>
                     {totalPages && <PaginationButtons curPage={curPage} totalPages={totalPages} onPageChange={handlePageChange}/> }
@@ -412,7 +412,7 @@ export default function SuggestionView() {
                     </ResultFilterForm>
                 </div>
                 <div className="max-h-fit w-full">
-                    <ResultsState isEmpty={paginatedModifications?.items.length === 0 || modificationModData?.length === 0} isLoading={pendingModifications || pendingModificationModData}>
+                    <ResultDisplay isEmpty={paginatedModifications?.items.length === 0 || modificationModData?.length === 0} isLoading={pendingModifications || pendingModificationModData}>
                         {
                             modificationModData && modificationReferenceIds && paginatedModifications?.items.map((modification) => {
                                 
@@ -427,7 +427,7 @@ export default function SuggestionView() {
                                 </div>
                             })
                         }
-                    </ResultsState>
+                    </ResultDisplay>
                 </div>
 
                 {paginatedModifications && <PaginationButtons curPage={modificationsPage} totalPages={paginatedModifications.totalPages} onPageChange={handleModificationsPageChange} /> }

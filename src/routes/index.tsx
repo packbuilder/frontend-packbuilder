@@ -1,29 +1,23 @@
 import { AlertButton } from '@/components/display/alert-button';
-import { GlassCard } from '@/components/display/glass-card';
-import {ModpackCardLarge} from '@/components/display/modpack/modpack-card';
-import SelectAvatarDialog from '@/components/display/select-avatar-dialog';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import LoginPrompt from '@/components/display/login-prompt';
+import CreateMinecraftModpackDialog from '@/components/display/modpack/create-minecraft-modpack';
+import ImportMinecraftModpackDialog from '@/components/display/modpack/import-minecraft-modpack';
+import { ModpackCardCompact, ModpackCardLarge } from '@/components/display/modpack/modpack-card';
+import ModpackDisplay from '@/components/display/modpack/modpack-display';
+import PaginationButtons from '@/components/display/paginationButtons';
+import DisplayRadioGroup from '@/components/display/radio-display-buttons';
+import ResultDisplay from '@/components/display/result-display';
+import ResultFilterForm from '@/components/display/result-filter-form';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription  } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { appQueries } from '@/hooks/appQueries';
-import { createModpack, importModpack } from '@/lib/api';
-import { enumNameFromValue } from '@/lib/utils';
-import { type Bookmark } from '@/types/bookmark';
-import { createModpackDtoSchema } from '@/types/dtos/createModpackDto';
-import { ImageType, ModLoader } from '@/types/enums';
-import type { Modpack } from '@/types/modpack';
-import { imageValueSchema } from '@/types/propertySchemas/imageValueSchema';
-import type { User } from '@/types/user';
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { Game } from '@/types/enums';
+import { useQuery } from '@tanstack/react-query';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { fallback, zodValidator } from '@tanstack/zod-adapter';
-import { Plus, Save, X } from 'lucide-react';
-import { useState, useRef, type FormEvent } from 'react';
-import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
 import z from "zod";
 
 const searchParamSchema = z.object({
@@ -44,258 +38,32 @@ export const Route = createFileRoute("/")({
     component: Home,
 });
 
-// TODO: Fix components. Update modpack dialog to include game selector field
-function CreateModpackDialog({curUser, minecraftVersions} : {curUser: User, minecraftVersions: string[]}) {
-    const [isOpen, setOpen] = useState(false);
-    const queryClient = useQueryClient();
-    const router = useRouter();
-    const formRef = useRef(null);
-
-    const [minecraftVersion, setMinecraftVersion] = useState(minecraftVersions[0]);
-    const [modLoader, setModLoader] = useState(ModLoader.Forge.toString());
-    const [avatar, setAvatar] = useState("modpack_avatar_1.gif");
-
-    const mutation = useMutation({
-        mutationFn: async (formData: FormData) => {
-            const modpackName = formData.get("name") as string;
-            const imageValue = formData.get("stockAvatar") as string;
-            const result = createModpackDtoSchema.safeParse({name: modpackName, modLoader: modLoader, gameVersion: minecraftVersion, imageValue, imageType: ImageType.Stock});
-
-            if (!result.success) {
-                throw new Error(result.error.issues[0].message);
-            }
-
-            const status = await createModpack(result.data);
-
-            if(!status || status < 200 || status > 299) {
-                throw new Error("There was a problem with creating this modpack.");
-            }
-        },
-        onSuccess: async () => {
-            toast.success("Successfully created modpack");
-            setOpen(false);
-
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.userModpacks(curUser).queryKey,
-                refetchType: "all"
-            });
-
-            await router.invalidate({sync: true});
-        },
-        onError: (error) => {
-            toast.error(error.message);
-            console.error(error.message)
-        }
+function SelectDisplayRadioGroup() {
+    const navigate = useNavigate({from: Route.fullPath});
+    const {display} = Route.useSearch({
+        select: ({display}) => ({
+            display
+        })
     });
 
-    const submitForm = () => {
-        const form = formRef.current as unknown as HTMLFormElement;
-        form.requestSubmit();
+    const handleValueChange = (newValue: string) => {
+        navigate({search: (prev) => ({...prev, display: newValue}), resetScroll: false});
     }
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        mutation.mutate(formData);
-    }
-
-    return <Dialog open={isOpen} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-            <Button variant={"default"}>
-                Create Modpack <Plus />
-            </Button>   
-        </DialogTrigger>
-        <DialogContent aria-describedby='' showCloseButton={false} className="flex flex-col justify-center items-center w-fit min-md:max-w-3/4 max-md:w-9/10">
-            <DialogHeader className="w-full px-2">
-                <DialogTitle className='text-xl text-left'>
-                    Create a Modpack from scratch!
-                </DialogTitle>
-                <DialogDescription className='text-md text-gray-400 text-left'>
-                    Set the details for your modpack and start packbuilding today!
-                </DialogDescription>
-            </DialogHeader>
-            <form method="post" ref={formRef} id="create-modpack" className=" w-full p-2 flex flex-col items-start justify-center gap-2" onSubmit={handleSubmit}>
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel htmlFor='stockAvatar'><h2>Modpack avatar</h2></FieldLabel>
-                        <div className='flex items-center justify-start gap-2'>
-                            <div className='size-fit'>
-                                <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
-                                    <AvatarImage src={`/modpackAvatars/${avatar}`} alt="Modpack Picture" />
-                                    <AvatarFallback>ER</AvatarFallback>
-                                </Avatar>
-                            </div>
-                            <Input id='stockAvatar' name='stockAvatar' value={avatar} readOnly hidden/>
-                            <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} avatarType={"modpackAvatars"} />
-                        </div>
-                    </Field>
-                    <Field className='w-fit'>
-                        <FieldLabel htmlFor='name'><h2 className="font-bold text-lg">Modpack name</h2></FieldLabel>
-                        <Input required id="name" type="text" name="name" placeholder="Your modpack name..."/>
-                    </Field>
-                    <Field>
-                        <FieldLabel><h2 className='font-bold text-lg max-md:text-center'>Game version & Mod loader</h2></FieldLabel>
-                        <div className='flex items-center justify-start gap-2'>
-                            <Select disabled={!minecraftVersions} value={minecraftVersion} onValueChange={setMinecraftVersion}>
-                                <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                                    <SelectValue placeholder="Select game version..."/>
-                                </SelectTrigger> 
-                                <SelectContent className="bg-white text-black" side="bottom">
-                                    <SelectGroup>     
-                                        <SelectLabel>Select version</SelectLabel>
-                                        {
-                                            minecraftVersions?.map((version, index) => {
-                                                return <SelectItem className="cursor-pointer" key={index} value={version}>
-                                                    {version}
-                                                </SelectItem>
-                                            })
-                                        }
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            <Select value={modLoader.toString()} onValueChange={setModLoader}>
-                                <SelectTrigger style={{color: "black", backgroundColor: "whitesmoke" }}>
-                                    <SelectValue placeholder="Select game version..."/>
-                                </SelectTrigger> 
-                                <SelectContent className="bg-white text-black" side="bottom">
-                                    <SelectGroup>     
-                                        <SelectLabel>Select mod loader</SelectLabel>
-                                        {
-                                            Object.values(ModLoader).map((modLoader, index) => {
-                                                return <SelectItem className="cursor-pointer" key={index} value={modLoader}>
-                                                    {enumNameFromValue(ModLoader, modLoader)}
-                                                </SelectItem>
-                                            })
-                                        }
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </Field>
-                </FieldGroup>
-            </form>
-            <DialogFooter className="w-full px-2">
-                <div className="w-full flex flex-row justify-start items-center gap-2">
-                    <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Create Modpack <Save/></Button>
-                    <DialogClose asChild>
-                        <Button variant={"destructive"}>Cancel <X/></Button>
-                    </DialogClose>
-                </div>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-}
-
-function ImportModpackDialog({curUser} : {curUser: User}) {
-    const [isOpen, setOpen] = useState(false);
-    const queryClient = useQueryClient();
-    const router = useRouter();
-    const formRef = useRef(null);
-    const [avatar, setAvatar] = useState("modpack_avatar_1.gif");
-
-    const mutation = useMutation({
-        mutationFn: async (formData: FormData) => {
-            const payload = new FormData();
-            const file = formData.get("file") as File | null;
-            const imageValue = formData.get("stockAvatar") as string;
-
-            const result = imageValueSchema.safeParse(imageValue);
-
-            if (!result.success) {
-                throw new Error(result.error.issues[0].message);
-            }
-
-            if(!file) {
-                throw new Error("You must upload a manifest.json file.");
-            }
-
-            payload.append("file", file);
-            payload.append("avatarDto.imageValue", imageValue);
-            payload.append("avatarDto.imageType", ImageType.Stock);
-
-            const status = await importModpack(payload);
-
-            if(!status || status < 200 || status > 299) {
-                throw new Error("There was a problem with importing your modpack.");
-            }
-        },
-        onSuccess: async () => {
-            toast.success('Successfully imported modpack!');
-            setOpen(false);
-
-            await queryClient.invalidateQueries({
-                queryKey: appQueries.userModpacks(curUser).queryKey,
-                refetchType: "all"
-            });
-
-            await router.invalidate({sync: true});
-        },
-        onError: (error) => {
-            toast.error(error.message)
-            console.error(error.message)
-        }
-    });
-
-    const submitForm = () => {
-        const form = formRef.current as unknown as HTMLFormElement;
-        form.requestSubmit();
-    }
-
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        mutation.mutate(formData);
-    }
-
-    return <Dialog open={isOpen} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-            <Button variant={"default"}>
-                Import Modpack <Plus />
-            </Button>   
-        </DialogTrigger>
-        <DialogContent showCloseButton={false} className="flex flex-col justify-center items-center w-fit min-md:max-w-3/4 max-md:w-9/10">
-            <DialogHeader className="w-full px-2">
-                <DialogTitle className='text-xl text-left'>
-                    Import an existing curseforge modpack
-                </DialogTitle>
-                <DialogDescription className='text-gray-400 text-left'>
-                    To import a modpack from curseforge, you will need to upload your modpacks manifest.json file. Packbuilder will handle the rest.
-                </DialogDescription>
-            </DialogHeader>
-            <form method="post" ref={formRef} id="import-modpack" className=" w-full p-2 flex flex-col items-start justify-cetner gap-2" onSubmit={handleSubmit}>
-                <Field>
-                    <FieldLabel htmlFor='stockAvatar'><h2>Modpack avatar</h2></FieldLabel>
-                    <div className='flex items-center justify-start gap-2'>
-                        <div className='size-fit'>
-                            <Avatar className="cursor-pointer border-white border-2 rounded-[50%] size-[50px]">
-                                <AvatarImage src={`/modpackAvatars/${avatar}`} alt="Modpack Picture" />
-                                <AvatarFallback>ER</AvatarFallback>
-                            </Avatar>
-                        </div>
-                        <Input id='stockAvatar' name='stockAvatar' value={avatar} readOnly hidden/>
-                        <SelectAvatarDialog curAvatar={avatar} setAvatar={setAvatar} avatarType={"modpackAvatars"} />
-                    </div>
-                </Field>
-                <div className="flex flex-col justify-center items-start gap-2">
-                    <h2 className="font-bold text-md">Upload your manifest.json here</h2>
-                    <Input className='' id="file-upload" type="file" name="file" accept='.json'/>
-                </div>
-            </form>
-            <DialogFooter className="w-full px-2">
-                <div className='w-full flex flex-col items-center gap-2'>
-                    <div className="w-full flex flex-row justify-start items-center gap-2">
-                        <Button variant={"default"} onClick={submitForm} disabled={mutation.isPending} type="submit">Import Modpack <Save/></Button>
-                        <DialogClose asChild>
-                            <Button variant={"destructive"}>Cancel <X/></Button>
-                        </DialogClose>
-                    </div>
-                </div>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+    return (
+        <DisplayRadioGroup  
+            value={display} 
+            onValueChange={handleValueChange}
+            options={[
+                { value: "modpacks", label: "Modpacks" },
+                { value: "bookmarks", label: "Bookmarks" },
+            ]} 
+        /> 
+  )
 }
 
 function Home() {
+    const pageSize = 10;
     const { curUser } = Route.useLoaderData();
     const {display, modpacksPage, modpacksQuery, bookmarksPage, bookmarksQuery} = Route.useSearch({
         select: ({display, modpacksPage, bookmarksPage, modpacksQuery, bookmarksQuery}) => ({
@@ -306,92 +74,126 @@ function Home() {
             bookmarksQuery
         })
     });
-
-    const pageSize = 10;
+    const navigate = useNavigate();
+    const [selectedGame, setGame] = useState<Game>(Game.Minecraft);
     
+    const {data: minecraftVersions} = useQuery(appQueries.minecraftVersions());
     const {data: paginatedModpacks, isPending: pendingModpackData} = useQuery(appQueries.userModpacks(curUser?.id, modpacksPage, modpacksQuery, pageSize));
     const {data: paginatedBookmarks, isPending: pendingBookmarkData} = useQuery(appQueries.userBookmarks(curUser?.id, bookmarksPage, bookmarksQuery, pageSize));
 
     const userModpacks = paginatedModpacks?.items || [];
     const userBookmarks = paginatedBookmarks?.items || [];
+
+    console.log(paginatedModpacks, userModpacks)
+
+    const isEmpty = userModpacks.length === 0 || userBookmarks.length === 0
+    const isLoading = display === "modpacks" && pendingModpackData || display === "bookmarks" && pendingBookmarkData
     
-    const {data: minecraftVersions} = useQuery(appQueries.minecraftVersions());
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const newSearchQuery = formData.get("searchQuery") as string;
+
+        if(display === "modpacks") {
+            navigate({search: (prev) => ({...prev, modpacksPage: 1, modpacksQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
+        } else {
+            navigate({search: (prev) => ({...prev, bookmarksPage: 1, bookmarksQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
+        }
+    }
+
+    const handleModpackPageChange = (newPage: number) => {
+        navigate({search: (prev) => ({...prev, modpacksPage: newPage}), resetScroll: false, from: Route.fullPath});
+    }
+
+    const handleBookmarkPageChange = (newPage: number) => {
+        navigate({search: (prev) => ({...prev, bookmarksPage: newPage}), resetScroll: false, from: Route.fullPath});
+    }
+
+    const handleValueChange = (value: Game) => {
+        setGame(value);
+    }
 
     // TODO: Re-style home page for new paginated data
-    return <section className="flex flex-col justify-between items-center w-full mx-auto h-full pb-10">
+    return <section className="flex flex-col items-center justify-center p-2 w-full min-md:max-w-3/4 min-md:min-w-2/4">
         <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
-            <div className="flex flex-col justify-around items-center mb-4">
-                <h1 className="text-3xl font-bold p-2">Your Modpacks</h1>
+            <header className="flex flex-col justify-around items-center gap-4">
                 <div className='flex items-center justify-center gap-2'>
-                    {curUser && minecraftVersions && curUser.emailVerified && <CreateModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
-                    {curUser && curUser.emailVerified && <ImportModpackDialog curUser={curUser} />}
-                    {curUser && !curUser.emailVerified && <AlertButton alertText='Verify your email first'>
-                        Create modpack <Plus/>
-                    </AlertButton>}
-                    {curUser && !curUser.emailVerified && <AlertButton alertText='Verify your email first'>
-                        Import modpack <Plus/>
-                    </AlertButton>}
+                    <img className='displayImage' src="packbuilder-placeholder.png" />
+                    <div className='flex-col justify-start items-center'>
+                        <h1 className="text-3xl font-bold">Packbuilder</h1>
+                        <h3>A collaborative modpack building tool.</h3>
+                    </div>
                 </div>
-            </div>
-            {modpacks && modpacks.length > 0 && 
-                <div className='flex flex-col items-center justify-center max-w-3/5 min-md:max-w-115 w-fit'>
-                    <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
-                        <CarouselContent className='py-6 px-2'>
+                
+                <div className='flex items-center justify-center gap-2'>
+                    <LoginPrompt curUser={curUser} />
+
+                    {
+                        !curUser || curUser.emailVerified && 
+                        <div className='flex flex-col items-center justify-center gap-2 min-lg:flex-row'>
+                            <Select defaultValue={selectedGame} onValueChange={handleValueChange}>
+                                <SelectTrigger>
+                                    <span className="text-sm">Game:</span>
+                                    <SelectValue placeholder="Select game..."/>
+                                    <Separator orientation="vertical"  className="h-full" />
+                                </SelectTrigger> 
+                                <SelectContent className="">
+                                    <SelectGroup>     
+                                        <SelectLabel>Sort</SelectLabel>
+                                        <SelectItem className="cursor-pointer" value="0">Minecraft</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+
                             {
-                                modpacks.map((modpack: Modpack, index: number) => {
-                                    return <CarouselItem key={index} className={`flex items-center justify-center ${modpacks.length > 1 ? "min-md:basis-1/2" : ""}`}>
-                                        <ModpackCardLarge modpack={modpack} key={index}/>
-                                    </CarouselItem>
-                                })
+                                selectedGame === Game.Minecraft &&
+                                <>
+                                    { minecraftVersions &&  <CreateMinecraftModpackDialog curUser={curUser} minecraftVersions={minecraftVersions}/>}
+                                    <ImportMinecraftModpackDialog curUser={curUser} />
+                                </>
                             }
-                        </CarouselContent>
-                        <CarouselPrevious />
-                        <CarouselNext />
-                    </Carousel>
+                        </div>
+                    }
                 </div>
-            }
+            </header>
+            
+            <Separator className='my-4 '/>
 
-            {
-                (!modpacks || modpacks.length <= 0) && 
-                <GlassCard className='size-45 flex items-center justify-center'>
-                    <h2 className='text-lg text-center'>
-                        {!curUser ? "You must be logged in to create modpacks" : "You have no modpacks!"}
-                    </h2>
-                </GlassCard>  
-            }
-
-        </div>
-       <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
-            <div className="flex flex-col justify-around items-center mb-4">
-                <h1 className="text-3xl font-bold p-2">Your Bookmarks</h1>
-            </div>
-            {bookmarks && bookmarks.length > 0 && 
-                <div className='flex flex-col items-center justify-center max-w-3/5 min-md:max-w-115 w-fit'>
-                    <Carousel opts={{align: "start", loop: true}} className="flex justify-center items-center w-full">
-                        <CarouselContent className='py-6 px-2'>
+            <section className="flex items-center justify-center gap-4 flex-col w-19/20">
+            
+                <SelectDisplayRadioGroup />
+    
+                <div className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
+                    <div className="flex items-center justify-center w-full gap-1">
+                        <ResultFilterForm handleSubmit={handleSubmit} />
+                    </div>
+                    <div className="w-full max-h-fit">
+                        <ResultDisplay className='' isEmpty={isEmpty} isLoading={isLoading}>
                             {
-                                bookmarks.map((bookmark: Bookmark, index: number) => {
-                                    return <CarouselItem key={index} className={`flex items-center justify-center ${bookmarks.length > 1 ? "min-md:basis-1/2" : ""}`}>
-                                        <ModpackCardLarge modpack={bookmark.modpack} key={index}/>
-                                    </CarouselItem>
-                                })
+                                display === "modpacks" ? (
+                                    userModpacks.map((modpack) => {
+                                        return <ModpackDisplay key={modpack.id + "modpacks"} modpack={modpack}/>
+                                    })
+                                ) : (
+                                    userBookmarks.map((bookmark) => {
+                                        return <ModpackDisplay key={bookmark.id + "bookmarks"} modpack={bookmark.modpack}/>
+                                    })  
+                                )
                             }
-                        </CarouselContent>
-                        <CarouselPrevious />
-                        <CarouselNext />
-                    </Carousel>
+                        </ResultDisplay>
+                    </div>
                 </div>
-            }
-
-            {
-                (!bookmarks || bookmarks.length <= 0)  &&
-                <GlassCard className='size-45 flex items-center justify-center'>
-                    <h2 className='text-lg text-center'>
-                        {!curUser ? "You must be logged in to bookmark modpacks" : "You have no bookmarks!"}
-                    </h2>
-                </GlassCard>  
-            }
-
+    
+                {
+                    display === "modpacks" && paginatedModpacks && 
+                    <PaginationButtons curPage={modpacksPage} totalPages={paginatedModpacks.totalPages} onPageChange={handleModpackPageChange} /> 
+                } 
+    
+                {
+                    display === "bookmarks" && paginatedBookmarks &&
+                    <PaginationButtons curPage={bookmarksPage} totalPages={paginatedBookmarks.totalPages} onPageChange={handleBookmarkPageChange} />
+                } 
+            </section>
         </div>
     </section>
 }

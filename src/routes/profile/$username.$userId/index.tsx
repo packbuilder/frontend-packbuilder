@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import DisplayRadioGroup from '@/components/display/radio-display-buttons';
 import ResultFilterForm from '@/components/display/result-filter-form';
 import SuggestionFilterSelect from '@/components/display/suggestion/suggestion-filter-select';
-import ResultsState from '@/components/display/result-state';
+import ResultDisplay from '@/components/display/result-display';
 import { isResponseSuccess } from '@/lib/utils';
 
 const searchParamsSchema = z.object({
@@ -399,7 +399,7 @@ export default function ProfileView() {
                     </ResultFilterForm>
                 </div>
                 <div className="w-full max-h-fit">
-                    <ResultsState isEmpty={isEmpty} isLoading={isLoading}>
+                    <ResultDisplay isEmpty={isEmpty} isLoading={isLoading}>
                         {display === "modpacks" ? 
                             userModpacks?.items.map((modpack, index) => {
                                 return <div key={index} className="size-full p-0">
@@ -413,7 +413,7 @@ export default function ProfileView() {
                                 </div>
                             })  
                         }
-                    </ResultsState>
+                    </ResultDisplay>
                 </div>
             </div>
         </section>

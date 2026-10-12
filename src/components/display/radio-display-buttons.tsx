@@ -20,7 +20,7 @@ export default function DisplayRadioGroup({
         <RadioGroup
             value={value}
             onValueChange={onValueChange}
-            className="inline-flex rounded-full bg-muted p-1"
+            className="inline-flex rounded-full bg-muted"
         >
             {options.map((option) => (
                 <label key={option.value} className="cursor-pointer">
