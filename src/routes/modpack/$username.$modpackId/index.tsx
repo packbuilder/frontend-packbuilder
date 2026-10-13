@@ -1,4 +1,4 @@
-import { Bookmark, Gamepad } from "lucide-react";
+import { Bookmark, Gamepad, Router } from "lucide-react";
 import { createBookmark, deleteBookmark } from "@/lib/api";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { appQueries } from "@/hooks/appQueries";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { enumNameFromValue } from "@/lib/utils";
-import { ImageType, ModLoader, SuggestionState } from "@/types/enums";
+import { Game, ImageType, ModLoader, SuggestionState } from "@/types/enums";
 import type { Modpack } from "@/types/modpack";
 import type { User } from "@/types/user";
 import { CurseForgeModResults } from "@/components/display/curseforge/mod-display";
@@ -27,6 +27,8 @@ import CreateSuggestionDialog from "@/components/suggestion/create-suggestion-di
 import ResultFilterForm from "@/components/display/result-filter-form";
 import SuggestionDisplay from "@/components/suggestion/suggestion-display";
 import DisplayRadioGroup from "@/components/display/radio-display-buttons";
+import LoginPrompt from "@/components/display/login-prompt";
+import SearchFilterDropdown from "@/components/display/search-filter-dropdown";
 
 const searchParamSchema = z.object({
     display: fallback(z.enum(["mods", "suggestions"]), "mods").default("mods"),
@@ -60,6 +62,7 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
     const minecraftVersions = await queryClient.ensureQueryData(appQueries.minecraftVersions());
     const modIds = modpack.versions[0]?.versionMods.map((versionMod: VersionMod) => versionMod.modId);
     const referenceIds = await queryClient.ensureQueryData(appQueries.modReferenceIds(modIds));
+    const userBookmark = await queryClient.ensureQueryData(appQueries.getCurrentUserBookmark(modpack.id));
 
     await queryClient.ensureQueryData(appQueries.getCurrentUserBookmark(modpackId));
     await queryClient.ensureQueryData(appQueries.modpackSuggestions(modpackId, 1));
@@ -67,17 +70,17 @@ export const Route = createFileRoute('/modpack/$username/$modpackId/')({
 
     const breadcrumbs = [{text: modpack.name, link: `/modpack/${modpack.user.name}/${modpack.id}`}];
 
-    return {curUser: user, modpack, queryClient, minecraftVersions, breadcrumbs}
+    return {curUser: user, modpack, queryClient, minecraftVersions, breadcrumbs, userBookmark}
   },
   component: ModpackView,
 })
 
 function BookmarkModpackButton({modpack, curUser} : {modpack: Modpack, curUser: User}) {
-    const userBookmark = useQuery(appQueries.getCurrentUserBookmark(modpack.id));
+    const {userBookmark} = Route.useLoaderData();
     const [isBookmarked, setIsBookmarked] = useState(userBookmark ? true : false);
     const [isClicked, setIsClicked] = useState(false);
     const queryClient = useQueryClient();
-
+    
     const handleClick = () => {
         if(!isClicked) {
             mutation.mutate();
@@ -144,7 +147,7 @@ function ModpackVersionSelect({modpack, versionIteration, handleValueChange} : {
     return (
         <Select value={versionIteration} onValueChange={handleValueChange}>
             <SelectTrigger>
-                <span className="text-sm">Version:</span>
+                <span className="text-sm">Modpack version:</span>
                 <SelectValue placeholder="Select modpack version..."/>
                 <Separator orientation="vertical"  className="h-full" />
             </SelectTrigger> 
@@ -272,7 +275,7 @@ export default function ModpackView() {
                 <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center min-md:max-w-3/4 w-full min-w-0">
                     <h1 className="font-bold w-full truncate leading-normal max-md:text-center">{modpack.name}</h1>
-                    <h3 className="leading-normal">
+                    <h3 className="leading-normal flex gap-1">
                         Created by 
                         <Link to="/profile/$username/$userId" className="underline font-bold" params={{username: modpack.user.name, userId:modpack.userId}}>
                             {modpack.user.name}
@@ -281,10 +284,13 @@ export default function ModpackView() {
                     <div className="flex justify-center items-center text-lg gap-1 mt-2 h-5 font-bold">
                         <Gamepad className="text-[var(--text-secondary)]" />
                         <h3 className="text-[var(--text-secondary)]">
-                            {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())} 
+                            {enumNameFromValue(Game, modpack.game.toString())} 
                         </h3>
                         <h3 className="text-[var(--text-secondary)]">
                             {displayedVersion.gameVersion}
+                        </h3>
+                        <h3 className="text-[var(--text-secondary)]">
+                            on {enumNameFromValue(ModLoader,displayedVersion.modLoader.toString())} 
                         </h3>
                     </div>
                 </div>
@@ -305,23 +311,7 @@ export default function ModpackView() {
             </div>
         </header>
 
-        {
-            curUser && curUser.emailVerified === false && 
-            <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">
-                In order to create suggestions or edit this modpack, you must verify your email. 
-                <br /> 
-                <Link to="/profile/verify-email" className="underline">Click here to verify your email.</Link>
-            </h3>
-        }
-
-        {
-            !curUser && 
-            <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">
-                In order to create suggestions or edit this modpack, you must be logged into a verified account.
-                <br />
-                <Link to="/login" className="underline">Click here to login</Link>
-            </h3>
-        }
+        <LoginPrompt curUser={curUser} />
 
         <Separator className="my-4"/>
         
@@ -329,15 +319,17 @@ export default function ModpackView() {
 
             <SelectDisplayRadioGroup />
 
-            <div className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
+            <div className="flexColumnContainer">
                 <div className="flex items-center justify-center w-full gap-1">
                     <ResultFilterForm handleSubmit={handleSubmit}>
-                        {
-                            display === "mods" ? 
-                            <ModpackVersionSelect modpack={modpack} versionIteration={versionIteration} handleValueChange={handleVersionChange} />
-                            : 
-                            <SuggestionFilterSelect suggestionFilter={suggestionFilter} handleFilterChange={handleFilterChange} />
-                        }
+                        <SearchFilterDropdown>
+                            {
+                                display === "mods" ? 
+                                <ModpackVersionSelect modpack={modpack} versionIteration={versionIteration} handleValueChange={handleVersionChange} />
+                                : 
+                                <SuggestionFilterSelect suggestionFilter={suggestionFilter} handleFilterChange={handleFilterChange} />
+                            }
+                        </SearchFilterDropdown>
                     </ResultFilterForm>
                 </div>
                 <div className="w-full max-h-fit">
@@ -346,7 +338,7 @@ export default function ModpackView() {
                                 display === "mods" ? (
                                     <CurseForgeModResults versionModData={curseForgeModData}  paginatedVersionMods={paginatedVersionMods}/>
                                 ) : (
-                                  paginatedSuggestions!.items.map((suggestion, index) => {
+                                  paginatedSuggestions?.items.map((suggestion, index) => {
                                     return <div key={index} className="size-full max-w-full p-0">
                                         <SuggestionDisplay suggestion={suggestion} modpack={modpack} curUser={curUser} />
                                     </div>

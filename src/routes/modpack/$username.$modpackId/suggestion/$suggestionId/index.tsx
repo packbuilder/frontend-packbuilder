@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CloudAlert, CloudCheck, CloudCog, Merge } from "lucide-react";
+import { CloudAlert, CloudCheck, CloudCog, FilterIcon, Merge } from "lucide-react";
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
@@ -23,6 +23,12 @@ import UpdateSuggestionDialog from "@/components/display/suggestion/update-sugge
 import VerifySuggestionDialog from "@/components/display/suggestion/verify-suggestion-dialog";
 import { ConflictStateFilterSelect, ModActionFilterSelect } from "@/components/display/modification/modification-filter-display";
 import CurseForgeSearchForm from "@/components/display/curseforge/search-form";
+import LoginPrompt from "@/components/display/login-prompt";
+import { Popover } from "@/components/ui/popover";
+import { PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
+import { DropdownMenu, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenuContent, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import SearchFilterDropdown from "@/components/display/search-filter-dropdown";
 
 type RemoveModpackModsProps = {
     curPage: number, 
@@ -156,7 +162,7 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
                     <CurseForgeSearchForm handleSortChange={handleSortChange} handleSubmit={handleSubmit} searchQuery={searchQuery} sortMethod={sort} submitButtonRef={submitButtonRef} searchInputRef={searchModsInputRef} />
                 </DialogHeader>
                 <ResultDisplay isEmpty={!modSearchResults || modSearchResults.mods.length > 0} isLoading={pendingSearchResults}>
-                    {modSearchResults!.mods.map((mod: CurseForgeMod) => {
+                    {modSearchResults?.mods.map((mod: CurseForgeMod) => {
                         let disabledMessage = "";
 
                         if (modificationReferenceIdSet.has(mod.referenceId)) {
@@ -219,7 +225,7 @@ function RemoveModpackMods({curPage, totalPages, pendingData, modpackModData, mo
                     </div>
                     <ResultDisplay isEmpty={!modpackModData || modpackModData.length > 0} isLoading={pendingData}>
                         {
-                            modpackModData!.map((mod: CurseForgeMod, index: number) => {
+                            modpackModData?.map((mod: CurseForgeMod, index: number) => {
                                 let isEnabled = true;
                                 let disabledMessage = "";
                                 modificationReferenceIds.forEach(referenceId => {
@@ -350,7 +356,7 @@ export default function SuggestionView() {
     return <section className="flex flex-col items-center max-w-full justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
         <header className="flex flex-col justify-between items-center gap-6 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between min-w-0">
-                <img src={suggestion.user?.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : suggestion.user?.imageValue} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
+                <img src={suggestion.user?.imageType.toString() === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : "/packbuilder-placeholder.png"} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
                 <div className="flex flex-col min-md:items-start items-center justify-center gap-3 min-w-0">
                     <h1 className="font-bold truncate w-full max-md:text-center leading-normal">{suggestion.user?.name}'s suggestion</h1>
                     <h3 className="text-md line-clamp-2 text-center max-w-9/10 min-md:text-left min-md:line-clamp-3"> {suggestion.memo}</h3> 
@@ -398,37 +404,38 @@ export default function SuggestionView() {
             }
         </header>
 
-        {!curUser?.emailVerified && suggestion.userId === curUser?.id && <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">In order to edit this suggestion, you must verify your email. <br /> <Link to="/profile/verify-email" className="underline">Click here to verify your email.</Link></h3>}
+        <LoginPrompt curUser={curUser} />
 
-        <Separator className="my-2" />
+        <Separator />
 
-        <section className="flex items-center justify-center gap-4 flex-col w-9/10">
-            <h1 className="min-md:self-start">Modifications</h1>
-            <div className="flex flex-col justify-center items-center w-full gap-2 overflow-visible">
+        <section className="flex items-center justify-center gap-2 flex-col w-9/10">
+            <h1>Modifications</h1>
+            <div className="flexColumnContainer">
                 <div className="flex items-center justify-start w-full gap-2">
                     <ResultFilterForm handleSubmit={handleSubmit}>
-                        <ModActionFilterSelect modActionFilter={modActionFilter} handleModActionFilterChange={handleModActionFilterChange} />
-                        <ConflictStateFilterSelect conflictStateFilter={conflictStateFilter} handleConflictStateFilterChange={handleConflictStateFilterChange}/>
+                        <SearchFilterDropdown>
+                            <ModActionFilterSelect modActionFilter={modActionFilter} handleModActionFilterChange={handleModActionFilterChange} />
+
+                            <ConflictStateFilterSelect conflictStateFilter={conflictStateFilter} handleConflictStateFilterChange={handleConflictStateFilterChange}/>
+                        </SearchFilterDropdown>
                     </ResultFilterForm>
                 </div>
-                <div className="max-h-fit w-full">
-                    <ResultDisplay isEmpty={paginatedModifications?.items.length === 0 || modificationModData?.length === 0} isLoading={pendingModifications || pendingModificationModData}>
-                        {
-                            modificationModData && modificationReferenceIds && paginatedModifications?.items.map((modification) => {
-                                
-                                const modData = modificationModData.find(modData => modification.mod.referenceId === modData.referenceId);
-                                
-                                if(!modData) {
-                                    return <div>Error fetching mod data for mod with id {modification.mod.referenceId}.</div>
-                                }
-            
-                                return <div key={modification.id} className="size-full p-0">
-                                    <CurseForgeModificationDisplay suggestion={suggestion} curUser={curUser} curseforgeMod={modData} modification={modification} modpack={modpack} modificationReferenceIds={modificationReferenceIds} />
-                                </div>
-                            })
-                        }
-                    </ResultDisplay>
-                </div>
+                <ResultDisplay isEmpty={paginatedModifications?.items.length === 0 || modificationModData?.length === 0} isLoading={pendingModifications || pendingModificationModData}>
+                    {
+                        modificationModData && modificationReferenceIds && paginatedModifications?.items.map((modification) => {
+                            
+                            const modData = modificationModData.find(modData => modification.mod.referenceId === modData.referenceId);
+                            
+                            if(!modData) {
+                                return <div>Error fetching mod data for mod with id {modification.mod.referenceId}.</div>
+                            }
+        
+                            return <div key={modification.id} className="size-full p-0">
+                                <CurseForgeModificationDisplay suggestion={suggestion} curUser={curUser} curseforgeMod={modData} modification={modification} modpack={modpack} modificationReferenceIds={modificationReferenceIds} />
+                            </div>
+                        })
+                    }
+                </ResultDisplay>
 
                 {paginatedModifications && <PaginationButtons curPage={modificationsPage} totalPages={paginatedModifications.totalPages} onPageChange={handleModificationsPageChange} /> }
             </div>

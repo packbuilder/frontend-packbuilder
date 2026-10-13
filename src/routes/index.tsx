@@ -1,22 +1,18 @@
-import { AlertButton } from '@/components/display/alert-button';
 import LoginPrompt from '@/components/display/login-prompt';
 import CreateMinecraftModpackDialog from '@/components/display/modpack/create-minecraft-modpack';
 import ImportMinecraftModpackDialog from '@/components/display/modpack/import-minecraft-modpack';
-import { ModpackCardCompact, ModpackCardLarge } from '@/components/display/modpack/modpack-card';
 import ModpackDisplay from '@/components/display/modpack/modpack-display';
 import PaginationButtons from '@/components/display/paginationButtons';
 import DisplayRadioGroup from '@/components/display/radio-display-buttons';
 import ResultDisplay from '@/components/display/result-display';
 import ResultFilterForm from '@/components/display/result-filter-form';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { appQueries } from '@/hooks/appQueries';
 import { Game } from '@/types/enums';
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { fallback, zodValidator } from '@tanstack/zod-adapter';
-import { Plus } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import z from "zod";
 
@@ -84,15 +80,17 @@ function Home() {
     const userModpacks = paginatedModpacks?.items || [];
     const userBookmarks = paginatedBookmarks?.items || [];
 
-    console.log(paginatedModpacks, userModpacks)
+    console.log(userModpacks.length, userBookmarks.length)
 
-    const isEmpty = userModpacks.length === 0 || userBookmarks.length === 0
+    const isEmpty = display === "modpacks" && userModpacks.length === 0 || display === "bookmarks" && userBookmarks.length === 0
     const isLoading = display === "modpacks" && pendingModpackData || display === "bookmarks" && pendingBookmarkData
     
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const newSearchQuery = formData.get("searchQuery") as string;
+
+        console.log(newSearchQuery)
 
         if(display === "modpacks") {
             navigate({search: (prev) => ({...prev, modpacksPage: 1, modpacksQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
@@ -163,7 +161,7 @@ function Home() {
             
                 <SelectDisplayRadioGroup />
     
-                <div className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
+                <div className="flexColumnContainer">
                     <div className="flex items-center justify-center w-full gap-1">
                         <ResultFilterForm handleSubmit={handleSubmit} />
                     </div>

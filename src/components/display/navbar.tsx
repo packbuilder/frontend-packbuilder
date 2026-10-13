@@ -15,7 +15,7 @@ function BreadCrumbs() {
     // Had to cast because typescript couldnt infer its type
     const {breadcrumbs} = filteredMatches[0].loaderData as unknown as {breadcrumbs?: [BreadcrumbData]};
     return (
-        <Breadcrumb className="max-md:overflow-x-scroll max-w-3/4 no-wrap">
+        <Breadcrumb className="max-md:overflow-x-scroll max-w-3/4 no-wrap py-2">
             <BreadcrumbList className="max-w-full flex-nowrap">
             <BreadcrumbItem>
                 <BreadcrumbLink asChild>

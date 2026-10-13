@@ -6,7 +6,7 @@ export function ModActionFilterSelect({modActionFilter, handleModActionFilterCha
     return (
         <Select value={modActionFilter ?? "All"} onValueChange={handleModActionFilterChange}>
             <SelectTrigger>
-                <span className="text-sm">Filter:</span>
+                <span className="text-sm">Mod action:</span>
                 <SelectValue placeholder="Filter modifications..."/>
                 <Separator orientation="vertical"  className="h-full" />
             </SelectTrigger> 
@@ -27,7 +27,7 @@ export function ConflictStateFilterSelect({conflictStateFilter, handleConflictSt
     return (
         <Select value={conflictStateFilter ?? "All"} onValueChange={handleConflictStateFilterChange}>
             <SelectTrigger>
-                <span className="text-sm">Filter:</span>
+                <span className="text-sm">Conflicts state:</span>
                 <SelectValue placeholder="Filter modifications..."/>
                 <Separator orientation="vertical"  className="h-full" />
             </SelectTrigger> 

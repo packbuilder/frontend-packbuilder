@@ -6,7 +6,7 @@ export default function SuggestionFilterSelect({suggestionFilter, handleFilterCh
     return (
         <Select value={suggestionFilter ?? "All"} onValueChange={handleFilterChange}>
             <SelectTrigger>
-                <span className="text-sm">Filter:</span>
+                <span className="text-sm">Suggestion state:</span>
                 <SelectValue placeholder="Filter modifications..."/>
                 <Separator orientation="vertical"  className="h-full" />
             </SelectTrigger> 

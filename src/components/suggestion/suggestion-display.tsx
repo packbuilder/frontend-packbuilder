@@ -27,11 +27,11 @@ export default function SuggestionDisplay({suggestion, modpack, curUser, showAct
             </div>
         </div>
     }
-    
+
     return <div className="w-full bg-[var(--surface-1)]">
             <div className="grid w-full max-w-full h-fit grid-cols-[60px_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2 min-md:grid-cols-[100px_minmax(0,3fr)_1fr] bg-[var(--surface-1)]">
                 <div className="flex items-center justify-center min-md:row-span-3">
-                    <img className="displayImage" src={suggestion.user.imageType === ImageType.Stock ? `/profileAvatars/${suggestion.user.imageValue}` : suggestion.user.imageValue} alt="logo" />
+                    <img className="displayImage" src={suggestion.user.imageType.toString() === ImageType.Stock ? `/profileAvatars/${suggestion.user.imageValue}` : "/packbuilder-placeholder.png"} />
                 </div>
                 <header className="flex flex-col gap-2 w-full justify-center min-md:col-start-2 min-md:row-span-2">
                     <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
@@ -80,17 +80,16 @@ export default function SuggestionDisplay({suggestion, modpack, curUser, showAct
                         </span>
                     </div>
                 </div>
-                {
-                    modpack && curUser && showActions &&
-                    <div className="flex items-center justify-start p-2 w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">
-                        <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.user.name, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}}>
-                            <Button variant={"default"}>
-                                <p>View</p>
-                            </Button>
-                        </Link>
-                        <MergeSuggestionDialog modpack={modpack} curUser={curUser} suggestion={suggestion} />
-                    </div>
-                }
+                <div className="flex items-center justify-start p-2 w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">
+                    <Link to={"/modpack/$username/$modpackId/suggestion/$suggestionId"} params={{username: suggestion.user.name, modpackId: suggestion.modpackId.toString(), suggestionId: suggestion.id.toString()}}>
+                        <Button variant={"default"}>
+                            <p>View</p>
+                        </Button>
+                    </Link>
+                    {
+                        modpack && curUser && showActions && <MergeSuggestionDialog modpack={modpack} curUser={curUser} suggestion={suggestion} />
+                    }
+                </div>
             </div>
             <Separator />
     </div>

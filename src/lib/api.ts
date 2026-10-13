@@ -212,8 +212,8 @@ export async function getBookmark(modpackId: number) {
     
     try {
         const response = await api.get(`/bookmarks/${modpackId}`);
-        const data = response.data && bookmarkSchema.parse(response.data);
-        return data;
+
+        return bookmarkSchema.parse(response.data);;
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
@@ -300,6 +300,7 @@ export async function getSuggestionModifications(modpackId: number, suggestionId
         });
 
         const data = response.data as PaginatedModificationSchema;
+
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -311,7 +312,7 @@ export async function getSuggestionModifications(modpackId: number, suggestionId
 export async function getCurseForgeModData(referenceIds: string[]) {
     
     try {
-        const response = await api.post(`/curseforge`, referenceIds, );
+        const response = await api.post(`/curseforge`, referenceIds);
 
         const mods = z.array(curseForgeModSchema).parse(response.data); 
         return mods;
@@ -325,9 +326,10 @@ export async function getCurseForgeModData(referenceIds: string[]) {
 export async function getSuggestion(modpackId: number, suggestionId: number) {
 
     try {
-        const response = await api.get(`/modpacks/${modpackId}/suggestions/${suggestionId}`, );
+        const response = await api.get(`/modpacks/${modpackId}/suggestions/${suggestionId}`);
 
         const data = suggestionSchema.parse(response.data);
+        
         return data;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -367,8 +369,6 @@ export async function createModpack(body: CreateModpackDto) {
     try {
         const response = await api.post(`/modpacks/`, body, );
 
-        console.log(response.status)
-
         return response.status;
     } catch (error) {
         const err = error as unknown as AxiosError
@@ -393,7 +393,7 @@ export async function createBookmark(modpackId: number) {
 export async function importModpack(formData: FormData) {
 
     try {
-         const response = await api.post(`/modpacks/import`, formData, );
+         const response = await api.post(`/modpacks/import/curseforge`, formData, );
 
         return response.status;
     } catch (error) {
