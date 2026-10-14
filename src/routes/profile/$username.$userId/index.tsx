@@ -25,6 +25,7 @@ import ResultFilterForm from '@/components/display/result-filter-form';
 import SuggestionFilterSelect from '@/components/display/suggestion/suggestion-filter-select';
 import ResultDisplay from '@/components/display/result-display';
 import { isResponseSuccess } from '@/lib/utils';
+import SearchFilterDropdown from '@/components/display/search-filter-dropdown';
 
 const searchParamsSchema = z.object({
     display: fallback(z.enum(["modpacks", "suggestions"]), "modpacks").default("modpacks"),
@@ -392,10 +393,12 @@ export default function ProfileView() {
             <div className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
                 <div className="flex items-center justify-center w-full gap-1">
                     <ResultFilterForm handleSubmit={handleSubmit}>
-                        {
-                            display === "suggestions" &&
-                            <SuggestionFilterSelect suggestionFilter={suggestionsFilter} handleFilterChange={handleFilterChange} />
-                        }
+                            {
+                                display === "suggestions" &&
+                                <SearchFilterDropdown>
+                                    <SuggestionFilterSelect suggestionFilter={suggestionsFilter} handleFilterChange={handleFilterChange} />
+                                </SearchFilterDropdown>
+                            }
                     </ResultFilterForm>
                 </div>
                 <div className="w-full max-h-fit">
@@ -409,7 +412,7 @@ export default function ProfileView() {
                             :   
                             userSuggestions?.items.map((suggestion, index) => {
                                 return <div key={index} className="size-full max-w-full p-0">
-                                    <SuggestionDisplay suggestion={suggestion} />
+                                    <SuggestionDisplay suggestion={suggestion} modpack={suggestion.modpack} />
                                 </div>
                             })  
                         }

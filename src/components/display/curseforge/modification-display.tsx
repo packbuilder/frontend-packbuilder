@@ -56,7 +56,15 @@ export function CurseForgeModificationDisplay({curseforgeMod, modification, modp
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modificationModData(suggestion.id, modificationReferenceIds).queryKey,
                 refetchType: "all"
+            }); 
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.modpackVersionMods(modpack.id, modpack.versions[0].iterations.toString()),
+                refetchType: "all"
             });
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.suggestionModifications(modpack.id, suggestion.id),
+                refetchType: "all"
+            })
         },
         onError: (error) => {
             toast.error(error.message);
@@ -92,12 +100,12 @@ export function CurseForgeModificationDisplay({curseforgeMod, modification, modp
                     <div className="flex items-center justify-center gap-2">
                         <span className="infoPill">
                             {
-                                modification.conflictState === ConflictState.MissingDependencies ? 
+                                modification.conflictState.toString() === ConflictState.MissingDependencies ? 
                                 <div className="flex items-center justify-center items-center gap-1">
                                     <p className="text-xs text-nowrap">Missing dependencies</p> 
                                     <TriangleAlert className="text-yellow-500 size-4" />
                                 </div>
-                                : modification.conflictState === ConflictState.Conflicting ? 
+                                : modification.conflictState.toString() === ConflictState.Conflicting ? 
                                 <div className="flex items-center justify-center items-center gap-1">
                                     <p className="text-xs text-nowrap">Conflicting</p> 
                                     <TriangleAlert className="text-red-500 size-4" />
@@ -112,7 +120,7 @@ export function CurseForgeModificationDisplay({curseforgeMod, modification, modp
                         <span className="infoPill">
                             <div>
                                 {
-                                    modification.modAction === ModAction.Added ? 
+                                    modification.modAction.toString() === ModAction.Added ? 
                                     <div className="flex items-center justify-center items-center gap-1">
                                         <p className="text-xs text-nowrap">Added</p> 
                                         <CirclePlus className="text-green-500 size-4" />
@@ -169,18 +177,26 @@ export function CreateCurseForgeModificationDisplay({curseforgeMod, modAction, m
         },
         onSuccess: async () => {
             toast.success(`Successfully added a modification for ${curseforgeMod.name} to your suggestion!`);
+
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(modpack.id, suggestion.id).queryKey,
                 refetchType: "all",
             });
+
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modpack(modpack.id).queryKey,
                 refetchType: "all"
             });
+
             await queryClient.invalidateQueries({
                 queryKey: appQueries.modificationModData(suggestion.id, modificationReferenceIds).queryKey,
                 refetchType: "all"
             });
+
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.suggestionModifications(modpack.id, suggestion.id),
+                refetchType: "all"
+            });    
         },
         onError: (error) => {
             toast.error(error.message);

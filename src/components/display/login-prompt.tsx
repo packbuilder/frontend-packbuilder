@@ -2,12 +2,12 @@ import type { User } from "@/types/user"
 import { Link } from "@tanstack/react-router"
 import { Button } from "../ui/button"
 
-export default function LoginPrompt({curUser} : {curUser: User | null}) {
+export default function LoginPrompt({curUser, text} : {curUser: User | null, text: string}) {
     if(!curUser) {
         return (
             <div className='flex flex-col gap-2 items-center justify-center w-full'>
                 <h3 className="text-sm text-center font-bold mt-4 max-w-3/4">
-                    In order to create modpacks, login to a verified account or sign up!
+                    {text}
                 </h3>
                 <div className="flex gap-2">
                     <Link to='/login'>

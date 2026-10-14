@@ -51,8 +51,8 @@ function SelectDisplayRadioGroup() {
             value={display} 
             onValueChange={handleValueChange}
             options={[
-                { value: "modpacks", label: "Modpacks" },
-                { value: "bookmarks", label: "Bookmarks" },
+                { value: "modpacks", label: "Your modpacks" },
+                { value: "bookmarks", label: "Your bookmarks" },
             ]} 
         /> 
   )
@@ -124,7 +124,7 @@ function Home() {
                 </div>
                 
                 <div className='flex items-center justify-center gap-2'>
-                    <LoginPrompt curUser={curUser} />
+                    <LoginPrompt curUser={curUser} text="In order to create modpacks, login to a verified account or sign up!" />
 
                     {
                         !curUser || curUser.emailVerified && 

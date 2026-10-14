@@ -15,11 +15,11 @@ type CurseForgePaginationButtonProps = {
 }
 
 export function CurseforgePaginationButtons({ curseforgePaginationData, curPage, onPageChange } : CurseForgePaginationButtonProps) {
-    
     const nextPage = async () => {
         if(!curseforgePaginationData || curseforgePaginationData.resultCount !== curseforgePaginationData.pageSize) {
             return;
         }
+        
         onPageChange(curPage + 1);
     }
 

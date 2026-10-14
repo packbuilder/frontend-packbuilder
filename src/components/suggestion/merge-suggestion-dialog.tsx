@@ -5,7 +5,6 @@ import type { Suggestion } from "@/types/suggestion";
 import type { User } from "@/types/user";
 import { Dialog, DialogFooter ,DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose, DialogHeader } from "@/components/ui/dialog";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -22,8 +21,7 @@ type MergeSuggestionDialogProps = {
 export default function MergeSuggestionDialog({modpack, suggestion, curUser} : MergeSuggestionDialogProps) {
     const [isOpen, setIsOpen] = useState(false);
     const queryClient = useQueryClient();
-    const router = useRouter();
-    const canMerge = suggestion.state === SuggestionState.Verified && curUser?.id === modpack.userId && suggestion.modifications.length > 0;
+    const canMerge = suggestion.state.toString() === SuggestionState.Verified && curUser?.id === modpack.userId && suggestion.modifications.length > 0;
     
     const mutation = useMutation({
         mutationFn: async () => {
@@ -51,7 +49,10 @@ export default function MergeSuggestionDialog({modpack, suggestion, curUser} : M
                 refetchType: "all"
             });
 
-            await router.invalidate({sync: true}); 
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.modpackSuggestions(modpack.id),
+                refetchType: "all"
+            }); 
         },
         onError: (error: Error) => {
             toast.error(error.message);

@@ -1,4 +1,4 @@
-import { Bookmark, Gamepad, Router } from "lucide-react";
+import { Bookmark, Gamepad } from "lucide-react";
 import { createBookmark, deleteBookmark } from "@/lib/api";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -311,7 +311,7 @@ export default function ModpackView() {
             </div>
         </header>
 
-        <LoginPrompt curUser={curUser} />
+        <LoginPrompt curUser={curUser} text="In order to create a suggestion or edit this modpack, you must be logged into a verified account!" />
 
         <Separator className="my-4"/>
         
@@ -340,7 +340,7 @@ export default function ModpackView() {
                                 ) : (
                                   paginatedSuggestions?.items.map((suggestion, index) => {
                                     return <div key={index} className="size-full max-w-full p-0">
-                                        <SuggestionDisplay suggestion={suggestion} modpack={modpack} curUser={curUser} />
+                                        <SuggestionDisplay suggestion={suggestion} modpack={modpack} curUser={curUser} showActions />
                                     </div>
                                 })  
                                 )

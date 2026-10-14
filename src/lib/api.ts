@@ -200,7 +200,7 @@ export async function getUserBookmarks(page: number, searchQuery?: string, pageS
         });
 
         return response.data as PaginatedBookmarkSchema;
-        
+
     } catch (error) {
         const err = error as unknown as AxiosError
         console.error(err.message);
@@ -295,7 +295,7 @@ export async function getSuggestionModifications(modpackId: number, suggestionId
                 pageSize,
                 searchQuery: searchQuery,
                 modActionFilter,
-                conflictStateFilter
+                conflictingFilter: conflictStateFilter
             }
         });
 

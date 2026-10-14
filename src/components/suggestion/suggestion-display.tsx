@@ -1,17 +1,17 @@
 import type { Suggestion } from "@/types/suggestion";
-import { CloudAlert, CloudCheck, CloudCog, CirclePlus, CircleMinus, PackageOpen, Tag } from "lucide-react";
-import { ImageType, ModAction, ModLoader, SuggestionState } from "@/types/enums";
+import { CirclePlus, CircleMinus } from "lucide-react";
+import { ImageType, ModAction } from "@/types/enums";
 import { Separator } from "../ui/separator";
-import { enumNameFromValue } from "@/lib/utils";
 import type { User } from "@/types/user";
 import type { Modpack } from "@/types/modpack";
 import { Link } from "@tanstack/react-router";
 import { Button } from "../ui/button";
 import MergeSuggestionDialog from "./merge-suggestion-dialog";
+import { SuggestionTags } from "../display/tags";
 
 type SuggestionDisplayProps = {
     suggestion: Suggestion, 
-    modpack?: Modpack, 
+    modpack: Modpack, 
     curUser?: User | null,
     showActions?: boolean
 }
@@ -52,32 +52,7 @@ export default function SuggestionDisplay({suggestion, modpack, curUser, showAct
                 </header>
                 <div className="flex items-center justify-between w-full max-h-fit text-sm col-span-2 min-md:col-start-2 min-md:row-start-3">
                     <div className="flex flex-wrap items-center w-full justify-start gap-1 gap-y-2">
-                        <span className="infoPill">
-                            {
-                                suggestion.state.toString() === SuggestionState.Unverified ?
-                                <div className="flex items-center justify-center gap-1">
-                                    <CloudAlert className="text-red-500 size-4"/> <p>Unverified</p>
-                                </div>
-                                : suggestion.state.toString() === SuggestionState.VerificationPending ?
-                                <div className="flex items-center justify-center gap-1">
-                                    <CloudCog className="text-white size-4"/> <p>Verification pending</p>
-                                </div>
-                                :
-                                <div className="flex items-center justify-center gap-1">
-                                    <CloudCheck className="text-green-500 size-4"/> <p>Verified</p>
-                                </div>
-                            }
-                        </span>
-                        <span className="infoPill">
-                            <div className="flex items-center justify-center gap-1">
-                                <PackageOpen className="text-orange-100 size-4"/> <p>{enumNameFromValue(ModLoader, suggestion.modLoader.toString())}</p>
-                            </div>
-                        </span>
-                        <span className="infoPill">
-                            <div className="flex items-center justify-center gap-1">
-                                <Tag className="text-green-100 size-4"/> <p>Minecraft {suggestion.gameVersion}</p>
-                            </div>
-                        </span>
+                        <SuggestionTags suggestion={suggestion} modpack={modpack}/>
                     </div>
                 </div>
                 <div className="flex items-center justify-start p-2 w-full max-h-fit col-span-2 gap-2 min-md:col-start-3 min-md:row-span-3 min-md:justify-center min-md:row-start-1 min-md:h-full min-md:max-h-full">

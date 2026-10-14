@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { CloudAlert, CloudCheck, CloudCog, FilterIcon, Merge } from "lucide-react";
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CloudAlert, CloudCheck, CloudCog, Merge } from "lucide-react";
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { appQueries } from "@/hooks/appQueries";
 import { ConflictState, CurseForgeSearchFilter, ImageType, ModAction, SuggestionState } from "@/types/enums";
@@ -24,10 +24,6 @@ import VerifySuggestionDialog from "@/components/display/suggestion/verify-sugge
 import { ConflictStateFilterSelect, ModActionFilterSelect } from "@/components/display/modification/modification-filter-display";
 import CurseForgeSearchForm from "@/components/display/curseforge/search-form";
 import LoginPrompt from "@/components/display/login-prompt";
-import { Popover } from "@/components/ui/popover";
-import { PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
-import { DropdownMenu, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { DropdownMenuContent, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import SearchFilterDropdown from "@/components/display/search-filter-dropdown";
 
 type RemoveModpackModsProps = {
@@ -48,7 +44,7 @@ type AddCurseForgeModProps = {
 }
 
 const searchParamSchema = z.object({
-    curseforgePage: fallback(z.number(), 0).default(0),
+    curseForgePage: fallback(z.number(), 0).default(0),
     curseForgeQuery: fallback(z.string(), "").default(''),
     curseForgeSortMethod: fallback(z.enum(["0", "1", "2", "3"]), "0").default("0"),
     
@@ -143,7 +139,7 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
     }
 
     const handlePageChange = (newPage: number) => {
-        navigate({search: (prev) => ({...prev, curseforgePage: newPage}), resetScroll: false, from: Route.fullPath});
+        navigate({search: (prev) => ({...prev, curseForgePage: newPage}), resetScroll: false, from: Route.fullPath});
     }   
 
     return (
@@ -161,7 +157,7 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
 
                     <CurseForgeSearchForm handleSortChange={handleSortChange} handleSubmit={handleSubmit} searchQuery={searchQuery} sortMethod={sort} submitButtonRef={submitButtonRef} searchInputRef={searchModsInputRef} />
                 </DialogHeader>
-                <ResultDisplay isEmpty={!modSearchResults || modSearchResults.mods.length > 0} isLoading={pendingSearchResults}>
+                <ResultDisplay isEmpty={!modSearchResults || modSearchResults.mods.length <= 0} isLoading={pendingSearchResults}>
                     {modSearchResults?.mods.map((mod: CurseForgeMod) => {
                         let disabledMessage = "";
 
@@ -173,20 +169,20 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
 
                         return (
                             <CreateCurseForgeModificationDisplay
-                            key={mod.referenceId}
-                            curseforgeMod={mod}
-                            modpack={modpack}
-                            suggestion={suggestion}
-                            modAction={ModAction.Added}
-                            isEnabled={!disabledMessage}
-                            modificationReferenceIds={modificationReferenceIds}
-                            disabledMessage={disabledMessage}
+                                key={mod.referenceId}
+                                curseforgeMod={mod}
+                                modpack={modpack}
+                                suggestion={suggestion}
+                                modAction={ModAction.Added}
+                                isEnabled={!disabledMessage}
+                                modificationReferenceIds={modificationReferenceIds}
+                                disabledMessage={disabledMessage}
                             />
                         );
                     })}
                 </ResultDisplay>
                 <div>
-                    <CurseforgePaginationButtons curseforgePaginationData={modSearchResults?.pagination} curPage={page} onPageChange={handlePageChange}/>
+                    <CurseforgePaginationButtons curseforgePaginationData={modSearchResults?.pagination} curPage={Number(page)} onPageChange={handlePageChange}/>
                 </div>
             </DialogContent>
         </Dialog>
@@ -223,7 +219,7 @@ function RemoveModpackMods({curPage, totalPages, pendingData, modpackModData, mo
                     <div className="flex items-center justify-start w-full gap-1">
                         <ResultFilterForm handleSubmit={handleSubmit} />
                     </div>
-                    <ResultDisplay isEmpty={!modpackModData || modpackModData.length > 0} isLoading={pendingData}>
+                    <ResultDisplay isEmpty={!modpackModData || modpackModData.length <= 0} isLoading={pendingData}>
                         {
                             modpackModData?.map((mod: CurseForgeMod, index: number) => {
                                 let isEnabled = true;
@@ -260,7 +256,7 @@ function RemoveModpackMods({curPage, totalPages, pendingData, modpackModData, mo
 
 export default function SuggestionView() {
     const navigate = useNavigate();
-    const {modpack: initialModpackData, suggestion: initialSuggestionData, curUser} = Route.useLoaderData();
+    const { curUser } = Route.useLoaderData();
     const params = Route.useParams();
     const modpackId = parseInt(params.modpackId);
     const suggestionId = parseInt(params.suggestionId);
@@ -277,17 +273,15 @@ export default function SuggestionView() {
         })
     });
 
-    const { data: modpack, isPending: modpackPending } = useQuery({
+    const { data: modpack, isPending: modpackPending } = useSuspenseQuery({
         queryFn: appQueries.modpack(modpackId).queryFn,
         queryKey: appQueries.modpack(modpackId).queryKey,
-        initialData: initialModpackData,       
         refetchOnMount: true,        
     });
 
-    const { data: suggestion, isPending: suggestionPending } = useQuery({
+    const { data: suggestion, isPending: suggestionPending } = useSuspenseQuery({
         queryFn: appQueries.suggestion(modpackId, suggestionId).queryFn,
         queryKey: appQueries.suggestion(modpackId, suggestionId).queryKey,
-        initialData: initialSuggestionData,       
         refetchOnMount: true,        
     });
 
@@ -307,13 +301,7 @@ export default function SuggestionView() {
         return modpack.versions[0].iterations;
     }, [modpack.versions[0]]);
 
-    const { data: paginatedModifications, isPending: pendingModifications } = useQuery({
-        queryFn: appQueries.suggestionModifications(modpackId, suggestionId, modificationsPage, modificationsQuery, modActionFilter ?? undefined, conflictStateFilter ?? undefined).queryFn,
-
-        queryKey: appQueries.suggestionModifications(modpackId, suggestionId, modificationsPage, modificationsQuery, modActionFilter ?? undefined, conflictStateFilter ?? undefined).queryKey,
-
-        placeholderData: keepPreviousData
-    });
+    const { data: paginatedModifications, isPending: pendingModifications } = useQuery(appQueries.suggestionModifications(modpack.id, suggestion.id, modificationsPage, modificationsQuery, modActionFilter ?? undefined, conflictStateFilter ?? undefined));
     
     const {data: paginatedVersionMods, isPending: pendingVersionMods} = useQuery(appQueries.modpackVersionMods(modpackId, versionIteration.toString(), modpackModsPage, modpackModsQuery));
 
@@ -404,7 +392,7 @@ export default function SuggestionView() {
             }
         </header>
 
-        <LoginPrompt curUser={curUser} />
+        <LoginPrompt curUser={curUser} text="In order to perform actions on this suggestion, you must be logged into a verified account." />
 
         <Separator />
 
