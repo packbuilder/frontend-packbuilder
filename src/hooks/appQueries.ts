@@ -30,8 +30,8 @@ export const appQueries = {
     }),
 
     modpackVersionMods: (modpackId: number, versionIteration: string, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
-        queryKey: [...appQueries.keys.modpackVersionMods(modpackId!, versionIteration!), page, pageSize, searchQuery],
-        queryFn: () => getVersionMods(modpackId!, versionIteration!, page, pageSize || 50, searchQuery || ""),
+        queryKey: [...appQueries.keys.modpackVersionMods(modpackId, versionIteration), page, pageSize, searchQuery],
+        queryFn: () => getVersionMods(modpackId, versionIteration, page, pageSize || 50, searchQuery || ""),
         placeholderData: keepPreviousData
     }),
 

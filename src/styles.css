@@ -185,7 +185,15 @@ p {
   }
 
   .infoPill {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full gap-1 border border-[var(--text-secondary)] text-[var(--text-secondary)];
+    @apply inline-flex items-center px-2.5 text-nowrap py-0.5 rounded-full gap-1 border border-[var(--text-secondary)] text-[var(--text-secondary)];
+  }
+
+  .mainBlock {
+    @apply flex flex-col items-center justify-center p-2 w-full min-md:max-w-3/4 min-md:min-w-2/4;
+  }
+
+  .sectionBlock {
+    @apply flex items-center justify-center gap-2 flex-col w-full min-xl:max-w-8/10;
   }
 }
 

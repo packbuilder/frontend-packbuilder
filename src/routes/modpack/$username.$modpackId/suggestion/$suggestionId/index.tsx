@@ -158,7 +158,7 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
                     <CurseForgeSearchForm handleSortChange={handleSortChange} handleSubmit={handleSubmit} searchQuery={searchQuery} sortMethod={sort} submitButtonRef={submitButtonRef} searchInputRef={searchModsInputRef} />
                 </DialogHeader>
                 <ResultDisplay isEmpty={!modSearchResults || modSearchResults.mods.length <= 0} isLoading={pendingSearchResults}>
-                    {modSearchResults?.mods.map((mod: CurseForgeMod) => {
+                    {modSearchResults?.mods.map((mod: CurseForgeMod, index: number) => {
                         let disabledMessage = "";
 
                         if (modificationReferenceIdSet.has(mod.referenceId)) {
@@ -169,7 +169,7 @@ function AddCurseForgeMods({modpackReferenceIds, modificationReferenceIds, sugge
 
                         return (
                             <CreateCurseForgeModificationDisplay
-                                key={mod.referenceId}
+                                key={mod.referenceId + index}
                                 curseforgeMod={mod}
                                 modpack={modpack}
                                 suggestion={suggestion}
@@ -202,7 +202,7 @@ function RemoveModpackMods({curPage, totalPages, pendingData, modpackModData, mo
         const formData = new FormData(event.currentTarget);
         const newSearchQuery = formData.get("searchQuery") as string;
 
-        navigate({search: (prev) => ({page: 1, modpackModsQuery: newSearchQuery, ...prev}), resetScroll: false, from: Route.fullPath});
+        navigate({search: (prev) => ({...prev, modpackModsPage: 1, modpackModsQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
     }
 
     return (
@@ -230,7 +230,7 @@ function RemoveModpackMods({curPage, totalPages, pendingData, modpackModData, mo
                                         disabledMessage = "This mod is already in your list of changes."
                                     }
                                 });
-                                return <div className="w-full p-0">     
+                                return <div className="w-full p-0" key={mod.referenceId + index + mod.slug}>     
                                     <CreateCurseForgeModificationDisplay 
                                         modificationReferenceIds={modificationReferenceIds} 
                                         suggestion={suggestion} 
@@ -341,7 +341,7 @@ export default function SuggestionView() {
 
     useSuggestionSubscription(suggestion.modpackId, suggestion.id);
 
-    return <section className="flex flex-col items-center max-w-full justify-center gap-4 p-2 min-md:min-w-2/4 min-md:max-w-3/4">
+    return <section className="mainBlock">
         <header className="flex flex-col justify-between items-center gap-6 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between min-w-0">
                 <img src={suggestion.user?.imageType.toString() === ImageType.Stock ? `/profileAvatars/${suggestion.user?.imageValue}` : "/packbuilder-placeholder.png"} alt={"user profile picture"} className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
@@ -394,9 +394,9 @@ export default function SuggestionView() {
 
         <LoginPrompt curUser={curUser} text="In order to perform actions on this suggestion, you must be logged into a verified account." />
 
-        <Separator />
+        <Separator className="mt-4"/>
 
-        <section className="flex items-center justify-center gap-2 flex-col w-9/10">
+        <section className="sectionBlock">
             <h1>Modifications</h1>
             <div className="flexColumnContainer">
                 <div className="flex items-center justify-start w-full gap-2">

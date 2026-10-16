@@ -111,8 +111,7 @@ function Home() {
         setGame(value);
     }
 
-    // TODO: Re-style home page for new paginated data
-    return <section className="flex flex-col items-center justify-center p-2 w-full min-md:max-w-3/4 min-md:min-w-2/4">
+    return <section className="mainBlock">
         <div className="flex flex-col justify-between items-center w-full mx-auto h-full">
             <header className="flex flex-col justify-around items-center gap-4">
                 <div className='flex items-center justify-center gap-2'>
@@ -157,7 +156,7 @@ function Home() {
             
             <Separator className='my-4 '/>
 
-            <section className="flex items-center justify-center gap-4 flex-col w-19/20">
+            <section className="sectionBlock">
             
                 <SelectDisplayRadioGroup />
     

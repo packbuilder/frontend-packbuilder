@@ -21,6 +21,10 @@ export function useSuggestionSubscription(modpackId: number, suggestionId: numbe
             await queryClient.invalidateQueries({
                 queryKey: appQueries.suggestion(payload.modpackId, payload.suggestionId).queryKey
             });
+
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.suggestionModifications(payload.modpackId, payload.suggestionId)
+            });
         }
 
         const onModpackUpdated = async (payload: {

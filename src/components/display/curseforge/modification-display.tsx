@@ -215,8 +215,19 @@ export function CreateCurseForgeModificationDisplay({curseforgeMod, modAction, m
                 <img className="displayImage" src={curseforgeMod.logoUrl || "/packbuilder-placeholder.png"} />
             </div>
             <CurseForgeModHeader curseForgeMod={curseforgeMod} />
-            <div className="flex items-center justify-between w-full h-fit row-start-3 col-span-2">
-                <div className="flex items-start justify-center gap-2 w-fit">
+            {
+                !isEnabled && 
+                <div className="gap-2 row-start-2 col-span-3 flex items-center justify-center">
+                    <span className="infoPill">
+                        <div className="flex items-center justify-center items-center gap-1">
+                            <TriangleAlert className="text-red-500 size-4" />
+                            <p className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</p> 
+                        </div>
+                    </span>
+                </div>
+            }
+            <div className="flex items-center justify-center w-full h-fit row-start-3 col-span-2">
+                <div className="flex items-center justify-center gap-2 w-fit">
                     {isEnabled ?
                         <form method="post" id="modDisplay" onSubmit={handleSubmit} className="w-full">
                             <Input type="hidden" name="modPlatform" value={ModPlatform.CurseForge}/>
@@ -241,17 +252,6 @@ export function CreateCurseForgeModificationDisplay({curseforgeMod, modAction, m
                     }
                 </div>
             </div>
-            {
-                !isEnabled && 
-                <div className="gap-2 row-start-2 col-span-3">
-                    <span className="infoPill">
-                        <div className="flex items-center justify-center items-center gap-1">
-                            <TriangleAlert className="text-red-500 size-4" />
-                            <p className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</p> 
-                        </div>
-                    </span>
-                </div>
-            }
         </div>
         <Separator />
     </div>

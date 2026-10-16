@@ -17,8 +17,8 @@ type SuggestionDisplayProps = {
 }
 
 export default function SuggestionDisplay({suggestion, modpack, curUser, showActions} : SuggestionDisplayProps) {
-    const addedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Added);
-    const removedMods = suggestion.modifications.filter(m => m.modAction === ModAction.Removed);
+    const addedMods = suggestion.modifications.filter(m => m.modAction.toString() === ModAction.Added);
+    const removedMods = suggestion.modifications.filter(m => m.modAction.toString() === ModAction.Removed);
 
     if(!suggestion.user) {
         return <div className="w-full bg-[var(--surface-1)]">
@@ -51,7 +51,7 @@ export default function SuggestionDisplay({suggestion, modpack, curUser, showAct
                     <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{suggestion.memo}</p>
                 </header>
                 <div className="flex items-center justify-between w-full max-h-fit text-sm col-span-2 min-md:col-start-2 min-md:row-start-3">
-                    <div className="flex flex-wrap items-center w-full justify-start gap-1 gap-y-2">
+                    <div className="flex flex-wrap items-center w-fit justify-start gap-1 gap-y-2">
                         <SuggestionTags suggestion={suggestion} modpack={modpack}/>
                     </div>
                 </div>

@@ -368,7 +368,7 @@ export default function ProfileView() {
         }
     }
     
-    return <section className="flex flex-col items-center max-w-9/10 justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
+    return <section className="mainBlock">
         <header className="flex flex-col justify-between items-center max-w-full gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col max-w-full items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img className='size-40 border-white/30 border-1' src={userProfileData.imageType === ImageType.Stock ? `/profileAvatars/${userProfileData.imageValue}` : userProfileData.imageValue} alt={"user profile picture"} />
@@ -387,7 +387,7 @@ export default function ProfileView() {
 
         <Separator className="my-4"/>
         
-        <section className="flex items-center justify-center gap-4 flex-col w-19/20">
+        <section className="sectionBlock">
             <SelectDisplayRadioGroup />
 
             <div className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">

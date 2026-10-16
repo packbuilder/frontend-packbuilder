@@ -19,7 +19,7 @@ export default function ModpackDisplay({modpack} : {modpack: Modpack}) {
                         by {modpack.user.name}
                     </h3>
                 </div>  
-                <div className="flex items-center justify-center gap-2 text-md text-[var(--text-secondary)]">
+                <div className="flex flex-wrap items-center justify-start gap-2 text-md text-[var(--text-secondary)]">
                     <ModpackTags modpack={modpack}/>
                 </div>
             </header>

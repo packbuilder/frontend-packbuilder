@@ -134,7 +134,7 @@ function SelectDisplayRadioGroup() {
     return (
         <DisplayRadioGroup  
             value={display} 
-        onValueChange={handleValueChange}
+            onValueChange={handleValueChange}
             options={[
                 { value: "mods", label: "Mods" },
                 { value: "suggestions", label: "Suggestions" },
@@ -269,7 +269,7 @@ export default function ModpackView() {
 
     useModpackSubscription(modpack.id);
 
-    return <section className="flex flex-col items-center justify-center p-2 w-full min-md:max-w-3/4 min-md:min-w-2/4">
+    return <section className="mainBlock">
         <header className="flex flex-col justify-between items-center gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
                 <img src={modpack.imageType === ImageType.Stock ? `/modpackAvatars/${modpack.imageValue}` : modpack.imageValue} alt="Modpack logo" className="bg-black border border-white/30 aspect-square w-28 h-28 md:w-40 md:h-40" />
@@ -315,7 +315,7 @@ export default function ModpackView() {
 
         <Separator className="my-4"/>
         
-        <section className="flex items-center justify-center gap-4 flex-col w-19/20">
+        <section className="sectionBlock">
 
             <SelectDisplayRadioGroup />
 
