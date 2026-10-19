@@ -2,9 +2,8 @@ import type { CurseForgeMod } from "@/types/curseforge/curseforgeMod";
 import type { Modification } from "@/types/modification";
 import { Link } from "@tanstack/react-router";
 import { CircleCheck, CircleMinus, CirclePlus, ExternalLink, TriangleAlert, X } from "lucide-react";
-import { Separator } from "../ui/separator";
+import { Separator } from "../../ui/separator";
 import { ConflictState, ModAction, ModPlatform } from "@/types/enums";
-import InfoPill from "../display/info-pill";
 import type { Modpack } from "@/types/modpack";
 import type { Suggestion } from "@/types/suggestion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,22 +11,38 @@ import { createModificationDtoSchema } from "@/types/dtos/createModificationDto"
 import { createModification, deleteModification } from "@/lib/api";
 import { appQueries } from "@/hooks/appQueries";
 import type { FormEvent } from "react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+import { Input } from "../../ui/input";
+import { Button } from "../../ui/button";
 import type { User } from "@/types/user";
-import DisplayImage from "../display/display-image";
 import { toast } from "sonner";
+import { CurseForgeModHeader } from "./mod-display";
 
-export function ModificationDisplay({curseforgeMod, modification, modpack, suggestion, modificationReferenceIds, curUser} : {curseforgeMod: CurseForgeMod, modification: Modification, modpack: Modpack, suggestion: Suggestion, modificationReferenceIds: string[], curUser: User | null | undefined}) {
+type ModificationDisplayProps = {
+    curseforgeMod: CurseForgeMod, 
+    modification: Modification, 
+    modpack: Modpack, 
+    suggestion: Suggestion, 
+    modificationReferenceIds: string[], 
+    curUser: User | null | undefined
+}
 
-    const modpackIdStr = modpack.id.toString();
-    const suggestionIdStr = modification.suggestionId.toString();
+type CreateModificationDisplayProps = {
+    curseforgeMod: CurseForgeMod, 
+    isEnabled: boolean, 
+    disabledMessage: string, 
+    modificationReferenceIds: string[], 
+    modpack: Modpack, 
+    suggestion: Suggestion, 
+    modAction: ModAction
+}
+
+export function CurseForgeModificationDisplay({curseforgeMod, modification, modpack, suggestion, modificationReferenceIds, curUser} : ModificationDisplayProps) {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
         mutationFn: async (formData: FormData) => {
             const modificationId = formData.get("modificationId") as string;
-            const status = await deleteModification(modpackIdStr, modificationId, suggestionIdStr);
+            const status = await deleteModification(modpack.id, modificationId, suggestion.id);
 
             if(!status || status < 200 || status > 299) {
                 throw new Error(`There was a problem with deleting modification for ${curseforgeMod.name} from this suggestion`);
@@ -36,12 +51,20 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
         onSuccess: async () => {
             toast.success(`Successfully removed modification for ${curseforgeMod.name} from your suggestion!`);
             await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(modpackIdStr, suggestionIdStr).queryKey,
+                queryKey: appQueries.suggestion(modpack.id, suggestion.id).queryKey,
             });
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modificationModData(suggestionIdStr, modificationReferenceIds).queryKey,
+                queryKey: appQueries.modificationModData(suggestion.id, modificationReferenceIds).queryKey,
+                refetchType: "all"
+            }); 
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.modpackVersionMods(modpack.id, modpack.versions[0].iterations.toString()),
                 refetchType: "all"
             });
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.suggestionModifications(modpack.id, suggestion.id),
+                refetchType: "all"
+            })
         },
         onError: (error) => {
             toast.error(error.message);
@@ -75,15 +98,14 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
             <div className="flex items-center justify-between w-full h-fit col-span-2 min-md:row-start-2 min-md:col-start-2">
                 <div className="flex items-center justify-center flex-wrap gap-2">
                     <div className="flex items-center justify-center gap-2">
-                        {/* TODO: Figure out a better way to inform the user on what missing dependencies means? */}
-                        <InfoPill>
+                        <span className="infoPill">
                             {
-                                modification.conflictState === ConflictState.MissingDependencies ? 
+                                modification.conflictState.toString() === ConflictState.MissingDependencies ? 
                                 <div className="flex items-center justify-center items-center gap-1">
                                     <p className="text-xs text-nowrap">Missing dependencies</p> 
                                     <TriangleAlert className="text-yellow-500 size-4" />
                                 </div>
-                                : modification.conflictState === ConflictState.Conflicting ? 
+                                : modification.conflictState.toString() === ConflictState.Conflicting ? 
                                 <div className="flex items-center justify-center items-center gap-1">
                                     <p className="text-xs text-nowrap">Conflicting</p> 
                                     <TriangleAlert className="text-red-500 size-4" />
@@ -94,11 +116,11 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
                                     <CircleCheck className="text-green-500 size-4" />
                                 </div>
                             }
-                        </InfoPill>
-                        <InfoPill>
+                        </span>
+                        <span className="infoPill">
                             <div>
                                 {
-                                    modification.modAction === ModAction.Added ? 
+                                    modification.modAction.toString() === ModAction.Added ? 
                                     <div className="flex items-center justify-center items-center gap-1">
                                         <p className="text-xs text-nowrap">Added</p> 
                                         <CirclePlus className="text-green-500 size-4" />
@@ -110,7 +132,7 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
                                     </div>
                                 }
                             </div>
-                        </InfoPill>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -133,10 +155,7 @@ export function ModificationDisplay({curseforgeMod, modification, modpack, sugge
     </div>
 }
 
-export function CreateModificationDisplay(
-    {curseforgeMod, modAction, modpack, suggestion, isEnabled, disabledMessage, modificationReferenceIds} : 
-    {curseforgeMod: CurseForgeMod, isEnabled: boolean, disabledMessage: string, modificationReferenceIds: string[], modpack: Modpack, suggestion: Suggestion, modAction: ModAction}
-) {
+export function CreateCurseForgeModificationDisplay({curseforgeMod, modAction, modpack, suggestion, isEnabled, disabledMessage, modificationReferenceIds} : CreateModificationDisplayProps) {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
@@ -150,7 +169,7 @@ export function CreateModificationDisplay(
                 throw new Error(result.error.issues[0].message);
             }
 
-            const status = await createModification(modpack.id.toString(), suggestion.id.toString(), result.data);
+            const status = await createModification(modpack.id, suggestion.id, result.data);
 
             if(!status || status < 200 || status > 299) {
                 throw new Error(`There was a problem with adding a modification for ${curseforgeMod.name} to your suggestion.`);
@@ -158,18 +177,26 @@ export function CreateModificationDisplay(
         },
         onSuccess: async () => {
             toast.success(`Successfully added a modification for ${curseforgeMod.name} to your suggestion!`);
+
             await queryClient.invalidateQueries({
-                queryKey: appQueries.suggestion(modpack.id.toString(), suggestion.id.toString()).queryKey,
+                queryKey: appQueries.suggestion(modpack.id, suggestion.id).queryKey,
                 refetchType: "all",
             });
+
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modpack(modpack.id.toString()).queryKey,
+                queryKey: appQueries.modpack(modpack.id).queryKey,
                 refetchType: "all"
             });
+
             await queryClient.invalidateQueries({
-                queryKey: appQueries.modificationModData(suggestion.id.toString(), modificationReferenceIds).queryKey,
+                queryKey: appQueries.modificationModData(suggestion.id, modificationReferenceIds).queryKey,
                 refetchType: "all"
             });
+
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.suggestionModifications(modpack.id, suggestion.id),
+                refetchType: "all"
+            });    
         },
         onError: (error) => {
             toast.error(error.message);
@@ -185,22 +212,22 @@ export function CreateModificationDisplay(
     return <div className="w-full bg-[var(--surface-1)] transition duration-200">
         <div className="grid w-full h-fit grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-3 gap-y-3 p-2">
             <div className="flex items-center justify-center">
-                <DisplayImage src={curseforgeMod.logoUrl || "/packbuilder-placeholder.png"} />
+                <img className="displayImage" src={curseforgeMod.logoUrl || "/packbuilder-placeholder.png"} />
             </div>
-            <header className="flex flex-col gap-2 w-full justify-center">
-                <div className="flex items-center justify-center max-w-full w-fit gap-2 min-w-0 min-md:w-full min-md:justify-start min-md:w-fit min-md:text-xl">
-                    <h2 className="text-md font-bold truncate min-w-0 flex-1 max-w-fit text-[var(--text-primary)]">
-                        {curseforgeMod.name}
-                    </h2>
-                    <Separator orientation="vertical" />
-                    <p className="text-md truncate min-w-0 flex-1 max-w-fit text-[var(--text-secondary)] min-md:text-lg">
-                        by {curseforgeMod.authors[0].name}
-                    </p>
-                </div>  
-                <p className="text-sm text-left line-clamp-2 min-w-0 w-full text-[var(--text-secondary)]">{curseforgeMod.summary}</p>
-            </header>
-            <div className="flex items-center justify-between w-full h-fit row-start-3 col-span-2">
-                <div className="flex items-start justify-center gap-2 w-fit">
+            <CurseForgeModHeader curseForgeMod={curseforgeMod} />
+            {
+                !isEnabled && 
+                <div className="gap-2 row-start-2 col-span-3 flex items-center justify-center">
+                    <span className="infoPill">
+                        <div className="flex items-center justify-center items-center gap-1">
+                            <TriangleAlert className="text-red-500 size-4" />
+                            <p className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</p> 
+                        </div>
+                    </span>
+                </div>
+            }
+            <div className="flex items-center justify-center w-full h-fit row-start-3 col-span-2">
+                <div className="flex items-center justify-center gap-2 w-fit">
                     {isEnabled ?
                         <form method="post" id="modDisplay" onSubmit={handleSubmit} className="w-full">
                             <Input type="hidden" name="modPlatform" value={ModPlatform.CurseForge}/>
@@ -225,17 +252,6 @@ export function CreateModificationDisplay(
                     }
                 </div>
             </div>
-            {
-                !isEnabled && 
-                <div className="gap-2 row-start-2 col-span-3">
-                    <InfoPill>
-                        <div className="flex items-center justify-center items-center gap-1">
-                            <TriangleAlert className="text-red-500 size-4" />
-                            <p className="text-xs text-nowrap min-md:text-sm">{disabledMessage}</p> 
-                        </div>
-                    </InfoPill>
-                </div>
-            }
         </div>
         <Separator />
     </div>

@@ -17,7 +17,7 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
 
     const mutation = useMutation({
         mutationFn: async () => {
-            const status = await deleteSuggestion(modpack.id.toString(), suggestion.id.toString());
+            const status = await deleteSuggestion(modpack.id, suggestion.id);
 
             if(!status || status < 200 || status > 300 ) {
                 throw new Error("There was a problem with deleting your suggestion.");
@@ -26,8 +26,8 @@ export default function DeleteSuggestionDialog({suggestion, modpack} : {suggesti
         onSuccess: async () => {
             toast.success(`Successfully deleted your suggestion from ${modpack.name}`);
             
-            queryClient.invalidateQueries({
-                queryKey: appQueries.modpackSuggestions(modpack.id.toString()).queryKey,
+            await queryClient.invalidateQueries({
+                queryKey: appQueries.keys.modpackSuggestions(modpack.id),
                 refetchType: "all"
             });
             

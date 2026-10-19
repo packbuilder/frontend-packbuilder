@@ -3,23 +3,20 @@ export enum ModPlatform {
     CurseForge = "1"
 }
 
+export enum Game {
+    Minecraft = "0"
+}
+
 export enum ModAction {
     Added = "0",
     Removed = "1",
     Updated = "2"
 }
 
-export enum ModificationFilter {
-    All = "0",
-    Added = "1",
-    Removed = "2",
-    Conflicting = "3"
-}
-
-export enum SuggestionFilter {
-    All = "0",
-    Verified = "1",
-    Unverified = "2"
+export enum ConflictState {
+    NoConflicts = "0",
+    Conflicting = "1",
+    MissingDependencies = "2"
 }
 
 export enum CurseForgeSearchFilter {
@@ -34,12 +31,6 @@ export enum SuggestionState {
     Verified = "1",
     VerificationPending = "2",
     MergePending = "3"
-}
-
-export enum ConflictState {
-    NoConflicts = "0",
-    Conflicting = "1",
-    MissingDependencies = "2"
 }
 
 export enum ModLoader {

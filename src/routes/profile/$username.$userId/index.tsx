@@ -1,73 +1,75 @@
 import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { Button } from "@/components/ui/button";
 import { Edit, Lock, Save, X } from "lucide-react";
-import Cookies from "js-cookie";
 import { updateProfileDtoSchema } from "@/types/dtos/updateProfileDto";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMemo, useRef, useState, type FormEvent } from "react";
-import { changeEmail, updateProfile } from '@/lib/api';
-import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { useRef, useState, type FormEvent } from "react";
+import { changeEmail, logout, updateProfile } from '@/lib/api';
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { appQueries } from '@/hooks/appQueries';
-import { SuggestionDisplay } from '@/components/suggestion/suggestion-display';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SuggestionDisplay from '@/components/suggestion/suggestion-display';
 import { Separator } from '@/components/ui/separator';
-import ModpackDisplay from '@/components/modpack/modpack-display';
-import DisplayContainer from '@/components/display/display-container';
+import ModpackDisplay from '@/components/display/modpack/modpack-display';
 import { fallback, zodValidator } from '@tanstack/zod-adapter';
 import z from 'zod';
-import { ImageType, SuggestionFilter, SuggestionState } from '@/types/enums';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Spinner } from '@/components/ui/spinner';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import ClearableCommandInput from "@/components/display/clearable-command-input";
+import { ImageType, SuggestionState } from '@/types/enums';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { changeEmailDtoSchema } from '@/types/dtos/changeEmailDto';
 import SelectAvatarDialog from '@/components/display/select-avatar-dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { AvatarImage, AvatarFallback, Avatar } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import DisplayRadioGroup from '@/components/display/radio-display-buttons';
+import ResultFilterForm from '@/components/display/result-filter-form';
+import SuggestionFilterSelect from '@/components/display/suggestion/suggestion-filter-select';
+import ResultDisplay from '@/components/display/result-display';
+import { isResponseSuccess } from '@/lib/utils';
+import SearchFilterDropdown from '@/components/display/search-filter-dropdown';
 
-const dataDisplaySchema = z.object({
+const searchParamsSchema = z.object({
     display: fallback(z.enum(["modpacks", "suggestions"]), "modpacks").default("modpacks"),
+    modpacksPage: fallback(z.number(), 1).default(1),
+    suggestionsPage: fallback(z.number(), 1).default(1),
+    modpacksQuery: fallback(z.string(), "").default(""),
+    suggestionsQuery: fallback(z.string(), "").default(""),
+    suggestionsFilter: fallback(z.enum(SuggestionState).nullable(), null).default(null)
 });
 
 export const Route = createFileRoute('/profile/$username/$userId/')({
-    validateSearch: zodValidator(dataDisplaySchema),
+    validateSearch: zodValidator(searchParamsSchema),
     params: {
         parse: (raw) => ({
             username: raw.username,
             userId: Number(raw.userId),
         }),
     },
-    loaderDeps: ({search: {display}}) => ({
-        display
+    loaderDeps: ({search: {display, modpacksPage, suggestionsPage, modpacksQuery, suggestionsQuery, suggestionsFilter}}) => ({
+        display,
+        modpacksPage,
+        suggestionsPage,
+        modpacksQuery,
+        suggestionsQuery,
+        suggestionsFilter
     }),
-    loader: async ({context, params}) => {
+    loader: async ({context, params, deps}) => {
         if (!Number.isInteger(params.userId)) {
             throw redirect({ to: "/" });
         }
 
+        const {modpacksPage, modpacksQuery, suggestionsPage, suggestionsQuery, suggestionsFilter} = deps
         const {user: curUser, queryClient} = context;
-        const {username, userId} = params;
+        const {userId} = params;
+
         const userData = await queryClient.ensureQueryData(appQueries.userData(userId));
 
         if(!userData) {
             throw redirect({to: "/"});
         }
-        
-        if (username !== userData.name) {
-            throw redirect({
-                to: "/profile/$username/$userId",
-                params: {
-                    username: userData.name,
-                    userId: userData.id,
-                },
-            });
-        }
 
-        const userModpacks = await queryClient.ensureQueryData(appQueries.userModpacks(userData));
-        const userSuggestions = await queryClient.ensureQueryData(appQueries.userSuggestions(userData));
+        const userModpacks = await queryClient.ensureQueryData(appQueries.userModpacks(userData.id, modpacksPage, modpacksQuery));
+        const userSuggestions = await queryClient.ensureQueryData(appQueries.userSuggestions(userData.id, suggestionsPage, suggestionsQuery, suggestionsFilter));
+
         const breadcrumbs = [{text: `${userData.name}'s profile`}];
 
         return {curUser, userData, userModpacks, userSuggestions, queryClient, breadcrumbs}
@@ -112,7 +114,7 @@ function EditProfileDialog() {
       onSuccess: async (newName: string) => {
         toast.success("Successfully updated your account details!");
         setOpen(false);
-        queryClient.invalidateQueries({queryKey: appQueries.userData(userId).queryKey, refetchType: "all"});
+        await queryClient.invalidateQueries({queryKey: appQueries.userData(userId).queryKey, refetchType: "all"});
         navigate({to: "/profile/$username/$userId", params: {username: newName, userId: userId}, replace: true});
     },
       onError: (error) => {
@@ -176,15 +178,26 @@ function EditProfileDialog() {
 }
 
 function ChangeEmailDialog() {
-  const [isOpen, setOpen] = useState(false);
-  const navigate = useNavigate();
-  const router = useRouter();
-  const formRef = useRef(null);
+    const [isOpen, setOpen] = useState(false);
+    const navigate = useNavigate();
+    const router = useRouter();
+    const formRef = useRef(null);
 
     const handleLogout = async () => {
-      Cookies.remove("_packbuilder_jwt");
-        await router.invalidate({sync: true});
-        navigate({to: "/login", reloadDocument: true});
+        try {
+            const response = await logout();
+
+            if(!isResponseSuccess(response)) {
+                throw new Error("There was a problem with logging out, please try again.")
+            }
+
+            await router.invalidate({sync: true});
+            navigate({to: "/login", reloadDocument: true});
+        
+        } catch(error) {
+            const err = error as unknown as Error 
+            toast.error(err.message);
+        }
     }
 
     const submitForm = () => {
@@ -205,8 +218,6 @@ function ChangeEmailDialog() {
 
             const status = await changeEmail(result.data);
 
-            // TODO: Figure out how to send text through responses from backend for richer error details
-
             if(!status || status < 200 || status > 200) {
                 throw new Error("There was a problem with updating your email.")
             }
@@ -215,7 +226,9 @@ function ChangeEmailDialog() {
         },
         onSuccess: async (newEmail: string) => {
             toast.success(`Your email was successfully updated to ${newEmail}, You have been logged out of your account.`);
+            
             setOpen(false);
+            
             await handleLogout();
         },
         onError: (error) => {
@@ -282,6 +295,7 @@ function ChangeEmailDialog() {
 
 function SelectDisplayRadioGroup() {
     const navigate = useNavigate({from: Route.fullPath});
+
     const {display} = Route.useSearch({
         select: (search) => ({
             display: search.display
@@ -289,50 +303,28 @@ function SelectDisplayRadioGroup() {
     });
 
     const handleValueChange = (newValue: string) => {
-        navigate({search: () => ({display: newValue}), resetScroll: false});
+        navigate({search: (prev) => ({...prev, display: newValue}), resetScroll: false});
     }
 
     return (
-        <RadioGroup
-        defaultValue={display}
-        onValueChange={handleValueChange}
-        className="inline-flex rounded-full bg-muted p-1"
-        >
-            <label className="cursor-pointer">
-                <RadioGroupItem value="modpacks" className="peer sr-only" />
-                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
-                ${display === "modpacks" ? "bg-primary text-white" : ""}
-                text-muted-foreground`}>
-                Modpacks
-                </div>
-            </label>
-
-            <label className="cursor-pointer">
-                <RadioGroupItem value="suggestions" className="peer sr-only" />
-                <div className={`px-4 py-1.5 text-sm rounded-full transition duration-200
-                ${display === "suggestions" ? "bg-primary text-white" : ""}
-                text-muted-foreground`}>
-                Suggestions
-                </div>
-            </label>
-        </RadioGroup>
-  )
+        <DisplayRadioGroup  
+            value={display} 
+            onValueChange={handleValueChange}
+            options={[
+                { value: "modpacks", label: "Modpacks" },
+                { value: "suggestions", label: "Suggestions" },
+            ]} 
+        />    
+    )
 }
 
 export default function ProfileView() {
     const {userId} = Route.useParams();
-    const {data: user} = useSuspenseQuery(appQueries.userData(userId));
-    const {data: userModpacks, isPending: pendingModpackData} = useSuspenseQuery(appQueries.userModpacks(user));
-    const {data: userSuggestions, isPending: pendingSuggestionData} = useSuspenseQuery(appQueries.userSuggestions(user))
+    const {data: userProfileData} = useSuspenseQuery(appQueries.userData(userId));
     const { curUser } = Route.useLoaderData();
-    const {display} = Route.useSearch({
-        select: (search) => ({
-            display: search.display
-        })
-    });
     const navigate = useNavigate();
-  
-    if(!user) {
+
+     if(!userProfileData) {
         return (
             <div>
             <h1>This profile does not exist.</h1>
@@ -340,36 +332,49 @@ export default function ProfileView() {
         )
     }
 
-    const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>(SuggestionFilter.All);
-  
-    const filteredSuggestions = useMemo(() => {
-        if (!userSuggestions) return [];
+    const {display, modpacksPage, suggestionsPage, modpacksQuery, suggestionsQuery, suggestionsFilter: suggestionsFilterParam} = Route.useSearch({
+        select: ({display, modpacksPage, suggestionsPage, suggestionsFilter, modpacksQuery, suggestionsQuery}) => ({
+            display,
+            modpacksPage,
+            suggestionsPage,
+            suggestionsFilter,
+            modpacksQuery,
+            suggestionsQuery
+        })
+    });
 
-        switch (suggestionFilter) {
-            case SuggestionFilter.Verified:
-                return userSuggestions?.filter(
-                    suggestion => suggestion.state === SuggestionState.Unverified
-                );
-            case SuggestionFilter.Unverified:
-                return userSuggestions?.filter(
-                    suggestion => suggestion.state === SuggestionState.Verified
-                );
-            default:
-                return userSuggestions;
-        }
-    }, [userSuggestions, suggestionFilter]);
+    const {data: userModpacks, isPending: pendingModpackData} = useQuery(appQueries.userModpacks(userProfileData.id, modpacksPage, modpacksQuery));
+    const {data: userSuggestions, isPending: pendingSuggestionData} = useQuery(appQueries.userSuggestions(userProfileData.id, suggestionsPage, suggestionsQuery, suggestionsFilterParam));
+
+    const isLoading = display === "modpacks" ? pendingModpackData : pendingSuggestionData;
+
+    const isEmpty = display === "modpacks" ? userModpacks?.items.length === 0 : userSuggestions?.items.length === 0;
+
+    const [suggestionsFilter, setSuggestionsFilter] = useState<SuggestionState | null>(suggestionsFilterParam);
     
-    const handleFilterChange = (newValue: SuggestionFilter) => {
-        setSuggestionFilter(newValue);
+    const handleFilterChange = (newValue: "All" | SuggestionState) => {
+        setSuggestionsFilter(newValue === "All" ? null : newValue)
+    }
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const newSearchQuery = formData.get("searchQuery") as string;
+
+        if(display === "mods") {
+            navigate({search: (prev) => ({...prev, modpacksPage: 1, modpacksQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
+        } else {
+            navigate({search: (prev) => ({...prev, suggestionsPage: 1, suggestionsQuery: newSearchQuery, suggestionsFilter}), resetScroll: false, from: Route.fullPath});
+        }
     }
     
-    return <section className="flex flex-col items-center max-w-9/10 justify-center p-2 min-md:max-w-3/4 min-md:min-w-2/4">
+    return <section className="mainBlock">
         <header className="flex flex-col justify-between items-center max-w-full gap-3 min-md:flex-row min-md:gap-6">
             <div className="flex flex-col max-w-full items-center justify-center gap-3 min-md:flex-row min-md:justify-between">
-                <img className='size-40 border-white/30 border-1' src={user.imageType === ImageType.Stock ? `/profileAvatars/${user.imageValue}` : user.imageValue} alt={"user profile picture"} />
+                <img className='size-40 border-white/30 border-1' src={userProfileData.imageType === ImageType.Stock ? `/profileAvatars/${userProfileData.imageValue}` : userProfileData.imageValue} alt={"user profile picture"} />
                 <div className="flex flex-col max-w-full min-md:items-start items-center justify-center gap-3">
-                        <h1 className="font-bold line-clamp-1 leading-normal">{user.name}</h1>
-                        {curUser?.id === user.id && <div className="flex items-center max-w-full flex-wrap justify-center gap-2">
+                        <h1 className="font-bold line-clamp-1 leading-normal">{userProfileData.name}</h1>
+                        {curUser?.id === userProfileData.id && <div className="flex items-center max-w-full flex-wrap justify-center gap-2">
                             <EditProfileDialog />
                             <ChangeEmailDialog />
                             <Button variant={"default"} onClick={() => navigate({to: "/login/forgot-password"})}>
@@ -382,83 +387,38 @@ export default function ProfileView() {
 
         <Separator className="my-4"/>
         
-        <section className="flex items-center justify-center gap-4 flex-col w-19/20">
+        <section className="sectionBlock">
             <SelectDisplayRadioGroup />
 
-            <Command className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
+            <div className="flex flex-col justify-center items-center w-full h-fit gap-2 overflow-visible">
                 <div className="flex items-center justify-center w-full gap-1">
-                    <ClearableCommandInput  placeholder="Search..." />
-                    <div className="flex max-md:flex-col items-center justify-center">
-                        <div className="flex items-center max-md:flex-col justify-center gap-2 z-1">
-                            <div className="flex items-center justify-center gap-2">
-                                {
-                                    display === "suggestions" ?
-                                    <Select value={suggestionFilter} onValueChange={handleFilterChange}>
-                                        <SelectTrigger>
-                                            <span className="text-sm">Filter:</span>
-                                            <SelectValue placeholder="Filter modifications..."/>
-                                            <Separator orientation="vertical"  className="h-full" />
-                                        </SelectTrigger> 
-                                        <SelectContent>
-                                            <SelectGroup>     
-                                                <SelectLabel>Select filter</SelectLabel>
-                                                <SelectItem className="cursor-pointer" value={"0"}>All</SelectItem>
-                                                <SelectItem className="cursor-pointer" value={"1"}>Unverified</SelectItem>
-                                                <SelectItem className="cursor-pointer" value={"2"}>Verified</SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select> : ""
-                                }
-                            </div>
-                        </div>
-                    </div>
+                    <ResultFilterForm handleSubmit={handleSubmit}>
+                            {
+                                display === "suggestions" &&
+                                <SearchFilterDropdown>
+                                    <SuggestionFilterSelect suggestionFilter={suggestionsFilter} handleFilterChange={handleFilterChange} />
+                                </SearchFilterDropdown>
+                            }
+                    </ResultFilterForm>
                 </div>
-                <CommandList className="w-full max-h-fit">
-                    <CommandEmpty className={display === "mods" && pendingModpackData || display === "suggestions" && pendingSuggestionData ? "hidden" : ""}>
-                        <DisplayContainer className="flex items-center justify-center h-96">
-                            <h2>It's looking empty in here...</h2>
-                        </DisplayContainer>
-                    </CommandEmpty>
-                    {display === "modpacks" ? 
-                        <CommandGroup className="w-full">
-                            <DisplayContainer className={`${userModpacks && userModpacks.length === 0 ? "hidden" : ""}`}>
-                                    {
-                                        pendingModpackData ? (
-                                            <div className="size-96 max-w-full flex items-center justify-center w-full">
-                                                <Spinner className="size-20" />
-                                            </div>
-                                        )
-                                        :
-                                        userModpacks && userModpacks.map((modpack, index) => {
-                                            return <CommandItem value={modpack.name} key={index} className="size-full p-0">
-                                                <ModpackDisplay modpack={modpack} />
-                                            </CommandItem>
-                                        })  
-                                    }
-                            </DisplayContainer>
-                        </CommandGroup>
-                        :
-                        <CommandGroup>
-                            <DisplayContainer className={`${filteredSuggestions.length === 0 ? "hidden" : ""}`}>
-                                {
-                                    pendingSuggestionData ? (
-                                        <div className="size-full flex items-center justify-center w-full">
-                                            <Spinner className="size-20" />
-                                        </div>
-                                    )
-                                    :
-                                    filteredSuggestions && userSuggestions ? filteredSuggestions.map((suggestion, index) => {
-                                        return <CommandItem value={suggestion.user?.name} key={index} className="size-full max-w-full p-0">
-                                            <SuggestionDisplay suggestion={suggestion} />
-                                        </CommandItem>
-                                    })  
-                                    : ""
-                                }
-                            </DisplayContainer>
-                        </CommandGroup>
-                    }
-                </CommandList>
-            </Command>
+                <div className="w-full max-h-fit">
+                    <ResultDisplay isEmpty={isEmpty} isLoading={isLoading}>
+                        {display === "modpacks" ? 
+                            userModpacks?.items.map((modpack, index) => {
+                                return <div key={index} className="size-full p-0">
+                                    <ModpackDisplay modpack={modpack} />
+                                </div>
+                            })  
+                            :   
+                            userSuggestions?.items.map((suggestion, index) => {
+                                return <div key={index} className="size-full max-w-full p-0">
+                                    <SuggestionDisplay suggestion={suggestion} modpack={suggestion.modpack} />
+                                </div>
+                            })  
+                        }
+                    </ResultDisplay>
+                </div>
+            </div>
         </section>
     </section>
 }

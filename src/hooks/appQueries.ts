@@ -1,73 +1,106 @@
-import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getMinecraftVersions, getUserBookmarks, getUserById, getVersionMods } from "@/lib/api";
-import type { ModLoader } from "@/types/enums";
-import type { User } from "@/types/user";
-import { queryOptions } from "@tanstack/react-query";
+import { getCurseForgeModData, getModpack, getModpackSuggestions, getModReferenceIds, getSuggestion, searchCurseforgeMods, getUserModpacks, getUserSuggestions, getMinecraftVersions, getUserBookmarks, getUserById, getVersionMods, getSuggestionModifications, getBookmark } from "@/lib/api";
+import type { ConflictState, ModAction, ModLoader, SuggestionState } from "@/types/enums";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 export const appQueries = {
-    suggestion: (modpackId: string, suggestionId: string) => queryOptions({
-        queryKey: ["suggestion", Number(modpackId), Number(suggestionId)],
+    keys: {
+        modpackSuggestions: (modpackId: number) => ["modpackSuggestions", modpackId],
+
+        suggestionModifications: (modpackId: number, suggestionId: number) => ["suggestionModifications", modpackId, suggestionId],
+
+        modpackVersionMods: (modpackId: number, versionIteration: string) => ["modpackVersionMods", modpackId, versionIteration],
+
+        userModpacks: (userId: number | null | undefined) => ["userModpacks", userId],
+
+        userSuggestions: (userId: number) => ["userSuggestions", userId],
+
+        userBookmarks: (userId: number | null | undefined) => ["userBookmarks", userId],
+
+        modificationModData: (suggestionId: number) => ["modificationModData", suggestionId]
+    },
+
+    suggestion: (modpackId: number, suggestionId: number) => queryOptions({
+        queryKey: ["suggestion", modpackId, suggestionId],
         queryFn: () => getSuggestion(modpackId, suggestionId),
     }),
 
-    modpack: (modpackId: string) => queryOptions({
-        queryKey: ["modpack", Number(modpackId)],
+    modpack: (modpackId: number) => queryOptions({
+        queryKey: ["modpack", modpackId],
         queryFn: () => getModpack(modpackId),
     }),
 
-    versionMods: (modpackId: string | null | undefined, versionIteration: string | null | undefined, page: number, pageSize: number) => queryOptions({
-        queryKey: ["modpackVersionMods", Number(modpackId), Number(versionIteration), Number(page), Number(pageSize)],
-        queryFn: () => getVersionMods(modpackId!, versionIteration!, page, pageSize),
-        enabled: !!modpackId && !!versionIteration
+    modpackVersionMods: (modpackId: number, versionIteration: string, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
+        queryKey: [...appQueries.keys.modpackVersionMods(modpackId, versionIteration), page, pageSize, searchQuery],
+        queryFn: () => getVersionMods(modpackId, versionIteration, page, pageSize || 50, searchQuery || ""),
+        placeholderData: keepPreviousData
+    }),
+
+    modpackSuggestions: (modpackId: number, page: number, searchQuery?: string, filter?: SuggestionState, pageSize?: number) => queryOptions({
+        queryKey: [...appQueries.keys.modpackSuggestions(modpackId), page, pageSize, searchQuery, filter],
+        queryFn: () => getModpackSuggestions(modpackId, page, pageSize || 50, searchQuery || "", filter),
+        placeholderData: keepPreviousData
+    }),  
+
+    suggestionModifications: (modpackId: number, suggestionId: number, page: number, searchQuery?: string, modActionFilter?: ModAction, conflictStateFilter?: ConflictState, pageSize?: number) =>  queryOptions({
+        queryKey: [...appQueries.keys.suggestionModifications(modpackId, suggestionId), page, pageSize, searchQuery, modActionFilter, conflictStateFilter],
+        queryFn: () => getSuggestionModifications(modpackId, suggestionId, page, searchQuery || "", modActionFilter, conflictStateFilter, pageSize),
+        placeholderData: keepPreviousData
+    }),
+    
+    userModpacks: (userId: number | null | undefined, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
+        queryKey: [...appQueries.keys.userModpacks(userId), page, searchQuery, pageSize],
+        queryFn: () => {
+            if(!userId) {
+                throw new Error("UserId is required to fetch user modpacks")
+            }
+
+            return getUserModpacks(userId, page, searchQuery || "", pageSize)
+        },
+        placeholderData: keepPreviousData
+    }),
+
+    userSuggestions: (userId: number, page: number, searchQuery?: string, pageSize?: number, filter?: SuggestionState) => queryOptions({
+        queryKey: [...appQueries.keys.userSuggestions(userId), page, searchQuery, pageSize, filter],
+        queryFn: () => getUserSuggestions(userId, page, searchQuery, pageSize, filter),
+        placeholderData: keepPreviousData
+    }),
+
+    userBookmarks: (userId: number | null | undefined, page: number, searchQuery?: string, pageSize?: number) => queryOptions({
+        queryKey: [...appQueries.keys.userBookmarks(userId), page, searchQuery, pageSize],
+        queryFn: () => getUserBookmarks(page, searchQuery, pageSize),
+        placeholderData: keepPreviousData
+    }),
+
+    getCurrentUserBookmark: (modpackId: number) => queryOptions({
+        queryKey: ["bookmark", modpackId],
+        queryFn: () => getBookmark(modpackId)
     }),
 
     userData: (userId: number) => queryOptions({
         queryKey: ["userProfile", userId.toString()],
         queryFn: () => getUserById(userId),
     }),
-    
-    userModpacks: (user: User | null) => queryOptions({
-        queryKey: user ? ["modpacks", user.id] : ["modpacks", "no-user"],
-        queryFn: () => getUserModpacks(user!),
-        enabled: !!user,
-    }),
-
-    userBookmarks: (user: User | null) => queryOptions({
-        queryKey: user ? ["bookmarks", user.id] : ["bookmarks", "no-user"],
-        queryFn: () => getUserBookmarks(),
-        enabled: !!user,
-    }),
-
-    userSuggestions: (user: User | null) => queryOptions({
-        queryKey: user ? ["suggestions", user.id] : ["suggestions", "no-user"],
-        queryFn: () => getUserSuggestions(user!.id),
-        enabled: !!user
-    }),
 
     modReferenceIds: (modIds: number[] | null | undefined) => queryOptions({
-        queryKey: ["referenceIds", modIds?.join(",") ?? "noModIds"],
+        queryKey: ["modReferenceIds", modIds?.join(",") ?? "noModIds"],
         queryFn: () => getModReferenceIds(modIds!),
         enabled: !!modIds
     }),
 
-    curseForgeModData: (referenceIds: string[] | null | undefined) => queryOptions({
+    modpackModData: (referenceIds: string[] | null | undefined) => queryOptions({
         queryKey: ["modpackModData", referenceIds?.join(",") ?? "noReferenceIds"],
         queryFn: () => getCurseForgeModData(referenceIds!),
         enabled: !!referenceIds,
     }),
 
-    modpackSuggestions: (modpackId: string) => queryOptions({
-        queryKey: ["modpackSuggestions", Number(modpackId)],
-        queryFn: () => getModpackSuggestions(modpackId)
-    }),  
-
-    modificationModData: (suggestionId: string, modificationReferenceIds: string[] | null | undefined) => queryOptions({
-        queryKey: ["modificationModData", suggestionId, modificationReferenceIds?.join(",") ?? "NoModificationModData"],
+    modificationModData: (suggestionId: number, modificationReferenceIds: string[] | null | undefined) => queryOptions({
+        queryKey: [...appQueries.keys.modificationModData(suggestionId), modificationReferenceIds?.join(",") ?? "NoModificationModData"],
         queryFn: () => getCurseForgeModData(modificationReferenceIds!),
         enabled: !!modificationReferenceIds
     }),
 
     curseForgeSearchResults: (searchQuery: string, page: number, sortMethod: "0" | "1" | "2" | "3", gameVersion: string, modLoader: ModLoader) => queryOptions({
-        queryKey: ["modSearchResults", searchQuery, page, sortMethod, gameVersion, modLoader],
+        queryKey: ["curseForgeSearchResults", searchQuery, page, sortMethod, gameVersion, modLoader],
         queryFn: () => searchCurseforgeMods(searchQuery, page, sortMethod, gameVersion, modLoader)
     }),
 

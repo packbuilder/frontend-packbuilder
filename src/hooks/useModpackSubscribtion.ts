@@ -2,12 +2,10 @@
 import { useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useSignalR } from "@/components/signalr/signalr-provider"
-import { appQueries } from "./appQueries"
-import { useRouter } from "@tanstack/react-router";
+import { appQueries } from "./appQueries"   
 
 export function useModpackSubscription(modpackId: number | undefined) {
   const { connection } = useSignalR();
-  const router = useRouter();
   const queryClient = useQueryClient()  
 
   useEffect(() => {
@@ -22,9 +20,8 @@ export function useModpackSubscription(modpackId: number | undefined) {
         if (payload.modpackId !== modpackId) return
         
         await queryClient.invalidateQueries({
-            queryKey: appQueries.modpackSuggestions(modpackId.toString()).queryKey
+            queryKey: appQueries.keys.modpackSuggestions(modpackId)
         });
-        await router.invalidate();
     }
 
     const onModpackUpdated = async (payload: {
@@ -33,14 +30,12 @@ export function useModpackSubscription(modpackId: number | undefined) {
         if(payload.modpackId !== modpackId) return
 
         await queryClient.invalidateQueries({
-            queryKey: appQueries.modpack(modpackId.toString()).queryKey
+            queryKey: appQueries.modpack(modpackId).queryKey
         });
 
         await queryClient.invalidateQueries({
-            queryKey: appQueries.modpackSuggestions(modpackId.toString()).queryKey
+            queryKey: appQueries.keys.modpackSuggestions(modpackId)
         });
-
-        await router.invalidate();
     }
 
     connection.on("SuggestionUpdated", onSuggestionUpdated)

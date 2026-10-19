@@ -7,7 +7,7 @@ import { ModLoader, SuggestionState } from "./enums";
 export const suggestionSchema = z.object({
     id: z.number(),
     user: userSchema.nullable(),
-    modpack: modpackSchema.nullable(),
+    modpack: modpackSchema,
     
     userId: z.number(),
     state: z.coerce.string().pipe(z.enum(SuggestionState)),

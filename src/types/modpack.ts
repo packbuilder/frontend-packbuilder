@@ -1,7 +1,7 @@
 import z from "zod";
 import { versionSchema } from "./version";
 import { userSchema } from "./user";
-import { ImageType } from "./enums";
+import { Game, ImageType } from "./enums";
 
 export const modpackSchema = z.object({
     id: z.number(),
@@ -9,6 +9,7 @@ export const modpackSchema = z.object({
     
     name: z.string(),
     slug: z.string(),
+    game: z.coerce.string().pipe(z.enum(Game)),
     imageValue: z.string(),
     imageType: z.coerce.string().pipe(z.enum(ImageType)),
     userId: z.number(),
