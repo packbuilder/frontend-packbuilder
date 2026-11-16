@@ -136,7 +136,6 @@ export async function getUserById(userId: number) {
 }
 
 export async function getUserModpacks(userId: number, page: number, searchQuery?: string, pageSize?: number) {
-
     try {
         const response = await api.get(`/user-modpacks/${userId}`, {
             params: {

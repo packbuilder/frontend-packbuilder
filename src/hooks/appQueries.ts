@@ -51,7 +51,7 @@ export const appQueries = {
         queryKey: [...appQueries.keys.userModpacks(userId), page, searchQuery, pageSize],
         queryFn: () => {
             if(!userId) {
-                throw new Error("UserId is required to fetch user modpacks")
+                return null;
             }
 
             return getUserModpacks(userId, page, searchQuery || "", pageSize)

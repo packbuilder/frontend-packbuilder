@@ -80,8 +80,6 @@ function Home() {
     const userModpacks = paginatedModpacks?.items || [];
     const userBookmarks = paginatedBookmarks?.items || [];
 
-    console.log(userModpacks.length, userBookmarks.length)
-
     const isEmpty = display === "modpacks" && userModpacks.length === 0 || display === "bookmarks" && userBookmarks.length === 0
     const isLoading = display === "modpacks" && pendingModpackData || display === "bookmarks" && pendingBookmarkData
     
@@ -89,8 +87,6 @@ function Home() {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const newSearchQuery = formData.get("searchQuery") as string;
-
-        console.log(newSearchQuery)
 
         if(display === "modpacks") {
             navigate({search: (prev) => ({...prev, modpacksPage: 1, modpacksQuery: newSearchQuery}), resetScroll: false, from: Route.fullPath});
